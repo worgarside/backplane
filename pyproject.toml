@@ -1,0 +1,93 @@
+[project]
+name = "janus"
+version = "0.1.0"
+description = "AI-facing gateway for local services and smart home orchestration"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["fastapi>=0.136.1"]
+
+
+# Tool Configs
+
+[tool.basedpyright]
+typeCheckingMode = "all"
+
+include = ["src"]
+
+executionEnvironments = [{ root = "src" }]
+
+reportMissingImports = "error"
+reportMissingTypeStubs = "error"
+
+pythonVersion = "3.14"
+
+
+[tool.ruff]
+fix = true
+exclude = ["backend/alembic/*", "backend/vulture_whitelist.py"]
+preview = false
+line-length = 90
+lint.select = ["ALL"]
+
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 115
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 15
+max-branches = 15
+max-public-methods = 150
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+  "pydantic.BaseModel",
+  "BaseModel",
+  "sqlalchemy.orm.DeclarativeBase",
+  "DeclarativeBase",
+  "Base",
+  "TypedDict",
+]
+quote-annotations = true # https://docs.astral.sh/ruff/settings/#lint_flake8-type-checking_quote-annotations
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = 100
+
+
+[tool.semantic_release]
+tag_format = "{version}"
+version_toml = ["pyproject.toml:project.version"]
+version_variables = [
+  "src/__init__.py:__version__",
+]
+major_on_zero = false
+allow_zero_version = true
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+  "build",
+  "chore",
+  "ci",
+  "deps",
+  "docs",
+  "hotfix",
+  "feat",
+  "fix",
+  "perf",
+  "style",
+  "refactor",
+  "test",
+]
+minor_tags = ["feat"]
+patch_tags = ["deps", "fix", "hotfix", "perf", "build"]
+parse_squash_commits = false

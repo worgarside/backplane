@@ -1,5 +1,5 @@
 [project]
-name = "janus"
+name = "backplane"
 version = "0.1.0"
 description = "AI-facing gateway for local services and smart home orchestration"
 readme = "README.md"

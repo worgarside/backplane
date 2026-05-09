@@ -1,4 +1,4 @@
-"""Janus package for AI-facing gateway for local services and smart home orchestration."""
+"""Backplane package for AI-facing gateway for local services and smart home orchestration."""
 
 from __future__ import annotations
 

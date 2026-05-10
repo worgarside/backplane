@@ -4,24 +4,37 @@ from __future__ import annotations
 
 import datetime as dt
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Final, final
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated, ClassVar, Final, Self, cast, final, override
 
+import anyio
 from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from markdown_it.tree import SyntaxTreeNode
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, TypeAdapter, validate_call
 
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Sequence
 
-    import anyio
-    from markdown_it.token import Token
-
-
 _MAX_MARKDOWN_HEADING_LEVEL: Final = 6
 _MIN_HEADING_DEPTH_WITH_PARENT: Final = 2
+
+MarkdownHeadingLevel = Annotated[
+    int,
+    Field(
+        ge=1,
+        le=_MAX_MARKDOWN_HEADING_LEVEL,
+        description=("Markdown heading depth where 1 is `#` and 6 is `######`."),
+    ),
+]
+
+_heading_level_adapter: TypeAdapter[MarkdownHeadingLevel] = TypeAdapter(
+    MarkdownHeadingLevel,
+)
 
 
 @cache
@@ -32,23 +45,6 @@ def _markdown_it() -> MarkdownIt:
         A cached ``MarkdownIt`` instance with the extensions this module expects.
     """
     return MarkdownIt("commonmark").enable(["table", "strikethrough"])
-
-
-def _validate_heading_level(level: int) -> None:
-    """Validate that ``level`` is a markdown heading depth.
-
-    Args:
-        level: Heading depth where ``1`` is ``#`` and ``6`` is ``######``.
-
-    Raises:
-        ValueError: If ``level`` is outside markdown's supported heading range.
-    """
-    if level < 1:
-        msg = "heading level must be at least 1."
-        raise ValueError(msg)
-    if level > _MAX_MARKDOWN_HEADING_LEVEL:
-        msg = f"heading level must be at most {_MAX_MARKDOWN_HEADING_LEVEL}."
-        raise ValueError(msg)
 
 
 def _visible_inline_text(tokens: Sequence[Token] | None) -> str:
@@ -170,18 +166,35 @@ class Heading:
     text: str
 
 
-@dataclass(slots=True)
-class Section:
+class Section(BaseModel):
     """A markdown section spanning from one heading to its outline boundary."""
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(extra="forbid")
 
     heading: Heading
     start_line: int
     end_line: int
     content: str
     position: int
-    _document: MarkdownDocument = field(repr=False, compare=False)
 
-    def subsections(self, level: int | None = None) -> list[Section]:
+    document: Annotated[MarkdownDocument, PrivateAttr()]
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        """Return whether this section matches ``other`` by outline span only."""
+        if not isinstance(other, Section):
+            return NotImplemented
+
+        return (
+            self.heading == other.heading
+            and self.start_line == other.start_line
+            and self.end_line == other.end_line
+            and self.content == other.content
+            and self.position == other.position
+        )
+
+    @validate_call
+    def subsections(self, level: MarkdownHeadingLevel | None = None) -> list[Self]:
         """Return sections at ``level`` contained within this section.
 
         Args:
@@ -192,21 +205,23 @@ class Section:
             Child sections in document order.
 
         Raises:
-            ValueError: If ``level`` is not deeper than this section's heading level,
-                or is outside markdown's supported heading range.
+            ValueError: If the subsection level is not deeper than this section's heading.
         """
         split_level = self.heading.level + 1 if level is None else level
+        split_level = _heading_level_adapter.validate_python(split_level)
         if split_level <= self.heading.level:
             msg = (
                 f"subsection level ({split_level}) must be greater than "
                 f"section heading level ({self.heading.level})."
             )
             raise ValueError(msg)
-        _validate_heading_level(split_level)
-        return self._document.sections(
-            split_level,
-            start_line=self.start_line + 1,
-            end_line=self.end_line,
+        return cast(
+            "list[Self]",
+            self.document.sections(
+                split_level,
+                start_line=self.start_line + 1,
+                end_line=self.end_line,
+            ),
         )
 
     def print_tree(self) -> None:
@@ -226,30 +241,40 @@ class Section:
         print_node(SyntaxTreeNode(_markdown_it().parse(self.content)))
 
 
-@final
-class MarkdownDocument:
+class MarkdownDocument(BaseModel):
     """Editable markdown document backed by a file."""
 
-    def __init__(self, file_path: anyio.Path) -> None:
-        """Create an unloaded markdown document.
+    file_path: Path
 
-        Args:
-            file_path: Path to the markdown file. The file is read when entering the
-                async context manager.
-        """
-        self.file_path = file_path
-        self.text = ""
-        self._tokens: list[Token] = []
-        self._headings: list[Heading] = []
-        self._loaded = False
+    _text: Annotated[str, PrivateAttr()]
+    _tokens: Annotated[list[Token], PrivateAttr()]
+    _headings: Annotated[list[Heading], PrivateAttr()]
+    _loaded: Annotated[bool, PrivateAttr()]
 
-    async def __aenter__(self) -> MarkdownDocument:
+    @property
+    def text(self) -> str:
+        """Return the document text."""
+        return self._text
+
+    @text.setter
+    def text(self, text: str) -> None:
+        """Set the document text."""
+        self._text = text
+        self._tokens = _markdown_it().parse(text)
+        self._headings = _extract_headings(self._tokens)
+
+    @property
+    def _async_file_path(self) -> anyio.Path:
+        """Async-capable path wrapper for disk I/O."""
+        return anyio.Path(self.file_path)
+
+    async def __aenter__(self) -> Self:
         """Load the document and return it for editing.
 
         Returns:
             The loaded document instance.
         """
-        self._set_text(await self.read())
+        self.text = await self.read()
         self._loaded = True
         return self
 
@@ -270,8 +295,6 @@ class MarkdownDocument:
             await self.flush()
         self._loaded = False
         self.text = ""
-        self._tokens = []
-        self._headings = []
 
     async def read(self) -> str:
         """Read the file content.
@@ -279,7 +302,7 @@ class MarkdownDocument:
         Returns:
             Markdown text from ``self.file_path``.
         """
-        return await self.file_path.read_text(encoding="utf-8")
+        return await self._async_file_path.read_text(encoding="utf-8")
 
     async def flush(self) -> None:
         """Write the current document text to disk.
@@ -287,7 +310,7 @@ class MarkdownDocument:
         The document must be loaded; call this from inside the async context manager.
         """
         self._ensure_loaded()
-        _ = await self.file_path.write_text(self.text, encoding="utf-8")
+        _ = await self._async_file_path.write_text(self.text, encoding="utf-8")
 
     async def reset(self) -> None:
         """Discard in-memory edits and reload the file from disk.
@@ -297,7 +320,7 @@ class MarkdownDocument:
         exit.
         """
         self._ensure_loaded()
-        self._set_text(await self.read())
+        self.text = await self.read()
 
     def _ensure_loaded(self) -> None:
         """Require the document to be inside its async context manager.
@@ -308,16 +331,6 @@ class MarkdownDocument:
         if not self._loaded:
             msg = "Document is not loaded; use `async with MarkdownDocument(...)`."
             raise RuntimeError(msg)
-
-    def _set_text(self, text: str) -> None:
-        """Replace document text and refresh derived parser state.
-
-        Args:
-            text: New full markdown document text.
-        """
-        self.text = text
-        self._tokens = _markdown_it().parse(text)
-        self._headings = _extract_headings(self._tokens)
 
     def _lines(self) -> list[str]:
         """Return document text as source lines, preserving line endings.
@@ -335,7 +348,8 @@ class MarkdownDocument:
         """
         return len(self._lines()) - 1
 
-    def headings(self, level: int | None = None) -> list[Heading]:
+    @validate_call
+    def headings(self, level: MarkdownHeadingLevel | None = None) -> list[Heading]:
         """Return headings, optionally filtered to one depth.
 
         Args:
@@ -345,11 +359,14 @@ class MarkdownDocument:
             Matching headings in document order.
         """
         self._ensure_loaded()
-        if level is not None:
-            _validate_heading_level(level)
         return [h for h in self._headings if level is None or h.level == level]
 
-    def get_heading(self, heading_text: str, level: int | None = None) -> Heading | None:
+    @validate_call
+    def get_heading(
+        self,
+        heading_text: str,
+        level: MarkdownHeadingLevel | None = None,
+    ) -> Heading | None:
         """Return the first heading matching ``heading_text`` and optional ``level``.
 
         Args:
@@ -365,9 +382,10 @@ class MarkdownDocument:
             None,
         )
 
+    @validate_call
     def sections(
         self,
-        level: int,
+        level: MarkdownHeadingLevel,
         *,
         start_line: int = 0,
         end_line: int | None = None,
@@ -384,7 +402,6 @@ class MarkdownDocument:
         """
         self._ensure_loaded()
         scope_end = self._last_line_index() if end_line is None else end_line
-        _validate_heading_level(level)
         if scope_end < start_line:
             return []
 
@@ -435,7 +452,7 @@ class MarkdownDocument:
             end_line=section_end,
             content="".join(lines[heading.line_no : section_end + 1]),
             position=position,
-            _document=self,
+            document=self,
         )
 
     def _resolve_parent_section(
@@ -515,11 +532,12 @@ class MarkdownDocument:
             raise ValueError(msg)
         return sections[position].start_line
 
+    @validate_call
     def add_section(
         self,
         heading_text: str,
         content: str,
-        level: int,
+        level: MarkdownHeadingLevel,
         *,
         nest_under_heading: str | Heading | None = None,
         position: int | None = None,
@@ -543,7 +561,6 @@ class MarkdownDocument:
                 cannot be found after reparsing.
         """
         self._ensure_loaded()
-        _validate_heading_level(level)
 
         parent = self._resolve_parent_section(level, nest_under_heading)
         if parent is None:
@@ -559,7 +576,7 @@ class MarkdownDocument:
             append_line,
         )
         block = _section_block(level, heading_text, content)
-        self._set_text(_insert_markdown_at_line(self.text, insert_line, block))
+        self.text = _insert_markdown_at_line(self.text, insert_line, block)
 
         inserted = self.get_heading(heading_text, level)
         if inserted is None:
@@ -567,12 +584,13 @@ class MarkdownDocument:
             raise RuntimeError(msg)
         return self._section_for_heading(inserted)
 
+    @validate_call
     def append_to_section(
         self,
         heading_text: str,
         content: str,
         *,
-        level: int = 2,
+        level: MarkdownHeadingLevel = 2,
     ) -> Section:
         """Append content to the section headed by ``heading_text``.
 
@@ -588,7 +606,6 @@ class MarkdownDocument:
             ValueError: If no matching heading exists.
         """
         self._ensure_loaded()
-        _validate_heading_level(level)
 
         heading = self.get_heading(heading_text, level)
         if heading is None:
@@ -600,8 +617,10 @@ class MarkdownDocument:
         if not chunk:
             return section
 
-        self._set_text(
-            _insert_markdown_at_line(self.text, section.end_line + 1, f"{chunk}\n"),
+        self.text = _insert_markdown_at_line(
+            self.text,
+            section.end_line + 1,
+            f"{chunk}\n",
         )
         return self._section_for_heading(heading)
 
@@ -645,5 +664,5 @@ class ObsidianService:
             / f"{date.isoformat()}.md"
         )
 
-        async with MarkdownDocument(daily_note_path) as daily_note:
+        async with MarkdownDocument(file_path=daily_note_path) as daily_note:
             yield daily_note

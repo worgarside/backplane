@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated, Self, override
 
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Generator, Sequence
 
     import anyio
     from markdown_it.token import Token
@@ -156,6 +156,17 @@ class MarkdownSection(BaseModel):
         Field(ge=1, le=6, description="The heading level of the section."),
     ]
 
+    @override
+    def __iter__(self) -> Generator[Self]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        """Iterate over the section and its nested sections.
+
+        Yields:
+            The section and its nested sections.
+        """
+        yield self
+        for section in self.sections:
+            yield from section
+
 
 class MarkdownDocument(BaseModel):
     """A markdown document split into frontmatter and heading sections."""
@@ -277,3 +288,8 @@ class MarkdownDocument(BaseModel):
             raise ValueError(msg)
 
         _ = await self._async_file_path.write_text(self._text, encoding="utf-8")
+
+    @override
+    def __iter__(self) -> Generator[MarkdownSection]:  # pyright: ignore[reportIncompatibleMethodOverride]
+        for section in self.body:
+            yield from section

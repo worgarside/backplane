@@ -43,8 +43,22 @@ repos:
           - --no-sort-keys
           - --autofix
           - --indent
-          - "2"
+          - '2'
       - id: trailing-whitespace
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.2.3
+    hooks:
+      - id: yamlfmt
+        args:
+          - --mapping
+          - '2'
+          - --sequence
+          - '4'
+          - --offset
+          - '2'
+          - --width
+          - '4096'
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0

@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "AI-facing gateway for local services and smart home orchestration"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = ["fastapi>=0.136.1"]
+dependencies = [
+    "fastapi>=0.136.1",
+    "markdown-it-py>=4.2.0",
+    "pydantic-settings>=2.14.1",
+    "uvloop>=0.22.1",
+]
 
 
 # Tool Configs
@@ -24,11 +29,10 @@ pythonVersion = "3.14"
 
 [tool.ruff]
 fix = true
-exclude = ["backend/alembic/*", "backend/vulture_whitelist.py"]
-preview = false
+preview = true
 line-length = 90
 lint.select = ["ALL"]
-
+lint.ignore = ["CPY"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 115
@@ -68,7 +72,7 @@ docstring-code-line-length = 100
 tag_format = "{version}"
 version_toml = ["pyproject.toml:project.version"]
 version_variables = [
-  "src/__init__.py:__version__",
+  "src/backplane/__init__.py:__version__",
 ]
 major_on_zero = false
 allow_zero_version = true

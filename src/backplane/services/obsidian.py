@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import pathlib
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from functools import cache
@@ -15,7 +16,7 @@ from markdown_it.token import Token
 from markdown_it.tree import SyntaxTreeNode
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, TypeAdapter, validate_call
 
-from backplane.utils.settings import SETTINGS
+from backplane.utils.markdown import MarkdownDocument as NewMarkdownDocument
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Sequence
@@ -192,6 +193,17 @@ class Section(BaseModel):
             and self.content == other.content
             and self.position == other.position
         )
+
+    @override
+    def __hash__(self) -> int:
+        """Return a hash of the section."""
+        return hash((
+            self.heading,
+            self.start_line,
+            self.end_line,
+            self.content,
+            self.position,
+        ))
 
     @validate_call
     def subsections(self, level: MarkdownHeadingLevel | None = None) -> list[Self]:
@@ -629,7 +641,7 @@ class MarkdownDocument(BaseModel):
 class ObsidianService:
     """Service for interacting with the Obsidian vault."""
 
-    DAILY_NOTE_DIRECTORY: Final = "Daily Notes"
+    DAILY_NOTE_DIRECTORY: Final = pathlib.PurePath("Daily Notes")
 
     async def append_to_daily_note(self, section_heading: str, content: str) -> None:
         """Append content to a section in today's daily note, creating it if needed.
@@ -639,16 +651,16 @@ class ObsidianService:
             content: Markdown content to append.
         """
         async with self.daily_note() as daily_note:
-            if daily_note.get_heading(section_heading, level=2) is None:
-                _ = daily_note.add_section(section_heading, content, level=2)
+            if daily_note.get_heading(section_heading, level=2) is None:  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue]
+                _ = daily_note.add_section(section_heading, content, level=2)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue, reportUnknownVariableType]
             else:
-                _ = daily_note.append_to_section(section_heading, content, level=2)
+                _ = daily_note.append_to_section(section_heading, content, level=2)  # pyright: ignore[reportUnknownMemberType, reportAttributeAccessIssue, reportUnknownVariableType]
 
     @asynccontextmanager
     async def daily_note(
         self,
         date: dt.date | None = None,
-    ) -> AsyncGenerator[MarkdownDocument]:
+    ) -> AsyncGenerator[NewMarkdownDocument]:
         """Open a daily note for editing, flushing on successful exit.
 
         Args:
@@ -658,11 +670,7 @@ class ObsidianService:
             Loaded markdown document for the requested daily note.
         """
         date = date or dt.datetime.now(tz=dt.UTC).date()
-        daily_note_path = (
-            SETTINGS.obsidian_vault_path
-            / self.DAILY_NOTE_DIRECTORY
-            / f"{date.isoformat()}.md"
-        )
+        daily_note_path = self.DAILY_NOTE_DIRECTORY / f"{date.isoformat()}.md"
 
-        async with MarkdownDocument(file_path=daily_note_path) as daily_note:
+        async with NewMarkdownDocument(vault_path=daily_note_path) as daily_note:  # pyright: ignore[reportCallIssue]
             yield daily_note

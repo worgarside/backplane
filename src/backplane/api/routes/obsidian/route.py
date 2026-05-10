@@ -1,10 +1,13 @@
+"""API routes for CRUD operations on Obsidian notes."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import PastDate
+from pydantic import PastDate  # noqa: TC002
 
-from backplane.services.obsidian import MarkdownDocument, ObsidianService
+from backplane.services.obsidian import ObsidianService
 from backplane.utils import today
+from backplane.utils.markdown import MarkdownDocument  # noqa: TC001
 
 router = APIRouter(prefix="/obsidian", tags=["obsidian"])
 

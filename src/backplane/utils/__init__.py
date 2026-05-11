@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from .helpers import today
+from .helpers import format_human_date, today
 
-__all__ = ["today"]
+__all__ = ["format_human_date", "today"]

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import pathlib
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -16,9 +15,11 @@ from markdown_it.token import Token
 from markdown_it.tree import SyntaxTreeNode
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, TypeAdapter, validate_call
 
+from backplane.utils import today
 from backplane.utils.markdown import MarkdownDocument as NewMarkdownDocument
 
 if TYPE_CHECKING:
+    import datetime as dt
     from collections.abc import AsyncGenerator, Sequence
 
 _MAX_MARKDOWN_HEADING_LEVEL: Final = 6
@@ -669,8 +670,9 @@ class ObsidianService:
         Yields:
             Loaded markdown document for the requested daily note.
         """
-        date = date or dt.datetime.now(tz=dt.UTC).date()
-        daily_note_path = self.DAILY_NOTE_DIRECTORY / f"{date.isoformat()}.md"
+        date = date or today()
 
-        async with NewMarkdownDocument(vault_path=daily_note_path) as daily_note:  # pyright: ignore[reportCallIssue]
+        async with NewMarkdownDocument(
+            vault_path=self.DAILY_NOTE_DIRECTORY / f"{date.isoformat()}.md",
+        ) as daily_note:  # pyright: ignore[reportCallIssue]
             yield daily_note

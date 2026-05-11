@@ -23,6 +23,6 @@ async def get_daily_note(date: PastDate | None = None) -> MarkdownDocument:
         The daily note content.
     """
     async with ObsidianService().daily_note(date=date or today()) as daily_note:
-        for s in daily_note:
+        for s in daily_note.iter_sections():
             print("#" * s.level + " " + s.heading)  # noqa: T201
         return daily_note

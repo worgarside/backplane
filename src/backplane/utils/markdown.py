@@ -5,7 +5,7 @@ from __future__ import annotations
 import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Self, override
+from typing import TYPE_CHECKING, Annotated, Self
 
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
@@ -156,16 +156,15 @@ class MarkdownSection(BaseModel):
         Field(ge=1, le=6, description="The heading level of the section."),
     ]
 
-    @override
-    def __iter__(self) -> Generator[Self]:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Iterate over the section and its nested sections.
+    def iter_sections(self) -> Generator[Self]:
+        """Yield this section followed by its nested sections in document order.
 
         Yields:
             The section and its nested sections.
         """
         yield self
         for section in self.sections:
-            yield from section
+            yield from section.iter_sections()
 
 
 class MarkdownDocument(BaseModel):
@@ -289,7 +288,11 @@ class MarkdownDocument(BaseModel):
 
         _ = await self._async_file_path.write_text(self._text, encoding="utf-8")
 
-    @override
-    def __iter__(self) -> Generator[MarkdownSection]:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def iter_sections(self) -> Generator[MarkdownSection]:
+        """Yield every section in the document in document order.
+
+        Yields:
+            Each top-level section followed by its nested sections.
+        """
         for section in self.body:
-            yield from section
+            yield from section.iter_sections()

@@ -150,13 +150,13 @@ class MarkdownSection(BaseModel):
 
     heading: str
     content: str | None = None
-    sections: list[Self] = Field(default_factory=list)
+    sections: list[MarkdownSection] = Field(default_factory=list)
     level: Annotated[
         int,
         Field(ge=1, le=6, description="The heading level of the section."),
     ]
 
-    def iter_sections(self) -> Generator[Self]:
+    def iter_sections(self) -> Generator[MarkdownSection]:
         """Yield this section followed by its nested sections in document order.
 
         Yields:
@@ -287,6 +287,43 @@ class MarkdownDocument(BaseModel):
             raise ValueError(msg)
 
         _ = await self._async_file_path.write_text(self._text, encoding="utf-8")
+
+    def get_section(self, heading_path: tuple[str, ...]) -> MarkdownSection:
+        """Return the section at the given heading path.
+
+        Args:
+            heading_path: List of heading text components to traverse.
+
+        Returns:
+            The section at the given path.
+
+        Raises:
+            ValueError: If the section is not found at the given path.
+        """
+        path_parts = list(heading_path)
+
+        section: MarkdownSection | None = None
+        prev_heading: str | None = None
+        sections = self.body
+
+        while path_parts:
+            heading = path_parts.pop(0)
+            section = next(
+                (s for s in sections if s.heading == heading),
+                None,
+            )
+            if section is None:
+                msg = f"Section with heading {heading!r} not found under {prev_heading!r}"
+                raise ValueError(msg)
+
+            sections = section.iter_sections()
+            prev_heading = heading
+
+        if section is None:
+            msg = f"Section not found at path {heading_path!r}"
+            raise ValueError(msg)
+
+        return section
 
     def iter_sections(self) -> Generator[MarkdownSection]:
         """Yield every section in the document in document order.

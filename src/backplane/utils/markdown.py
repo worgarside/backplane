@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import io
 import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Final, Self
+from typing import TYPE_CHECKING, Annotated, Self
 
 import mdformat
 from markdown_it import MarkdownIt
@@ -22,18 +23,24 @@ if TYPE_CHECKING:
     from markdown_it.token import Token
 
 
-type FrontmatterValue = list[str] | str | None
+# YAML 1.2 produces these scalar Python types under ``YAML(typ="rt")``. Order matters
+# for Pydantic union resolution: ``bool`` must precede ``int`` (since ``True`` is
+# also an ``int``) and ``datetime`` must precede ``date`` (since ``datetime``
+# subclasses ``date``). ruamel.yaml's tagged subclasses (``DoubleQuotedScalarString``,
+# ``ScalarBoolean``, ``TimeStamp``, ...) all inherit from these natives, so the
+# loaded values satisfy this union without coercion.
+type FrontmatterScalar = bool | int | float | str | dt.datetime | dt.date | None
+
+# Frontmatter values are arbitrary YAML scalars or nested containers
+type FrontmatterValue = (
+    FrontmatterScalar | list[FrontmatterValue] | dict[str, FrontmatterValue]
+)
 
 YAML_LOADER = YAML(typ="rt")
 YAML_LOADER.explicit_start = True
 YAML_LOADER.preserve_quotes = True
 YAML_LOADER.indent(mapping=2, sequence=4, offset=2)  # pyright: ignore[reportAny]
 YAML_LOADER.width = 4096
-
-# mdformat plugins enabled when normalising rendered markdown:
-# - "gfm": GitHub-flavored markdown extensions (tables, strikethrough, task lists)
-# - "frontmatter": preserves ``---``-delimited YAML frontmatter blocks verbatim
-_MDFORMAT_EXTENSIONS: Final = {"gfm", "frontmatter"}
 
 
 @cache
@@ -51,20 +58,14 @@ class _Heading:
     text: str
 
 
-def _parse_scalar(value: str) -> str:
-    """Parse a simple frontmatter scalar.
-
-    Returns:
-        The scalar value without surrounding quotes.
-    """
-    return value.strip().strip("\"'")
-
-
 def _parse_frontmatter(text: str) -> tuple[dict[str, FrontmatterValue], str]:
     """Split Obsidian-style frontmatter from the markdown body.
 
+    The YAML block is loaded through ``YAML_LOADER`` (round-trip mode) so types,
+    quote styles, key order, and comments are preserved for the eventual dump.
+
     Returns:
-        Parsed frontmatter and the remaining markdown body.
+        Parsed frontmatter as a ``CommentedMap`` and the remaining markdown body.
     """
     lines = text.splitlines()
     if not lines or lines[0] != "---":
@@ -75,72 +76,42 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, FrontmatterValue], str]:
     except ValueError:
         return {}, text
 
-    frontmatter: dict[str, FrontmatterValue] = {}
-    frontmatter_lines = lines[1:closing_line]
-    idx = 0
-    while idx < len(frontmatter_lines):
-        line = frontmatter_lines[idx]
-        idx += 1
-        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
-            continue
-
-        key, value = line.split(":", maxsplit=1)
-        key = key.strip()
-        value = value.strip()
-        if value:
-            frontmatter[key] = _parse_scalar(value)
-            continue
-
-        items: list[str] = []
-        while idx < len(frontmatter_lines):
-            item_line = frontmatter_lines[idx]
-            if item_line and not item_line.startswith(" "):
-                break
-            stripped_item = item_line.strip()
-            idx += 1
-            if stripped_item.startswith("- "):
-                items.append(_parse_scalar(stripped_item[2:]))
-        frontmatter[key] = items or None
-
-    return frontmatter, "\n".join(lines[closing_line + 1 :])
+    yaml_text = "\n".join(lines[1:closing_line])
+    loaded: dict[str, FrontmatterValue] = (
+        YAML_LOADER.load(yaml_text) or {}  # pyright: ignore[reportUnknownMemberType]
+    )
+    body_text = "\n".join(lines[closing_line + 1 :])
+    return loaded, body_text
 
 
-def _visible_inline_text(tokens: Sequence[Token] | None) -> str:
-    """Return visible text from parsed inline markdown tokens."""
-    if not tokens:
-        return ""
-
-    parts: list[str] = []
-    for token in tokens:
-        if token.type in {"text", "code_inline"}:
-            parts.append(token.content)
-        elif token.children:
-            parts.append(_visible_inline_text(token.children))
-    return "".join(parts)
-
-
-def _extract_headings(tokens: Sequence[Token]) -> list[_Heading]:
+def _extract_headings(
+    tokens: Sequence[Token],
+    lines: Sequence[str],
+) -> list[_Heading]:
     """Extract markdown headings from a token stream.
 
+    The heading text is sliced directly from the source line rather than walking
+    the parsed inline tokens, so inline formatting (``**bold**``, ``*italic*``,
+    ``[links](url)``, etc.) is preserved verbatim.
+
     Returns:
-        Headings in document order with visible text and zero-based source lines.
+        Headings in document order with raw text and zero-based source lines.
     """
     headings: list[_Heading] = []
-    for idx, token in enumerate(tokens):
+    for token in tokens:
         if token.type != "heading_open" or not token.tag.startswith("h"):
             continue
         if not token.map:
             continue
 
-        text = ""
-        if idx + 1 < len(tokens) and tokens[idx + 1].type == "inline":
-            text = _visible_inline_text(tokens[idx + 1].children).strip()
-
+        # Heading source lines are ``#... text``. Strip the leading marker run plus
+        # the single separator space; any trailing whitespace is also dropped.
+        raw = lines[token.map[0]].lstrip("#").lstrip(" \t").rstrip()
         headings.append(
             _Heading(
                 level=int(token.tag.removeprefix("h")),
                 line_no=token.map[0],
-                text=text,
+                text=raw,
             ),
         )
     return headings
@@ -246,7 +217,7 @@ class MarkdownDocument(BaseModel):
         self._frontmatter, body_text = _parse_frontmatter(text)
         lines = body_text.splitlines()
 
-        if not (headings := _extract_headings(_markdown_it().parse(body_text))):
+        if not (headings := _extract_headings(_markdown_it().parse(body_text), lines)):
             return self
 
         sections_by_heading: dict[_Heading, MarkdownSection] = {}
@@ -367,19 +338,31 @@ class MarkdownDocument(BaseModel):
     def render(self) -> str:
         """Render the document to markdown.
 
+        The body is normalised by ``mdformat`` (canonical spacing, list markers,
+        and table alignment). The frontmatter is rendered separately through
+        ``YAML_LOADER`` to preserve quoting styles, key order, types, and comments
+        that ``mdformat-frontmatter`` would otherwise flatten by re-parsing through
+        PyYAML.
+
         Returns:
-            The full markdown document including frontmatter (if any) and body,
-            normalised by ``mdformat`` (canonical spacing, list markers, and
-            table alignment).
+            The full markdown document including frontmatter (if any) and body.
         """
-        body = "\n\n".join(section.render() for section in self.body)
-        if self.frontmatter:
-            buffer = io.StringIO()
-            YAML_LOADER.dump(self.frontmatter, buffer)  # pyright: ignore[reportUnknownMemberType]
+        body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
+            "\n\n".join(section.render() for section in self.body),
+            extensions={"gfm"},  # GitHub-flavored markdown extensions
+        ).lstrip()
 
-            body = f"{buffer.getvalue()}---\n\n{body}"
+        if not self.frontmatter:
+            return body
 
-        return mdformat.text(  # pyright: ignore[reportUnknownMemberType]
-            body,
-            extensions=_MDFORMAT_EXTENSIONS,
-        )
+        # ruamel.yaml's ``YAML.dump`` writes to a stream and returns ``None``; per-call
+        # ``sort_keys``/``allow_unicode`` kwargs don't exist (round-trip mode preserves
+        # key order, and unicode is allowed by default on the instance). Dumping into
+        # an ``io.StringIO`` is the documented way to capture the output as a string.
+        buffer = io.StringIO()
+        YAML_LOADER.dump(self.frontmatter, buffer)  # pyright: ignore[reportUnknownMemberType]
+
+        # ``explicit_start = True`` emits the opening ``---``; the closing delimiter for
+        # Obsidian-style frontmatter is also ``---`` (not the YAML ``...`` document-end
+        # marker that ``explicit_end = True`` would produce), so it's added manually.
+        return f"{buffer.getvalue()}---\n{body}"

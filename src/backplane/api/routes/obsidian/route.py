@@ -84,4 +84,6 @@ async def update_daily_note(
         elif request.mode == "prepend":
             section.content = request.content + section.content
 
+        print(daily_note.render())  # noqa: T201
+
     return section

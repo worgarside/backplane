@@ -8,8 +8,12 @@ dependencies = [
     "fastapi>=0.136.1",
     "loguru>=0.7.3",
     "markdown-it-py>=4.2.0",
+    "mdformat>=1.0.0",
+    "mdformat-frontmatter>=2.0.10",
+    "mdformat-gfm>=1.0.0",
     "pydantic>=2.10",
     "pydantic-settings>=2.14.1",
+    "ruamel-yaml>=0.19.1",
     "uvicorn>=0.46.0",
     "uvloop>=0.22.1",
 ]

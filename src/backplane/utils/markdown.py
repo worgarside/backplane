@@ -2,24 +2,38 @@
 
 from __future__ import annotations
 
+import io
 import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated, Final, Self
 
+import mdformat
 from markdown_it import MarkdownIt
-from pydantic import BaseModel, Field, PrivateAttr, computed_field
+from pydantic import BaseModel, Field, computed_field
+from ruamel.yaml import YAML
 
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Sequence
+    from collections.abc import Generator, Iterable, Sequence
 
     import anyio
     from markdown_it.token import Token
 
 
 type FrontmatterValue = list[str] | str | None
+
+YAML_LOADER = YAML(typ="rt")
+YAML_LOADER.explicit_start = True
+YAML_LOADER.preserve_quotes = True
+YAML_LOADER.indent(mapping=2, sequence=4, offset=2)  # pyright: ignore[reportAny]
+YAML_LOADER.width = 4096
+
+# mdformat plugins enabled when normalising rendered markdown:
+# - "gfm": GitHub-flavored markdown extensions (tables, strikethrough, task lists)
+# - "frontmatter": preserves ``---``-delimited YAML frontmatter blocks verbatim
+_MDFORMAT_EXTENSIONS: Final = {"gfm", "frontmatter"}
 
 
 @cache
@@ -142,6 +156,7 @@ def _section_content(lines: list[str], start_line: int, end_line: int) -> str | 
 
     if not content_lines:
         return None
+
     return "\n".join(content_lines)
 
 
@@ -166,6 +181,21 @@ class MarkdownSection(BaseModel):
         for section in self.sections:
             yield from section.iter_sections()
 
+    def render(self) -> str:
+        """Render the section to markdown.
+
+        Returns:
+            A markdown source string for this section and its nested sections.
+            The output is valid markdown but not necessarily canonically formatted;
+            :meth:`MarkdownDocument.render` runs the final document through
+            ``mdformat`` to normalise spacing, table alignment, and so on.
+        """
+        parts: list[str] = [f"{'#' * self.level} {self.heading}"]
+        if self.content is not None and self.content.strip():
+            parts.append(self.content)
+        parts.extend(section.render() for section in self.sections)
+        return "\n\n".join(parts)
+
 
 class MarkdownDocument(BaseModel):
     """A markdown document split into frontmatter and heading sections."""
@@ -187,8 +217,6 @@ class MarkdownDocument(BaseModel):
             ),
         ),
     ] = True
-
-    _text: Annotated[str, PrivateAttr()]
 
     @computed_field
     @property
@@ -213,9 +241,9 @@ class MarkdownDocument(BaseModel):
         Returns:
             The loaded document instance.
         """
-        self._text = await self._async_file_path.read_text(encoding="utf-8")
+        text = await self._async_file_path.read_text(encoding="utf-8")
 
-        self._frontmatter, body_text = _parse_frontmatter(self._text)
+        self._frontmatter, body_text = _parse_frontmatter(text)
         lines = body_text.splitlines()
 
         if not (headings := _extract_headings(_markdown_it().parse(body_text))):
@@ -279,14 +307,16 @@ class MarkdownDocument(BaseModel):
         if exc_type is not None:
             return
 
+        rendered = self.render()
+
         if (
             self.validate_file_content_unchanged
-            and await self._async_file_path.read_text(encoding="utf-8") != self._text
+            and await self._async_file_path.read_text(encoding="utf-8") != rendered
         ):
             msg = "File content has changed since the document was loaded."
             raise ValueError(msg)
 
-        _ = await self._async_file_path.write_text(self._text, encoding="utf-8")
+        _ = await self._async_file_path.write_text(rendered, encoding="utf-8")
 
     def get_section(self, heading_path: tuple[str, ...]) -> MarkdownSection:
         """Return the section at the given heading path.
@@ -304,7 +334,7 @@ class MarkdownDocument(BaseModel):
 
         section: MarkdownSection | None = None
         prev_heading: str | None = None
-        sections = self.body
+        sections: Iterable[MarkdownSection] = self.body
 
         while path_parts:
             heading = path_parts.pop(0)
@@ -333,3 +363,23 @@ class MarkdownDocument(BaseModel):
         """
         for section in self.body:
             yield from section.iter_sections()
+
+    def render(self) -> str:
+        """Render the document to markdown.
+
+        Returns:
+            The full markdown document including frontmatter (if any) and body,
+            normalised by ``mdformat`` (canonical spacing, list markers, and
+            table alignment).
+        """
+        body = "\n\n".join(section.render() for section in self.body)
+        if self.frontmatter:
+            buffer = io.StringIO()
+            YAML_LOADER.dump(self.frontmatter, buffer)  # pyright: ignore[reportUnknownMemberType]
+
+            body = f"{buffer.getvalue()}---\n\n{body}"
+
+        return mdformat.text(  # pyright: ignore[reportUnknownMemberType]
+            body,
+            extensions=_MDFORMAT_EXTENSIONS,
+        )

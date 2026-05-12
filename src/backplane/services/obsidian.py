@@ -24,11 +24,14 @@ class ObsidianService:
     async def daily_note(
         self,
         date: dt.date | None = None,
+        *,
+        read_only: bool = True,
     ) -> AsyncGenerator[MarkdownDocument]:
         """Open a daily note for editing, flushing on successful exit.
 
         Args:
             date: Date of the daily note. Defaults to today's UTC date.
+            read_only: Prevent modifications to the daily note.
 
         Yields:
             Loaded markdown document for the requested daily note.
@@ -37,5 +40,6 @@ class ObsidianService:
 
         async with MarkdownDocument(
             vault_path=self.DAILY_NOTE_DIRECTORY / f"{date.isoformat()}.md",
+            validate_file_content_unchanged=read_only,
         ) as daily_note:  # pyright: ignore[reportCallIssue]
             yield daily_note

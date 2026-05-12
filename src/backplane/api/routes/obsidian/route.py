@@ -29,10 +29,7 @@ async def get_daily_note(date: DailyNoteDate = None) -> MarkdownDocument:
     Returns:
         The daily note content.
     """
-    async with ObsidianService().daily_note(date=date) as daily_note:
-        for s in daily_note.iter_sections():
-            print("#" * s.level + " " + s.heading)  # noqa: T201
-
+    async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note
 
 
@@ -74,15 +71,15 @@ async def update_daily_note(
     ):
         request.heading_path = (daily_note_top_level_heading, *request.heading_path)
 
-    async with ObsidianService().daily_note(date=date) as daily_note:
+    async with ObsidianService().daily_note(date=date, read_only=False) as daily_note:
         section = daily_note.get_section(request.heading_path)
 
         if not section.content or request.mode == "replace":
             section.content = request.content
         elif request.mode == "append":
-            section.content += request.content
+            section.content += "\n" + request.content
         elif request.mode == "prepend":
-            section.content = request.content + section.content
+            section.content = request.content + "\n" + section.content
 
         print(daily_note.render())  # noqa: T201
 

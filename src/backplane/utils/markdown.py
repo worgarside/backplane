@@ -6,7 +6,7 @@ import datetime as dt
 import io
 import pathlib
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, Self
 
 import mdformat
@@ -56,6 +56,35 @@ class _Heading:
     level: int
     line_no: int
     text: str
+
+
+@lru_cache(maxsize=1024)
+def _heading_plain_text(heading: str) -> str:
+    """Return the plain-text form of a heading for format-insensitive lookups.
+
+    Inline markdown markup (``**bold**``, ``_italic_``, ``` `code` ```,
+    ``~~strike~~``, ``[link](url)``, ...) is stripped so that
+    :meth:`MarkdownDocument.get_section` can match a section regardless of how its
+    heading is decorated in the source. The cached result means repeated lookups
+    over the same headings are O(1) after the first parse.
+
+    Args:
+        heading: The raw heading text as stored on a :class:`MarkdownSection`.
+
+    Returns:
+        The visible text of the heading with surrounding whitespace stripped.
+    """
+    parts: list[str] = []
+
+    def _collect(tokens: Iterable[Token]) -> None:
+        for token in tokens:
+            if token.type in {"text", "code_inline"}:
+                parts.append(token.content)
+            elif token.children:
+                _collect(token.children)
+
+    _collect(_markdown_it().parseInline(heading))
+    return "".join(parts).strip()
 
 
 def _parse_frontmatter(text: str) -> tuple[dict[str, FrontmatterValue], str]:
@@ -292,6 +321,10 @@ class MarkdownDocument(BaseModel):
     def get_section(self, heading_path: tuple[str, ...]) -> MarkdownSection:
         """Return the section at the given heading path.
 
+        Heading comparison is case-insensitive and format-insensitive: inline markdown markup on each
+        side (``**bold**``, ``_italic_``, ``` `code` ``, links, ...) is stripped and case-folded
+        before matching.
+
         Args:
             heading_path: List of heading text components to traverse.
 
@@ -309,8 +342,13 @@ class MarkdownDocument(BaseModel):
 
         while path_parts:
             heading = path_parts.pop(0)
+            target = _heading_plain_text(heading).casefold()
             section = next(
-                (s for s in sections if s.heading == heading),
+                (
+                    s
+                    for s in sections
+                    if _heading_plain_text(s.heading).casefold() == target
+                ),
                 None,
             )
             if section is None:

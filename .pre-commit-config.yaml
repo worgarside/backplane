@@ -84,6 +84,7 @@ repos:
         additional_dependencies:
           - fastmcp==3.3.1
           - markdown-it-py==4.2.0
+          - mdformat==1.0.0
           - pydantic-settings==2.14.1
           - uvloop==0.22.1
 

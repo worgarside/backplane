@@ -43,8 +43,22 @@ repos:
           - --no-sort-keys
           - --autofix
           - --indent
-          - "2"
+          - '2'
       - id: trailing-whitespace
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.2.3
+    hooks:
+      - id: yamlfmt
+        args:
+          - --mapping
+          - '2'
+          - --sequence
+          - '4'
+          - --offset
+          - '2'
+          - --width
+          - '4096'
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
@@ -67,6 +81,13 @@ repos:
     rev: 1.39.3
     hooks:
       - id: basedpyright
+        additional_dependencies:
+          - fastmcp==3.3.1
+          - markdown-it-py==4.2.0
+          - mdformat==1.0.0
+          - pydantic-settings==2.14.1
+          - ruamel-yaml==0.19.1
+          - uvloop==0.22.1
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0

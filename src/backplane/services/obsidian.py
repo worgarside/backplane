@@ -115,6 +115,6 @@ class ObsidianService:
             vault_path=vault_path,
             create_if_not_exists=create_if_not_exists,
             initial_content=initial_content,
-            validate_file_content_unchanged=read_only,
+            read_only=read_only,
         ) as daily_note:
             yield daily_note

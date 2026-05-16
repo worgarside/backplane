@@ -227,6 +227,11 @@ class MarkdownDocument(BaseModel):
         Field(description="Whether to create the file if it does not exist."),
     ] = False
 
+    read_only: Annotated[
+        bool,
+        Field(description="When true, skip all validation and writes on exit."),
+    ] = False
+
     validate_file_content_unchanged: Annotated[
         bool,
         Field(
@@ -337,7 +342,7 @@ class MarkdownDocument(BaseModel):
         Raises:
             ValueError: If the file content has changed since the document was loaded and validation is enabled.
         """
-        if exc_type is not None:
+        if exc_type is not None or self.read_only:
             return
 
         rendered = self.render()

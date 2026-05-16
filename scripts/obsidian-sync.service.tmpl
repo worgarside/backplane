@@ -1,0 +1,17 @@
+[Unit]
+Description=Obsidian Headless Sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%%SERVICE_USER%%
+ExecStart=/usr/bin/ob sync --continuous
+WorkingDirectory=%%VAULT_DIR%%
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:%%INSTALL_DIR%%/obsidian-sync.log
+StandardError=append:%%INSTALL_DIR%%/obsidian-sync.log
+
+[Install]
+WantedBy=multi-user.target

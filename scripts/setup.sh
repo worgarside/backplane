@@ -33,9 +33,21 @@ sed \
     "${INSTALL_DIR}/scripts/obsidian-sync.service" \
     >"/etc/systemd/system/obsidian-sync.service"
 
+# Install logrotate configs
+sed \
+    -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
+    "${INSTALL_DIR}/scripts/backplane.logrotate" \
+    >"/etc/logrotate.d/${SERVICE_NAME}"
+sed \
+    -e "s|%%VAULT_DIR%%|${VAULT_DIR}|g" \
+    "${INSTALL_DIR}/scripts/obsidian-sync.logrotate" \
+    >"/etc/logrotate.d/obsidian-sync"
+
 systemctl daemon-reload
-systemctl enable --now "${SERVICE_NAME}"
-systemctl enable --now obsidian-sync
+systemctl enable "${SERVICE_NAME}"
+systemctl restart "${SERVICE_NAME}"
+systemctl enable obsidian-sync
+systemctl restart obsidian-sync
 
 echo "Services running:"
 echo "  systemctl status ${SERVICE_NAME}"

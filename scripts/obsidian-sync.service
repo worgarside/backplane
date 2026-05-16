@@ -10,8 +10,8 @@ ExecStart=/usr/bin/ob sync --continuous
 WorkingDirectory=%%VAULT_DIR%%
 Restart=on-failure
 RestartSec=10
-StandardOutput=append:%%VAULT_DIR%%/obsidian-sync.log
-StandardError=append:%%VAULT_DIR%%/obsidian-sync.log
+StandardOutput=append:%%INSTALL_DIR%%/obsidian-sync.log
+StandardError=append:%%INSTALL_DIR%%/obsidian-sync.log
 
 [Install]
 WantedBy=multi-user.target

@@ -27,6 +27,7 @@ sed \
 
 # Install obsidian-sync unit (substitute placeholders)
 sed \
+    -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
     -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
     -e "s|%%VAULT_DIR%%|${VAULT_DIR}|g" \
     -e "s|/usr/bin/ob|${OB_BIN}|g" \
@@ -39,7 +40,7 @@ sed \
     "${INSTALL_DIR}/scripts/backplane.logrotate" \
     >"/etc/logrotate.d/${SERVICE_NAME}"
 sed \
-    -e "s|%%VAULT_DIR%%|${VAULT_DIR}|g" \
+    -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
     "${INSTALL_DIR}/scripts/obsidian-sync.logrotate" \
     >"/etc/logrotate.d/obsidian-sync"
 

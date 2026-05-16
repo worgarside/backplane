@@ -1,4 +1,4 @@
-%%VAULT_DIR%%/obsidian-sync.log {
+%%INSTALL_DIR%%/obsidian-sync.log {
     daily
     rotate 7
     compress

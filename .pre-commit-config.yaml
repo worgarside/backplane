@@ -86,6 +86,7 @@ repos:
           - markdown-it-py==4.2.0
           - mdformat==1.0.0
           - pydantic-settings==2.14.1
+          - ruamel-yaml==0.19.1
           - uvloop==0.22.1
 
   - repo: https://github.com/pre-commit/pygrep-hooks

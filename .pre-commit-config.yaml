@@ -82,7 +82,7 @@ repos:
     hooks:
       - id: basedpyright
         additional_dependencies:
-          - fastapi==0.136.1
+          - fastmcp==3.3.1
           - markdown-it-py==4.2.0
           - pydantic-settings==2.14.1
           - uvloop==0.22.1

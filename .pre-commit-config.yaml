@@ -83,6 +83,7 @@ repos:
       - id: basedpyright
         additional_dependencies:
           - fastmcp==3.3.1
+          - loguru==0.7.3
           - markdown-it-py==4.2.0
           - mdformat==1.0.0
           - pydantic-settings==2.14.1

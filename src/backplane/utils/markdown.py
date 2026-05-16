@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import difflib
 import io
 import pathlib
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, Self
 
 import mdformat
+from loguru import logger
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from ruamel.yaml import YAML
@@ -202,6 +204,7 @@ class MarkdownDocument(BaseModel):
 
     _frontmatter: dict[str, FrontmatterValue] = PrivateAttr(default_factory=dict)
     _body: list[MarkdownSection] = PrivateAttr(default_factory=list)
+    _loaded_rendered: Annotated[str, PrivateAttr()] = ""
 
     vault_path: Annotated[
         pathlib.PurePath,
@@ -222,6 +225,11 @@ class MarkdownDocument(BaseModel):
     create_if_not_exists: Annotated[
         bool,
         Field(description="Whether to create the file if it does not exist."),
+    ] = False
+
+    read_only: Annotated[
+        bool,
+        Field(description="When true, skip all validation and writes on exit."),
     ] = False
 
     validate_file_content_unchanged: Annotated[
@@ -275,6 +283,7 @@ class MarkdownDocument(BaseModel):
 
         if not (headings := _extract_headings(_markdown_it().parse(body_text), lines)):
             self._body = []
+            self._loaded_rendered = self.render()
             return self
 
         sections_by_heading: dict[_Heading, MarkdownSection] = {}
@@ -314,6 +323,7 @@ class MarkdownDocument(BaseModel):
 
         self._body = roots
 
+        self._loaded_rendered = self.render()
         return self
 
     async def __aexit__(
@@ -332,15 +342,21 @@ class MarkdownDocument(BaseModel):
         Raises:
             ValueError: If the file content has changed since the document was loaded and validation is enabled.
         """
-        if exc_type is not None:
+        if exc_type is not None or self.read_only:
             return
 
         rendered = self.render()
 
-        if (
-            self.validate_file_content_unchanged
-            and await self._async_file_path.read_text(encoding="utf-8") != rendered
-        ):
+        if self.validate_file_content_unchanged and rendered != self._loaded_rendered:
+            diff = "".join(
+                difflib.unified_diff(
+                    self._loaded_rendered.splitlines(keepends=True),
+                    rendered.splitlines(keepends=True),
+                    fromfile="loaded",
+                    tofile="rendered",
+                ),
+            )
+            logger.debug("Document mutation detected:\n{}", diff)
             msg = "File content has changed since the document was loaded."
             raise ValueError(msg)
 

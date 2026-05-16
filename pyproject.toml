@@ -81,6 +81,9 @@ docstring-code-format = true
 docstring-code-line-length = 100
 
 
+[tool.codespell]
+ignore-words-list = "tmpl"
+
 [tool.semantic_release]
 tag_format = "{version}"
 version_toml = ["pyproject.toml:project.version"]

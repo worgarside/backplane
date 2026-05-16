@@ -22,7 +22,7 @@ cd "$INSTALL_DIR"
 sed \
     -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
     -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
-    "${INSTALL_DIR}/scripts/backplane.service" \
+    "${INSTALL_DIR}/scripts/backplane.service.tmpl" \
     >"/etc/systemd/system/${SERVICE_NAME}.service"
 
 # Install obsidian-sync unit (substitute placeholders)
@@ -31,17 +31,17 @@ sed \
     -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
     -e "s|%%VAULT_DIR%%|${VAULT_DIR}|g" \
     -e "s|/usr/bin/ob|${OB_BIN}|g" \
-    "${INSTALL_DIR}/scripts/obsidian-sync.service" \
-    >"/etc/systemd/system/obsidian-sync.service"
+    "${INSTALL_DIR}/scripts/obsidian-sync.service.tmpl" \
+    >"/etc/systemd/system/obsidian-sync.service.tmpl"
 
 # Install logrotate configs
 sed \
     -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
-    "${INSTALL_DIR}/scripts/backplane.logrotate" \
+    "${INSTALL_DIR}/scripts/backplane.logrotate.tmpl" \
     >"/etc/logrotate.d/${SERVICE_NAME}"
 sed \
     -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
-    "${INSTALL_DIR}/scripts/obsidian-sync.logrotate" \
+    "${INSTALL_DIR}/scripts/obsidian-sync.logrotate.tmpl" \
     >"/etc/logrotate.d/obsidian-sync"
 
 systemctl daemon-reload

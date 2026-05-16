@@ -10,13 +10,13 @@ OB_BIN="$(command -v ob || echo /usr/local/bin/ob)"
 # Install uv if not present
 if ! command -v uv &>/dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.cargo/bin:$PATH"
 fi
+UV_BIN="$(command -v uv 2>/dev/null || echo "$HOME/.local/bin/uv")"
 
 # Install Python 3.14 + sync dependencies
 cd "$INSTALL_DIR"
-uv python install 3.14
-uv sync --frozen --no-dev
+"$UV_BIN" python install 3.14
+"$UV_BIN" sync --frozen --no-dev
 
 # Install systemd unit (substitute placeholders)
 sed \

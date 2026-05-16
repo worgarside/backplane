@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Annotated, Self
 
 import mdformat
 from markdown_it import MarkdownIt
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from ruamel.yaml import YAML
 
 from backplane.utils.settings import SETTINGS
@@ -200,13 +200,29 @@ class MarkdownSection(BaseModel):
 class MarkdownDocument(BaseModel):
     """A markdown document split into frontmatter and heading sections."""
 
-    _frontmatter: dict[str, FrontmatterValue]
-    _body: list[MarkdownSection]
+    _frontmatter: dict[str, FrontmatterValue] = PrivateAttr(default_factory=dict)
+    _body: list[MarkdownSection] = PrivateAttr(default_factory=list)
 
     vault_path: Annotated[
         pathlib.PurePath,
         Field(description="The path within the vault to the markdown file."),
     ]
+
+    initial_content: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "When ``create_if_not_exists`` is true and the file is missing, this "
+                "string is written as the new file contents instead of an empty file."
+            ),
+        ),
+    ] = None
+
+    create_if_not_exists: Annotated[
+        bool,
+        Field(description="Whether to create the file if it does not exist."),
+    ] = False
 
     validate_file_content_unchanged: Annotated[
         bool,
@@ -240,13 +256,25 @@ class MarkdownDocument(BaseModel):
 
         Returns:
             The loaded document instance.
+
+        Raises:
+            FileNotFoundError: If the file does not exist and creation is disabled.
         """
-        text = await self._async_file_path.read_text(encoding="utf-8")
+        try:
+            text = await self._async_file_path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            if not self.create_if_not_exists:
+                raise
+
+            text = self.initial_content if self.initial_content is not None else ""
+            _ = await self._async_file_path.parent.mkdir(parents=True, exist_ok=True)
+            _ = await self._async_file_path.write_text(text, encoding="utf-8")
 
         self._frontmatter, body_text = _parse_frontmatter(text)
         lines = body_text.splitlines()
 
         if not (headings := _extract_headings(_markdown_it().parse(body_text), lines)):
+            self._body = []
             return self
 
         sections_by_heading: dict[_Heading, MarkdownSection] = {}

@@ -71,7 +71,11 @@ async def update_daily_note(
     ):
         request.heading_path = (daily_note_top_level_heading, *request.heading_path)
 
-    async with ObsidianService().daily_note(date=date, read_only=False) as daily_note:
+    async with ObsidianService().daily_note(
+        date=date,
+        create_if_not_exists=True,
+        read_only=False,
+    ) as daily_note:
         section = daily_note.get_section(request.heading_path)
 
         if not section.content or request.mode == "replace":

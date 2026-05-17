@@ -23,5 +23,6 @@ mcp-logs:
 checkout branch="main":
     git fetch origin
     git checkout {{ branch }}
+    git pull
     uv sync
     just mcp-start

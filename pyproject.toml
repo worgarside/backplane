@@ -111,3 +111,8 @@ allowed_tags = [
 minor_tags = ["feat"]
 patch_tags = ["deps", "fix", "hotfix", "perf", "build"]
 parse_squash_commits = false
+build_command = """
+    python -m pip install uv
+    uv lock --upgrade-package "$PACKAGE_NAME"
+    git add uv.lock
+  """

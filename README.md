@@ -2,6 +2,12 @@
 
 AI-facing gateway for local services and smart home orchestration
 
+[![License: MIT](https://img.shields.io/github/license/worgarside/backplane)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/worgarside/backplane)](https://github.com/worgarside/backplane/releases)
+![Python](https://img.shields.io/badge/python-3.14%2B-blue)
+[![Pre-Commit Hooks](https://img.shields.io/github/actions/workflow/status/worgarside/backplane/pre-commit-hooks.yml?branch=main&label=pre-commit)](https://github.com/worgarside/backplane/actions/workflows/pre-commit-hooks.yml)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/worgarside/backplane?utm_source=oss&utm_medium=github&utm_campaign=worgarside%2Fbackplane&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)](https://coderabbit.ai)
+
 ## Installation
 
 Backplane is designed to run as a persistent service on a Linux host (tested on Debian 13 in a Proxmox LXC).

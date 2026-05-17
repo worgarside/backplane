@@ -82,6 +82,7 @@ repos:
     hooks:
       - id: basedpyright
         additional_dependencies:
+          - aiohttp==3.13.5
           - fastmcp==3.3.1
           - loguru==0.7.3
           - markdown-it-py==4.2.0

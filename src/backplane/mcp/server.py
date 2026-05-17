@@ -15,8 +15,15 @@ from backplane.services.home_assistant import notify_startup, reload_mcp_integra
 
 
 @asynccontextmanager
-async def _lifespan(_mcp: FastMCP[None]) -> AsyncGenerator[None]:
-    await notify_startup()
+async def _lifespan(mcp: FastMCP[None]) -> AsyncGenerator[None]:
+    raw_tools = await mcp.list_tools()
+    raw_resources = await mcp.list_resources()
+    raw_templates = await mcp.list_resource_templates()
+
+    tools = [t.name for t in raw_tools]
+    resources = [r.name for r in raw_resources] + [t.name for t in raw_templates]
+
+    await notify_startup(tools, resources)
     await reload_mcp_integration()
     yield
 

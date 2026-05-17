@@ -64,17 +64,30 @@ async def reload_mcp_integration() -> None:
     )
 
 
-async def notify_startup() -> None:
+async def notify_startup(tools: list[str], resources: list[str]) -> None:
     """Create a persistent notification in Home Assistant with the running version.
 
     No-ops silently if Home Assistant URL or token are not configured.
+
+    Args:
+        tools: Names of registered MCP tools.
+        resources: Display names of registered MCP resources and resource templates.
     """
+    tool_lines = "\n".join(f"- `{t}`" for t in sorted(tools))
+    resource_lines = "\n".join(f"- {r}" for r in sorted(resources))
+
+    message = (
+        f"MCP server started — v{__version__}\n\n"
+        f"**Tools**\n{tool_lines}\n\n"
+        f"**Resources**\n{resource_lines}"
+    )
+
     await _call_ha_service(
         "persistent_notification",
         "create",
         {
             "title": "Backplane",
-            "message": f"MCP server started — v{__version__}",
+            "message": message,
             "notification_id": "backplane_startup",
         },
     )

@@ -386,44 +386,71 @@ class MarkdownDocument(BaseModel):
 
         _ = await self._async_file_path.write_text(rendered, encoding="utf-8")
 
-    def get_section(self, heading_path: tuple[str, ...]) -> MarkdownSection:
-        """Return the section at the given heading path.
+    def get_section(
+        self,
+        heading_path: tuple[str, ...],
+        *,
+        create_if_not_exists: bool = False,
+    ) -> MarkdownSection:
+        """Return the section at the given heading path, optionally creating it.
 
         Heading comparison is case-insensitive and format-insensitive: inline markdown markup on each
         side (``**bold**``, ``_italic_``, ``` `code` ``, links, ...) is stripped and case-folded
         before matching.
 
         Args:
-            heading_path: List of heading text components to traverse.
+            heading_path: Sequence of heading text components to traverse.
+            create_if_not_exists: When ``True``, create any missing sections (and their \
+                ancestors) rather than raising ``ValueError``.
 
         Returns:
             The section at the given path.
 
         Raises:
-            ValueError: If the section is not found at the given path.
+            ValueError: If the section is not found and ``create_if_not_exists`` is ``False``.
         """
         path_parts = list(heading_path)
 
         section: MarkdownSection | None = None
         prev_heading: str | None = None
-        sections: Iterable[MarkdownSection] = self.body
+        container: list[MarkdownSection] = self.body
 
         while path_parts:
             heading = path_parts.pop(0)
             target = _heading_plain_text(heading).casefold()
-            section = next(
+            found = next(
                 (
                     s
-                    for s in sections
+                    for s in container
                     if _heading_plain_text(s.heading).casefold() == target
                 ),
                 None,
             )
-            if section is None:
-                msg = f"Section with heading {heading!r} not found under {prev_heading!r}"
-                raise ValueError(msg)
+            if found is None:
+                if not create_if_not_exists:
+                    siblings = [s.heading for s in container]
+                    siblings_repr = (
+                        ", ".join(repr(s) for s in siblings) if siblings else "(none)"
+                    )
+                    parent_repr = (
+                        f"section {prev_heading!r}"
+                        if prev_heading
+                        else "the document root"
+                    )
+                    msg = (
+                        f"Section {heading!r} not found under {parent_repr}. "
+                        f"Available sections: {siblings_repr}."
+                    )
+                    raise ValueError(msg)
 
-            sections = section.iter_sections()
+                found = MarkdownSection(
+                    heading=heading,
+                    level=(section.level if section is not None else 0) + 1,
+                )
+                container.append(found)
+
+            section = found
+            container = section.sections
             prev_heading = heading
 
         if section is None:

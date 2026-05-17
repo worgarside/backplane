@@ -12,5 +12,4 @@ _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8000
 
 if __name__ == "__main__":
-    uvloop.install()  # pyright: ignore[reportAny]
-    mcp.run(transport="sse", host=_HOST, port=_PORT)
+    uvloop.run(mcp.run_async(transport="sse", host=_HOST, port=_PORT))

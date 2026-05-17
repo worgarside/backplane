@@ -91,7 +91,7 @@ class ObsidianService:
         """Open a daily note for editing, flushing on successful exit.
 
         Args:
-            date: Date of the daily note. Defaults to today's UTC date.
+            date: Date of the daily note. Defaults to today's local date.
             create_if_not_exists: If true, create the note when missing using the vault's
                 daily note template from ``.obsidian/daily-notes.json`` when configured.
             read_only: When true, require file content unchanged on exit (no accidental writes).

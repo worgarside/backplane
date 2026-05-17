@@ -17,7 +17,7 @@ mcp-stop:
 
 # Tail MCP server logs
 mcp-logs:
-    tail -f /tmp/backplane-mcp.log
+    tail -f /tmp/backplane-mcp.log -n 100
 
 # Checkout a branch, sync deps, and restart the MCP server
 checkout branch="main":

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import datetime as dt  # noqa: TC003  # used at runtime by FastMCP schema introspection
+import datetime as dt  # used at runtime by FastMCP schema introspection
 import json
 import pathlib
 import re
@@ -103,12 +103,9 @@ _TEMPLATE_TREE = _load_template_heading_tree()
 
 _ADD_DESCRIPTION = (
     "Add content to a section of the user's Obsidian daily note. Use this when "
-    "the user wants to capture something into their daily note — tasks, ideas, "
-    "reminders, journal entries, or anything they want to record for the day. "
-    "The note is created from the vault's daily note template if it doesn't yet "
-    "exist.\n\n"
+    "the user wants to capture something into their daily note.\n\n"
     "The user's daily-note template defines this section structure (prefer these "
-    "names verbatim — same casing, same spelling):\n"
+    "names verbatim):\n"
     f"{_TEMPLATE_TREE}\n\n"
     "If the user explicitly asks for a section not listed above, set "
     "`create_section_if_not_exists=true` — this creates the section and is the "
@@ -255,11 +252,11 @@ async def add_to_daily_note(
         assert section is not None  # narrowed by heading_path min_length=1  # noqa: S101
 
         if not section.content or mode == "replace":
-            section.content = content
+            section.replace_content(content)
         elif mode == "append":
-            section.content += "\n" + content
+            section.append_content(content)
         elif mode == "prepend":
-            section.content = content + "\n" + section.content
+            section.prepend_content(content)
 
     return section.render()
 
@@ -287,6 +284,49 @@ async def get_daily_note(
     """
     async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note.render()
+
+
+@mcp.tool(
+    description=(
+        """Record a new idea in the Obsidian idea inbox.
+
+Use this when the user mentions:
+- an idea
+- something they could build
+- something worth investigating
+- a possible automation/improvement
+- a future project
+
+Preserve the user's original wording as closely as possible."""
+    ),
+)
+async def record_idea(
+    *,
+    idea: Annotated[str, Field(description="The idea to record.")],
+) -> str:
+    """Record a new idea in the Obsidian idea inbox.
+
+    Args:
+        idea: The idea to record.
+
+    Returns:
+        A confirmation message.
+    """
+    now = dt.datetime.now(dt.UTC)
+
+    async with ObsidianService().idea_inbox() as idea_inbox:
+        section = idea_inbox.get_section((
+            now.strftime("## %Y-%m-%d"),
+            now.strftime("### %H:%M"),
+        ))
+
+        section.append_content(idea)
+
+    return "Idea recorded successfully."
+
+
+# ------------------------------------------------------------
+# Resources
 
 
 @mcp.resource(

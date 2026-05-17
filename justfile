@@ -20,7 +20,7 @@ mcp-logs:
     tail -f /tmp/backplane-mcp.log
 
 # Checkout a branch, sync deps, and restart the MCP server
-checkout branch:
+checkout branch="main":
     git fetch origin
     git checkout {{ branch }}
     uv sync

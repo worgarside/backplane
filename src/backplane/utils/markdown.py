@@ -173,6 +173,30 @@ class MarkdownSection(BaseModel):
         Field(ge=1, le=6, description="The heading level of the section."),
     ]
 
+    def append_content(self, content: str) -> None:
+        """Append content to this section.
+
+        Args:
+            content: The content to append.
+        """
+        self.content = (self.content or "") + "\n" + content
+
+    def prepend_content(self, content: str) -> None:
+        """Prepend content to this section.
+
+        Args:
+            content: The content to prepend.
+        """
+        self.content = content + "\n" + (self.content or "")
+
+    def replace_content(self, content: str) -> None:
+        """Replace this section's content.
+
+        Args:
+            content: The replacement content.
+        """
+        self.content = content
+
     def iter_sections(self) -> Generator[MarkdownSection]:
         """Yield this section followed by its nested sections in document order.
 

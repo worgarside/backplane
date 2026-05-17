@@ -3,6 +3,9 @@ name: Pre-Commit Hooks
 
 on:
   merge_group:
+  push:
+    branches:
+      - main
   pull_request:
     types:
       - opened

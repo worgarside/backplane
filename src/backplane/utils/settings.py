@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Annotated
 
 import anyio
-from pydantic import BeforeValidator
+import yarl
+from pydantic import BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -15,7 +16,35 @@ class Settings(BaseSettings):
     obsidian_vault_path: Annotated[
         anyio.Path,
         BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
+        Field(description="Absolute path to the Obsidian vault directory."),
     ]
+
+    home_assistant_url: Annotated[
+        yarl.URL | None,
+        Field(
+            default=None,
+            description="Base URL of the Home Assistant instance, e.g. http://homeassistant.local:8123.",
+        ),
+    ]
+    home_assistant_token: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Long-lived access token for the Home Assistant REST API.",
+        ),
+    ]
+    home_assistant_mcp_entry_id: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Config entry ID of the Backplane MCP integration in Home Assistant.",
+        ),
+    ]
+
+    @field_validator("home_assistant_url", mode="before")
+    @classmethod
+    def _parse_ha_url(cls, v: str | None) -> yarl.URL | None:
+        return yarl.URL(v.rstrip("/")) if v is not None else None
 
 
 SETTINGS = Settings()  # pyright: ignore[reportCallIssue]

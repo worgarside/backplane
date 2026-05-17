@@ -12,6 +12,7 @@ description = "AI-facing gateway for local services and smart home orchestration
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "aiohttp>=3.11",
     "fastmcp>=3.3.1",
     "loguru>=0.7.3",
     "markdown-it-py>=4.2.0",
@@ -82,7 +83,7 @@ docstring-code-line-length = 100
 
 
 [tool.codespell]
-ignore-words-list = "tmpl"
+ignore-words-list = "tmpl,homeassistant"
 
 [tool.semantic_release]
 tag_format = "{version}"

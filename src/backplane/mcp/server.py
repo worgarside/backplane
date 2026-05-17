@@ -2,9 +2,24 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
 from fastmcp import FastMCP
 
 from backplane import __version__
+from backplane.services.home_assistant import notify_startup, reload_mcp_integration
+
+
+@asynccontextmanager
+async def _lifespan(_mcp: FastMCP[None]) -> AsyncGenerator[None]:
+    await notify_startup()
+    await reload_mcp_integration()
+    yield
+
 
 mcp: FastMCP[None] = FastMCP(
     "Backplane",
@@ -15,4 +30,5 @@ mcp: FastMCP[None] = FastMCP(
         "outputs concise — a short confirmation is usually enough."
     ),
     version=__version__,
+    lifespan=_lifespan,
 )

@@ -316,8 +316,8 @@ async def record_idea(
 
     async with ObsidianService().idea_inbox() as idea_inbox:
         section = idea_inbox.get_section((
-            now.strftime("## %Y-%m-%d"),
-            now.strftime("### %H:%M"),
+            now.strftime("# %Y-%m-%d"),
+            now.strftime("## %H:%M"),
         ))
 
         section.append_content(idea)

@@ -3,6 +3,8 @@ name: Auto-Create PR
 
 on:
   push:
+    branches-ignore:
+      - main
   workflow_dispatch:
 
 jobs:

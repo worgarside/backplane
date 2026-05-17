@@ -64,3 +64,31 @@ jobs:
           config_file: pyproject.toml
           verbosity: 2
           force: ${{ inputs.force-deployment }}
+
+  deploy:
+    name: Deploy
+    needs: release
+    if: needs.release.outputs.released == 'true' || inputs.publish-tag != ''
+    environment: production-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Set up SSH key and known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ vars.BACKPLANE_TAILSCALE_HOSTNAME }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            "${{ vars.DEPLOY_SSH_USER }}@${{ vars.BACKPLANE_TAILSCALE_HOSTNAME }}" \
+            "cd ${{ vars.BACKPLANE_INSTALL_DIR }} && just deploy ${{ needs.release.outputs.tag || inputs.publish-tag }}"

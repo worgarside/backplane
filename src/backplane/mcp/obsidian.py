@@ -8,6 +8,7 @@ import pathlib
 import re
 from typing import Annotated, Literal, cast
 
+from loguru import logger
 from pydantic import Field, PastDate
 
 from backplane.services.obsidian import ObsidianService
@@ -174,6 +175,13 @@ async def add_to_daily_note(
         ValueError: If the section is missing and ``create_section_if_not_exists`` is false.
     """
     date = date or today()
+    logger.info(
+        "add_to_daily_note: date={} heading={} mode={} create={}",
+        date,
+        heading_path,
+        mode,
+        create_section_if_not_exists,
+    )
 
     if heading_path[0] != (daily_note_top_level_heading := format_human_date(date)):
         heading_path = (daily_note_top_level_heading, *heading_path)
@@ -223,6 +231,7 @@ async def get_daily_note(
     Returns:
         The daily note, rendered as markdown.
     """
+    logger.info("get_daily_note: date={}", date)
     async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note.render()
 
@@ -254,6 +263,7 @@ async def record_idea(
     Returns:
         A confirmation message.
     """
+    logger.info("record_idea")
     now = dt.datetime.now(tz=SETTINGS.local_timezone)
     heading_path = (now.strftime("%Y-%m-%d"), now.strftime("%H:%M"))
 

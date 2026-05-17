@@ -19,6 +19,14 @@ mcp-stop:
 mcp-logs:
     tail -f /tmp/backplane-mcp.log -n 100
 
+# Checkout a specific tag, sync deps, and restart via systemd — called by CI
+deploy tag:
+    git fetch --tags origin
+    git checkout {{ tag }}
+    uv sync --frozen --no-dev
+    systemctl restart backplane
+    systemctl is-active --quiet backplane
+
 # Checkout a branch, sync deps, and restart the MCP server
 checkout branch="main":
     git fetch origin

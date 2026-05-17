@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v0.2.1 (2026-05-17)
+
+### Continuous Integration
+
+- Add build command for package updates ([#14](https://github.com/worgarside/backplane/pull/14),
+  [`d54f4a7`](https://github.com/worgarside/backplane/commit/d54f4a7733b711ebe45d3c8a06e7137ea41494ce))
+
+- Change deploy env ([#13](https://github.com/worgarside/backplane/pull/13),
+  [`b0e3df8`](https://github.com/worgarside/backplane/commit/b0e3df81a3266b462652df65286bd3a49ba22bec))
+
+
 ## v0.2.0 (2026-05-17)
 
 ### Bug Fixes

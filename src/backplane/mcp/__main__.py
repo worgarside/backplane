@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+import uvloop
 from loguru import logger
 
 from backplane import __version__
@@ -14,4 +15,4 @@ _PORT: Final = 8000
 
 if __name__ == "__main__":
     logger.info("Starting Backplane MCP server v{} on {}:{}", __version__, _HOST, _PORT)
-    mcp.run(transport="sse", host=_HOST, port=_PORT)
+    uvloop.run(mcp.run_async(transport="sse", host=_HOST, port=_PORT))

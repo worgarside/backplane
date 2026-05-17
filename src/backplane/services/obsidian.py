@@ -46,6 +46,7 @@ class ObsidianService:
 
     DAILY_NOTE_DIRECTORY: Final = pathlib.PurePath("Daily Notes")
     INBOX_DIRECTORY: Final = pathlib.PurePath("Inbox")
+    PROJECTS_ACTIVE_DIRECTORY: Final = pathlib.PurePath("Projects/Active")
 
     @staticmethod
     async def _daily_note_template_source() -> str | None:
@@ -132,3 +133,64 @@ class ObsidianService:
             read_only=False,
         ) as idea_inbox:
             yield idea_inbox
+
+    @asynccontextmanager
+    async def project_inbox(self) -> AsyncGenerator[MarkdownDocument]:
+        """Open the project capture audit log for editing.
+
+        Yields:
+            Loaded markdown document for the project inbox.
+        """
+        async with MarkdownDocument(
+            vault_path=self.INBOX_DIRECTORY / "Projects.md",
+            create_if_not_exists=True,
+            read_only=False,
+        ) as project_inbox:
+            yield project_inbox
+
+    async def _unique_project_slug(self, base: str) -> str:
+        """Resolve ``base`` to a slug that doesn't collide with an existing folder.
+
+        Appends ``-2``, ``-3``, ... until an unused folder name is found.
+
+        Args:
+            base: Desired slug.
+
+        Returns:
+            The first available slug starting from ``base``.
+        """
+        parent = SETTINGS.obsidian_vault_path / self.PROJECTS_ACTIVE_DIRECTORY
+        candidate = base
+        suffix = 2
+        while await (parent / candidate).exists():
+            candidate = f"{base}-{suffix}"
+            suffix += 1
+        return candidate
+
+    async def create_project(
+        self,
+        *,
+        slug_base: str,
+        project_content: str,
+        board_content: str,
+    ) -> tuple[str, pathlib.PurePath]:
+        """Create a new project folder with ``Project.md`` and ``Board.md``.
+
+        Resolves ``slug_base`` to an unused folder name (appending a numeric
+        suffix on collision), creates the folder, and writes both notes.
+
+        Args:
+            slug_base: Desired folder slug; suffixed to avoid overwriting an existing project.
+            project_content: Markdown body to write as ``Project.md``.
+            board_content: Markdown body to write as ``Board.md``.
+
+        Returns:
+            Tuple of ``(resolved_slug, project_folder_vault_path)``.
+        """
+        slug = await self._unique_project_slug(slug_base)
+        folder_vault_path = self.PROJECTS_ACTIVE_DIRECTORY / slug
+        folder = SETTINGS.obsidian_vault_path / folder_vault_path
+        await folder.mkdir(parents=True, exist_ok=False)
+        _ = await (folder / "Project.md").write_text(project_content, encoding="utf-8")
+        _ = await (folder / "Board.md").write_text(board_content, encoding="utf-8")
+        return slug, folder_vault_path

@@ -148,6 +148,32 @@ def _extract_headings(
     return headings
 
 
+def _render_text(text: str) -> str:
+    """Normalize a raw markdown string through the mdformat pipeline.
+
+    Parses frontmatter separately (to preserve ruamel.yaml formatting) then
+    runs the body through ``mdformat``. Used to produce a canonical form of the
+    on-disk content so that two snapshots of the same logical document compare
+    equal regardless of trivial whitespace differences.
+
+    Args:
+        text: Raw markdown source (may include YAML frontmatter).
+
+    Returns:
+        The normalized markdown string.
+    """
+    fm, body_text = _parse_frontmatter(text)
+    body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
+        body_text,
+        extensions={"gfm"},
+    ).lstrip()
+    if not fm:
+        return body
+    buffer = io.StringIO()
+    YAML_LOADER.dump(fm, buffer)  # pyright: ignore[reportUnknownMemberType]
+    return f"{buffer.getvalue()}---\n{body}"
+
+
 def _section_content(lines: list[str], start_line: int, end_line: int) -> str | None:
     """Return trimmed markdown body content for a heading span."""
     content_lines = lines[start_line:end_line]
@@ -172,6 +198,30 @@ class MarkdownSection(BaseModel):
         int,
         Field(ge=1, le=6, description="The heading level of the section."),
     ]
+
+    def append_content(self, content: str) -> None:
+        """Append content to this section.
+
+        Args:
+            content: The content to append.
+        """
+        self.content = (self.content or "") + "\n" + content
+
+    def prepend_content(self, content: str) -> None:
+        """Prepend content to this section.
+
+        Args:
+            content: The content to prepend.
+        """
+        self.content = content + "\n" + (self.content or "")
+
+    def replace_content(self, content: str) -> None:
+        """Replace this section's content.
+
+        Args:
+            content: The replacement content.
+        """
+        self.content = content
 
     def iter_sections(self) -> Generator[MarkdownSection]:
         """Yield this section followed by its nested sections in document order.
@@ -232,12 +282,12 @@ class MarkdownDocument(BaseModel):
         Field(description="When true, skip all validation and writes on exit."),
     ] = False
 
-    validate_file_content_unchanged: Annotated[
+    detect_external_modification: Annotated[
         bool,
         Field(
             description=(
-                "Whether to validate that the file content has not changed since the document was "
-                "loaded before writing modifications to the file."
+                "When true, re-read the file before writing and raise if it was modified "
+                "externally since it was loaded (optimistic concurrency guard)."
             ),
         ),
     ] = True
@@ -278,12 +328,12 @@ class MarkdownDocument(BaseModel):
             _ = await self._async_file_path.parent.mkdir(parents=True, exist_ok=True)
             _ = await self._async_file_path.write_text(text, encoding="utf-8")
 
+        self._loaded_rendered = _render_text(text)
         self._frontmatter, body_text = _parse_frontmatter(text)
         lines = body_text.splitlines()
 
         if not (headings := _extract_headings(_markdown_it().parse(body_text), lines)):
             self._body = []
-            self._loaded_rendered = self.render()
             return self
 
         sections_by_heading: dict[_Heading, MarkdownSection] = {}
@@ -322,8 +372,6 @@ class MarkdownDocument(BaseModel):
                 section.content = ""
 
         self._body = roots
-
-        self._loaded_rendered = self.render()
         return self
 
     async def __aexit__(
@@ -340,66 +388,95 @@ class MarkdownDocument(BaseModel):
             _traceback: Exception traceback from the context manager, if any.
 
         Raises:
-            ValueError: If the file content has changed since the document was loaded and validation is enabled.
+            ValueError: If the file was modified externally since it was loaded and
+                ``detect_external_modification`` is enabled.
         """
         if exc_type is not None or self.read_only:
             return
 
-        rendered = self.render()
+        if self.detect_external_modification:
+            current_text = await self._async_file_path.read_text(encoding="utf-8")
+            current_normalized = _render_text(current_text)
+            if current_normalized != self._loaded_rendered:
+                diff = "".join(
+                    difflib.unified_diff(
+                        self._loaded_rendered.splitlines(keepends=True),
+                        current_normalized.splitlines(keepends=True),
+                        fromfile="on_disk_at_load",
+                        tofile="on_disk_now",
+                    ),
+                )
+                logger.debug("External modification detected:\n{}", diff)
+                msg = "File was modified externally since it was loaded."
+                raise ValueError(msg)
 
-        if self.validate_file_content_unchanged and rendered != self._loaded_rendered:
-            diff = "".join(
-                difflib.unified_diff(
-                    self._loaded_rendered.splitlines(keepends=True),
-                    rendered.splitlines(keepends=True),
-                    fromfile="loaded",
-                    tofile="rendered",
-                ),
-            )
-            logger.debug("Document mutation detected:\n{}", diff)
-            msg = "File content has changed since the document was loaded."
-            raise ValueError(msg)
+        _ = await self._async_file_path.write_text(self.render(), encoding="utf-8")
 
-        _ = await self._async_file_path.write_text(rendered, encoding="utf-8")
-
-    def get_section(self, heading_path: tuple[str, ...]) -> MarkdownSection:
-        """Return the section at the given heading path.
+    def get_section(
+        self,
+        heading_path: tuple[str, ...],
+        *,
+        create_if_not_exists: bool = False,
+    ) -> MarkdownSection:
+        """Return the section at the given heading path, optionally creating it.
 
         Heading comparison is case-insensitive and format-insensitive: inline markdown markup on each
         side (``**bold**``, ``_italic_``, ``` `code` ``, links, ...) is stripped and case-folded
         before matching.
 
         Args:
-            heading_path: List of heading text components to traverse.
+            heading_path: Sequence of heading text components to traverse.
+            create_if_not_exists: When ``True``, create any missing sections (and their \
+                ancestors) rather than raising ``ValueError``.
 
         Returns:
             The section at the given path.
 
         Raises:
-            ValueError: If the section is not found at the given path.
+            ValueError: If the section is not found and ``create_if_not_exists`` is ``False``.
         """
         path_parts = list(heading_path)
 
         section: MarkdownSection | None = None
         prev_heading: str | None = None
-        sections: Iterable[MarkdownSection] = self.body
+        container: list[MarkdownSection] = self.body
 
         while path_parts:
             heading = path_parts.pop(0)
             target = _heading_plain_text(heading).casefold()
-            section = next(
+            found = next(
                 (
                     s
-                    for s in sections
+                    for s in container
                     if _heading_plain_text(s.heading).casefold() == target
                 ),
                 None,
             )
-            if section is None:
-                msg = f"Section with heading {heading!r} not found under {prev_heading!r}"
-                raise ValueError(msg)
+            if found is None:
+                if not create_if_not_exists:
+                    siblings = [s.heading for s in container]
+                    siblings_repr = (
+                        ", ".join(repr(s) for s in siblings) if siblings else "(none)"
+                    )
+                    parent_repr = (
+                        f"section {prev_heading!r}"
+                        if prev_heading
+                        else "the document root"
+                    )
+                    msg = (
+                        f"Section {heading!r} not found under {parent_repr}. "
+                        f"Available sections: {siblings_repr}."
+                    )
+                    raise ValueError(msg)
 
-            sections = section.iter_sections()
+                found = MarkdownSection(
+                    heading=heading,
+                    level=(section.level if section is not None else 0) + 1,
+                )
+                container.append(found)
+
+            section = found
+            container = section.sections
             prev_heading = heading
 
         if section is None:

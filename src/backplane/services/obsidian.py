@@ -45,6 +45,7 @@ class ObsidianService:
     """Service for interacting with the Obsidian vault."""
 
     DAILY_NOTE_DIRECTORY: Final = pathlib.PurePath("Daily Notes")
+    INBOX_DIRECTORY: Final = pathlib.PurePath("Inbox")
 
     @staticmethod
     async def _daily_note_template_source() -> str | None:
@@ -118,3 +119,16 @@ class ObsidianService:
             read_only=read_only,
         ) as daily_note:
             yield daily_note
+
+    @asynccontextmanager
+    async def idea_inbox(self) -> AsyncGenerator[MarkdownDocument]:
+        """Open the idea inbox for editing, flushing on successful exit.
+
+        Yields:
+            Loaded markdown document for the idea inbox.
+        """
+        async with MarkdownDocument(
+            vault_path=self.INBOX_DIRECTORY / "Ideas.md",
+            read_only=False,
+        ) as idea_inbox:
+            yield idea_inbox

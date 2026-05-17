@@ -2,23 +2,19 @@
 
 from __future__ import annotations
 
-import datetime as dt  # noqa: TC003  # used at runtime by FastMCP schema introspection
+import datetime as dt  # used at runtime by FastMCP schema introspection
 import json
 import pathlib
 import re
-from typing import TYPE_CHECKING, Annotated, Literal, cast
+from typing import Annotated, Literal, cast
 
 from pydantic import Field, PastDate
 
 from backplane.services.obsidian import ObsidianService
 from backplane.utils import format_human_date, today
-from backplane.utils.markdown import MarkdownSection
 from backplane.utils.settings import SETTINGS
 
 from .server import mcp
-
-if TYPE_CHECKING:
-    from backplane.utils.markdown import MarkdownDocument
 
 _HEADING_LINE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _CODE_FENCE = re.compile(r"^\s*```")
@@ -103,12 +99,9 @@ _TEMPLATE_TREE = _load_template_heading_tree()
 
 _ADD_DESCRIPTION = (
     "Add content to a section of the user's Obsidian daily note. Use this when "
-    "the user wants to capture something into their daily note — tasks, ideas, "
-    "reminders, journal entries, or anything they want to record for the day. "
-    "The note is created from the vault's daily note template if it doesn't yet "
-    "exist.\n\n"
+    "the user wants to capture something into their daily note.\n\n"
     "The user's daily-note template defines this section structure (prefer these "
-    "names verbatim — same casing, same spelling):\n"
+    "names verbatim):\n"
     f"{_TEMPLATE_TREE}\n\n"
     "If the user explicitly asks for a section not listed above, set "
     "`create_section_if_not_exists=true` — this creates the section and is the "
@@ -118,46 +111,6 @@ _ADD_DESCRIPTION = (
     "default), the call returns the actual sections in today's note so you can "
     "either match an existing one or retry with the flag set to true."
 )
-
-
-def _find_deepest_existing(
-    doc: MarkdownDocument,
-    heading_path: tuple[str, ...],
-) -> tuple[MarkdownSection | None, tuple[str, ...]]:
-    """Walk ``heading_path`` and return (deepest_existing, missing_tail).
-
-    Args:
-        doc: The loaded daily-note document.
-        heading_path: The full heading path to resolve.
-
-    Returns:
-        Tuple of (the deepest section that exists, the remaining headings that
-        need creating). If no prefix matches, the first element is ``None``.
-    """
-    for length in range(len(heading_path), 0, -1):
-        try:
-            section = doc.get_section(heading_path[:length])
-        except ValueError:
-            continue
-        return section, heading_path[length:]
-    return None, heading_path
-
-
-def _siblings_of(
-    doc: MarkdownDocument,
-    parent: MarkdownSection | None,
-) -> list[str]:
-    """Return the headings of the children of ``parent`` (or document roots).
-
-    Args:
-        doc: The loaded daily-note document.
-        parent: The parent section, or ``None`` for the document root.
-
-    Returns:
-        Heading text for each child in document order.
-    """
-    container = doc.body if parent is None else parent.sections
-    return [s.heading for s in container]
 
 
 @mcp.tool(description=_ADD_DESCRIPTION)
@@ -230,36 +183,21 @@ async def add_to_daily_note(
         create_if_not_exists=True,
         read_only=False,
     ) as daily_note:
-        parent, missing = _find_deepest_existing(daily_note, heading_path)
-
-        if missing and not create_section_if_not_exists:
-            parent_repr = parent.heading if parent is not None else "(document root)"
-            siblings = _siblings_of(daily_note, parent)
-            siblings_repr = ", ".join(siblings) if siblings else "(none)"
-            msg = (
-                f"Section {missing[0]!r} not found under {parent_repr!r}. "
-                f"Existing sections there: {siblings_repr}. "
-                f"Retry with an existing section, or set "
-                f"`create_section_if_not_exists=true` to create it."
+        try:
+            section = daily_note.get_section(
+                heading_path,
+                create_if_not_exists=create_section_if_not_exists,
             )
-            raise ValueError(msg)
-
-        section = parent
-        for heading in missing:
-            new_level = (section.level if section is not None else 0) + 1
-            new_section = MarkdownSection(heading=heading, level=new_level)
-            container = daily_note.body if section is None else section.sections
-            container.append(new_section)
-            section = new_section
-
-        assert section is not None  # narrowed by heading_path min_length=1  # noqa: S101
+        except ValueError as exc:
+            msg = f"{exc} Retry with an existing section, or set `create_section_if_not_exists=true` to create it."
+            raise ValueError(msg) from exc
 
         if not section.content or mode == "replace":
-            section.content = content
+            section.replace_content(content)
         elif mode == "append":
-            section.content += "\n" + content
+            section.append_content(content)
         elif mode == "prepend":
-            section.content = content + "\n" + section.content
+            section.prepend_content(content)
 
     return section.render()
 
@@ -287,6 +225,47 @@ async def get_daily_note(
     """
     async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note.render()
+
+
+@mcp.tool(
+    description=(
+        """Record a new idea in the Obsidian idea inbox.
+
+Use this when the user mentions:
+- an idea
+- something they could build
+- something worth investigating
+- a possible automation/improvement
+- a future project
+
+You should convert the idea from a spoken phrase to a written sentence, but the user's original wording
+should be preserved as closely as possible."""
+    ),
+)
+async def record_idea(
+    *,
+    idea: Annotated[str, Field(description="The idea to record.")],
+) -> str:
+    """Record a new idea in the Obsidian idea inbox.
+
+    Args:
+        idea: The idea to record.
+
+    Returns:
+        A confirmation message.
+    """
+    now = dt.datetime.now(dt.UTC)
+    heading_path = (now.strftime("%Y-%m-%d"), now.strftime("%H:%M"))
+
+    async with ObsidianService().idea_inbox() as idea_inbox:
+        section = idea_inbox.get_section(heading_path, create_if_not_exists=True)
+        section.append_content(idea)
+
+    return "Idea recorded successfully."
+
+
+# ------------------------------------------------------------
+# Resources
 
 
 @mcp.resource(

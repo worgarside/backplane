@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v0.3.0 (2026-05-17)
+
+### Chores
+
+- Add logging for server and obsidian functions
+  ([#16](https://github.com/worgarside/backplane/pull/16),
+  [`25c0cb8`](https://github.com/worgarside/backplane/commit/25c0cb8f3792f44fa6cd37b972bcf481cf3ba5e3))
+
+### Features
+
+- Integrate Home Assistant for MCP auto-reload
+  ([#15](https://github.com/worgarside/backplane/pull/15),
+  [`b6f6206`](https://github.com/worgarside/backplane/commit/b6f62061fca260748ad9fb6d7d4dc137a5d7a683))
+
+### Performance Improvements
+
+- Enhance event loop with uvloop ([#17](https://github.com/worgarside/backplane/pull/17),
+  [`d33f88f`](https://github.com/worgarside/backplane/commit/d33f88fb22bd9efd6268245f2202e3b065a08243))
+
+
 ## v0.2.1 (2026-05-17)
 
 ### Continuous Integration

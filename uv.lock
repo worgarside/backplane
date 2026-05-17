@@ -149,7 +149,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = ">=3.11" },
+    { name = "aiohttp", specifier = ">=3.13.5" },
     { name = "fastmcp", specifier = ">=3.3.1" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "markdown-it-py", specifier = ">=4.2.0" },

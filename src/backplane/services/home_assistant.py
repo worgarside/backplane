@@ -31,21 +31,24 @@ async def _call_ha_service(
     url = SETTINGS.home_assistant_url / f"api/services/{domain}/{service}"
     headers = {"Authorization": f"Bearer {SETTINGS.home_assistant_token}"}
 
-    async with (
-        aiohttp.ClientSession(timeout=_TIMEOUT) as session,
-        session.post(url, json=data, headers=headers) as response,
-    ):
-        if response.ok:
-            logger.info("{}/{} → {}", domain, service, response.status)
-        else:
-            body = await response.text()
-            logger.error(
-                "{}/{} returned {} — {}",
-                domain,
-                service,
-                response.status,
-                body,
-            )
+    try:
+        async with (
+            aiohttp.ClientSession(timeout=_TIMEOUT) as session,
+            session.post(url, json=data, headers=headers) as response,
+        ):
+            if response.ok:
+                logger.info("{}/{} → {}", domain, service, response.status)
+            else:
+                body = await response.text()
+                logger.error(
+                    "{}/{} returned {} — {}",
+                    domain,
+                    service,
+                    response.status,
+                    body,
+                )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("{}/{} failed (url={}) — {}", domain, service, url, exc)
 
 
 async def reload_mcp_integration() -> None:

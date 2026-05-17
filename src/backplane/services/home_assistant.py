@@ -80,7 +80,7 @@ async def notify_startup(tools: list[str], resources: list[str]) -> None:
     resource_lines = "\n".join(f"- {r}" for r in sorted(resources))
 
     message = (
-        f"MCP server v{__version__} started\n\n"
+        f"MCP server started\n\n"
         f"**Tools**\n{tool_lines}\n\n"
         f"**Resources**\n{resource_lines}"
     )
@@ -89,7 +89,7 @@ async def notify_startup(tools: list[str], resources: list[str]) -> None:
         "persistent_notification",
         "create",
         {
-            "title": "Backplane",
+            "title": f"Backplane v{__version__}",
             "message": message,
             "notification_id": "backplane_startup",
         },

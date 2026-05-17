@@ -153,7 +153,7 @@ async def add_to_daily_note(
     ] = False,
     date: Annotated[
         PastDate | None,
-        Field(description="The date of the daily note. Defaults to today's UTC date."),
+        Field(description="The date of the daily note. Defaults to today's local date."),
     ] = None,
 ) -> str:
     """Add content to a section of the user's Obsidian daily note.
@@ -165,7 +165,7 @@ async def add_to_daily_note(
         create_section_if_not_exists: Set true to create the section (and any missing
             ancestors) if it doesn't exist; false returns an error listing available
             sections.
-        date: The date of the daily note. Defaults to today's UTC date.
+        date: The date of the daily note. Defaults to today's local date.
 
     Returns:
         The updated section, rendered as markdown.
@@ -212,13 +212,13 @@ async def add_to_daily_note(
 async def get_daily_note(
     date: Annotated[
         PastDate | None,
-        Field(description="The date of the daily note. Defaults to today's UTC date."),
+        Field(description="The date of the daily note. Defaults to today's local date."),
     ] = None,
 ) -> str:
     """Read the user's Obsidian daily note.
 
     Args:
-        date: The date of the daily note. Defaults to today's UTC date.
+        date: The date of the daily note. Defaults to today's local date.
 
     Returns:
         The daily note, rendered as markdown.
@@ -254,7 +254,7 @@ async def record_idea(
     Returns:
         A confirmation message.
     """
-    now = dt.datetime.now(dt.UTC)
+    now = dt.datetime.now(tz=dt.UTC).astimezone()
     heading_path = (now.strftime("%Y-%m-%d"), now.strftime("%H:%M"))
 
     async with ObsidianService().idea_inbox() as idea_inbox:

@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 
 def today() -> dt.date:
-    """Return the current date in the UTC timezone."""
-    return dt.datetime.now(tz=dt.UTC).date()
+    """Return the current date in the local timezone."""
+    return dt.datetime.now(tz=dt.UTC).astimezone().date()
 
 
 _ORDINAL_SUFFIXES: Final = {1: "st", 2: "nd", 3: "rd"}  # codespell:ignore nd

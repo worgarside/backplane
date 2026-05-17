@@ -79,17 +79,13 @@ async def notify_startup(tools: list[str], resources: list[str]) -> None:
     tool_lines = "\n".join(f"- `{t}`" for t in sorted(tools))
     resource_lines = "\n".join(f"- {r}" for r in sorted(resources))
 
-    message = (
-        f"MCP server started\n\n"
-        f"**Tools**\n{tool_lines}\n\n"
-        f"**Resources**\n{resource_lines}"
-    )
+    message = f"**Tools**\n{tool_lines}\n\n**Resources**\n{resource_lines}"
 
     await _call_ha_service(
         "persistent_notification",
         "create",
         {
-            "title": f"Backplane v{__version__}",
+            "title": f"Backplane v{__version__} started",
             "message": message,
             "notification_id": "backplane_startup",
         },

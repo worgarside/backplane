@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import zoneinfo
 from typing import Annotated
 
 import anyio
@@ -16,6 +17,10 @@ class Settings(BaseSettings):
         anyio.Path,
         BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
     ]
+    local_timezone: Annotated[
+        zoneinfo.ZoneInfo,
+        BeforeValidator(zoneinfo.ZoneInfo),
+    ] = zoneinfo.ZoneInfo("Europe/London")
 
 
 SETTINGS = Settings()  # pyright: ignore[reportCallIssue]

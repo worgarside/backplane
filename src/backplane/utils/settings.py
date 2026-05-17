@@ -11,6 +11,16 @@ from pydantic import BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
 
 
+def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
+    if isinstance(v, zoneinfo.ZoneInfo):
+        return v
+    try:
+        return zoneinfo.ZoneInfo(str(v))
+    except zoneinfo.ZoneInfoNotFoundError as exc:
+        msg = f"invalid timezone {v!r}: provide a valid IANA timezone name, e.g. 'Europe/London'"
+        raise ValueError(msg) from exc
+
+
 class Settings(BaseSettings):
     """Settings for the Backplane application."""
 
@@ -21,7 +31,13 @@ class Settings(BaseSettings):
     ]
     local_timezone: Annotated[
         zoneinfo.ZoneInfo,
-        BeforeValidator(zoneinfo.ZoneInfo),
+        BeforeValidator(_parse_timezone),
+        Field(
+            description=(
+                "IANA timezone used for date/timestamp calculations, e.g. 'Europe/London'. "
+                "Overridable via the LOCAL_TIMEZONE environment variable."
+            ),
+        ),
     ] = zoneinfo.ZoneInfo("Europe/London")
 
     home_assistant_url: Annotated[

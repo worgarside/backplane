@@ -69,7 +69,7 @@ jobs:
     name: Deploy
     needs: release
     if: needs.release.outputs.released == 'true' || inputs.publish-tag != ''
-    environment: production
+    environment: production-deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

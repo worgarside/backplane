@@ -264,7 +264,7 @@ async def record_idea(
         A confirmation message.
     """
     logger.info("record_idea")
-    now = dt.datetime.now(tz=dt.UTC).astimezone()
+    now = dt.datetime.now(tz=SETTINGS.local_timezone)
     heading_path = (now.strftime("%Y-%m-%d"), now.strftime("%H:%M"))
 
     async with ObsidianService().idea_inbox() as idea_inbox:

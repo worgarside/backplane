@@ -2,12 +2,23 @@
 
 from __future__ import annotations
 
+import zoneinfo
 from typing import Annotated
 
 import anyio
 import yarl
 from pydantic import BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
+
+
+def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
+    if isinstance(v, zoneinfo.ZoneInfo):
+        return v
+    try:
+        return zoneinfo.ZoneInfo(str(v))
+    except zoneinfo.ZoneInfoNotFoundError as exc:
+        msg = f"invalid timezone {v!r}: provide a valid IANA timezone name, e.g. 'Europe/London'"
+        raise ValueError(msg) from exc
 
 
 class Settings(BaseSettings):
@@ -18,6 +29,16 @@ class Settings(BaseSettings):
         BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
         Field(description="Absolute path to the Obsidian vault directory."),
     ]
+    local_timezone: Annotated[
+        zoneinfo.ZoneInfo,
+        BeforeValidator(_parse_timezone),
+        Field(
+            description=(
+                "IANA timezone used for date/timestamp calculations, e.g. 'Europe/London'. "
+                "Overridable via the LOCAL_TIMEZONE environment variable."
+            ),
+        ),
+    ] = zoneinfo.ZoneInfo("Europe/London")
 
     home_assistant_url: Annotated[
         yarl.URL | None,

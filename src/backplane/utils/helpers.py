@@ -5,13 +5,15 @@ from __future__ import annotations
 import datetime as dt
 from typing import TYPE_CHECKING, Final
 
+from backplane.utils.settings import SETTINGS
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
 def today() -> dt.date:
-    """Return the current date in the local timezone."""
-    return dt.datetime.now(tz=dt.UTC).astimezone().date()
+    """Return the current date in the configured local timezone."""
+    return dt.datetime.now(tz=SETTINGS.local_timezone).date()
 
 
 _ORDINAL_SUFFIXES: Final = {1: "st", 2: "nd", 3: "rd"}  # codespell:ignore nd

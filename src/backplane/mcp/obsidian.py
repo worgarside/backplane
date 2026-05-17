@@ -238,7 +238,8 @@ Use this when the user mentions:
 - a possible automation/improvement
 - a future project
 
-Preserve the user's original wording as closely as possible."""
+You should convert the idea from a spoken phrase to a written sentence, but the user's original wording
+should be preserved as closely as possible."""
     ),
 )
 async def record_idea(

@@ -1,0 +1,115 @@
+---
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  merge_group:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: 3.14
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv dependencies
+        env:
+          UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+        run: uv sync --locked --all-groups
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: uv run pytest --cov=src --cov-report=xml
+
+      - name: Check Coverage
+        continue-on-error: true
+        id: coverage-check
+        run: |
+          uv run diff-cover \
+            coverage.xml \
+            --fail-under=90 \
+            --compare-branch=origin/${{ github.base_ref || 'main' }} \
+            --markdown-report .coverage-report.md
+
+      - name: Upload Coverage Report
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.WORGARSIDE_DEV_TOKEN }}
+        continue-on-error: true
+        # yamllint disable rule:line-length
+        run: |
+          cat .coverage-report.md >> "${GITHUB_STEP_SUMMARY}"
+
+          if ! grep -zqE "No lines with coverage information in this diff" .coverage-report.md; then
+
+            echo "There is coverage to report." >> "${GITHUB_STEP_SUMMARY}"
+            echo "Commenting on PR." >> "${GITHUB_STEP_SUMMARY}"
+
+            set +e  # Disable exit on error
+            output=$(gh pr comment ${{ github.event.pull_request.number }} --edit-last --body-file .coverage-report.md 2>&1)
+            status=$?
+            set -e  # Re-enable exit on error
+
+            echo -e "Output: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
+            echo -e "Status: \`${status}\`" >> "${GITHUB_STEP_SUMMARY}"
+
+            if [ $status -ne 0 ]; then
+                if [[ "$output" == *"no comments found for current user"* ]]; then
+                    # Re-run without --edit-last
+
+                    echo -e "No comments found for current user, re-running without \`--edit-last\`" >> "${GITHUB_STEP_SUMMARY}"
+
+                    gh pr comment ${{ github.event.pull_request.number }} --body-file .coverage-report.md
+                else
+                    echo -e "Error: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
+                    exit $status
+                fi
+            else
+                # Worked fine, output to summary
+                echo "${output}" >> "${GITHUB_STEP_SUMMARY}"
+            fi
+
+          else
+            echo "No coverage to report." >> "${GITHUB_STEP_SUMMARY}"
+
+            gh pr comment ${{ github.event.pull_request.number }} --edit-last --body "No coverage to report! 🙅‍♂️" || :
+          fi
+        # yamllint enable rule:line-length
+
+      - name: Fail for Test Failures or Low Coverage
+        if: steps.test.outcome == 'failure' || steps.coverage-check.outcome == 'failure'
+        run: exit 1

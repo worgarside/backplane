@@ -21,9 +21,24 @@ dependencies = [
     "pydantic>=2.10",
     "pydantic-settings>=2.14.1",
     "ruamel-yaml>=0.19.1",
+    "pydantic-ai>=1.0",
+    "rapidfuzz>=3.0",
     "uvicorn>=0.46.0",
     "uvloop>=0.22.1",
 ]
+
+[dependency-groups]
+dev = [
+    "diff-cover>=10.2.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.14",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
 
 
 # Tool Configs
@@ -59,6 +74,9 @@ max-args = 15
 max-branches = 15
 max-public-methods = 150
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108"]
+
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 
@@ -83,7 +101,7 @@ docstring-code-line-length = 100
 
 
 [tool.codespell]
-ignore-words-list = "tmpl,homeassistant"
+ignore-words-list = "tmpl,homeassistant,nd"
 
 [tool.semantic_release]
 tag_format = "{version}"

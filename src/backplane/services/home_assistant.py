@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import aiohttp
 from loguru import logger
 
@@ -67,6 +69,35 @@ async def reload_mcp_integration() -> None:
     )
 
 
+async def _startup_title() -> str:
+    """Return a notification title reflecting whether HEAD is a tagged release or a branch."""
+    tag_proc = await asyncio.create_subprocess_exec(
+        "git",
+        "describe",
+        "--exact-match",
+        "HEAD",
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    _ = await tag_proc.wait()
+
+    if tag_proc.returncode == 0:
+        return f"Backplane v{__version__} started"
+
+    branch_proc = await asyncio.create_subprocess_exec(
+        "git",
+        "rev-parse",
+        "--abbrev-ref",
+        "HEAD",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+    )
+    stdout, _ = await branch_proc.communicate()
+    branch = stdout.decode().strip() or "unknown"
+
+    return f"Backplane started on branch `{branch}`"
+
+
 async def notify_startup(tools: list[str], resources: list[str]) -> None:
     """Create a persistent notification in Home Assistant with the running version.
 
@@ -85,7 +116,7 @@ async def notify_startup(tools: list[str], resources: list[str]) -> None:
         "persistent_notification",
         "create",
         {
-            "title": f"Backplane v{__version__} started",
+            "title": await _startup_title(),
             "message": message,
             "notification_id": "backplane_startup",
         },

@@ -10,6 +10,8 @@ import pytest
 from backplane.utils.helpers.files import resolve_under_root
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     import anyio
 
 
@@ -41,3 +43,15 @@ def test__resolve_under_root_rejects_embedded_parent_segments(
             vault_path,
             pathlib.PurePath("Tasks/foo/../../outside.md"),
         )
+
+
+def test__resolve_under_root_rejects_symlink_escape(
+    vault_path: anyio.Path,
+    tmp_path: Path,
+) -> None:
+    """Symlinked paths that resolve outside the root are rejected."""
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    (pathlib.Path(str(vault_path)) / "escape").symlink_to(outside)
+    with pytest.raises(ValueError, match="Path escapes root"):
+        _ = resolve_under_root(vault_path, pathlib.PurePath("escape/secret.md"))

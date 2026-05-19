@@ -1,8 +1,9 @@
-"""Helper functions for Backplane."""
+"""Date and time formatting helpers."""
 
 from __future__ import annotations
 
 import datetime as dt
+import re
 from typing import TYPE_CHECKING, Final
 
 from backplane.utils.settings import SETTINGS
@@ -10,14 +11,14 @@ from backplane.utils.settings import SETTINGS
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+_ORDINAL_SUFFIXES: Final = {1: "st", 2: "nd", 3: "rd"}  # codespell:ignore nd
+_TEEN_RANGE: Final = range(11, 14)
+_DATE_TEMPLATE: Final = re.compile(r"\{\{\s*date\s*(?::([^}]*))?\s*\}\}", re.IGNORECASE)
+
 
 def today() -> dt.date:
     """Return the current date in the configured local timezone."""
     return dt.datetime.now(tz=SETTINGS.local_timezone).date()
-
-
-_ORDINAL_SUFFIXES: Final = {1: "st", 2: "nd", 3: "rd"}  # codespell:ignore nd
-_TEEN_RANGE: Final = range(11, 14)
 
 
 def ordinal_suffix_for_day(day: int) -> str:
@@ -88,10 +89,21 @@ def format_human_date(date: dt.date) -> str:
     return format_obsidian_moment_date(date, "dddd, MMMM Do YYYY")
 
 
-__all__ = [
-    "format_human_date",
-    "format_obsidian_moment_date",
-    "ordinal_day_of_month",
-    "ordinal_suffix_for_day",
-    "today",
-]
+def substitute_obsidian_core_date_variables(template: str, date: dt.date) -> str:
+    """Replace ``{{date}}`` and ``{{date:...}}`` placeholders (Obsidian core template syntax).
+
+    Args:
+        template: Raw template file contents.
+        date: Calendar date used for substitution.
+
+    Returns:
+        Template text with date placeholders expanded.
+    """
+
+    def _replace(match: re.Match[str]) -> str:
+        inner = match.group(1)
+        if inner is None or not inner.strip():
+            return date.isoformat()
+        return format_obsidian_moment_date(date, inner.strip())
+
+    return _DATE_TEMPLATE.sub(_replace, template)

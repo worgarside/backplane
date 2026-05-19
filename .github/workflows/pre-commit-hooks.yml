@@ -38,6 +38,11 @@ jobs:
           enable-cache: true
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install uv dependencies
+        env:
+          UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+        run: uv sync --locked --all-groups
+
       - name: Run prek
         id: run-pch
         uses: j178/prek-action@v2

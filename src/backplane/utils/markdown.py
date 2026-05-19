@@ -325,7 +325,7 @@ class MarkdownDocument(BaseModel):
                 raise
 
             text = self.initial_content if self.initial_content is not None else ""
-            _ = await self._async_file_path.parent.mkdir(parents=True, exist_ok=True)
+            await self._async_file_path.parent.mkdir(parents=True, exist_ok=True)
             _ = await self._async_file_path.write_text(text, encoding="utf-8")
 
         self._loaded_rendered = _render_text(text)

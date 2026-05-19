@@ -26,3 +26,4 @@ def test__today_returns_date_in_configured_timezone(
     mock_datetime.now.return_value = fixed  # pyright: ignore[reportAny]
 
     assert today() == dt.date(2026, 5, 9)
+    mock_datetime.now.assert_called_once_with(tz=tz)  # pyright: ignore[reportAny]

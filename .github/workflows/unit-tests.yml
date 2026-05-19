@@ -69,7 +69,6 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.WORGARSIDE_DEV_TOKEN }}
-        continue-on-error: true
         # yamllint disable rule:line-length
         run: |
           [[ -f .coverage-report.md ]] || exit 0
@@ -82,14 +81,25 @@ jobs:
             local output
             local status
             local comment_id
+            local lookup_output
 
-            comment_id=$(
+            set +e
+            lookup_output=$(
               gh api \
                 "/repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
                 --paginate \
                 --jq ".[] | select(.body | contains(\"${marker}\")) | .id" \
-                | tail -n 1
+                2>&1
             )
+            status=$?
+            set -e
+
+            if [ "${status}" -ne 0 ]; then
+              echo -e "Coverage comment lookup failed: \`${lookup_output}\`" >> "${GITHUB_STEP_SUMMARY}"
+              exit "${status}"
+            fi
+
+            comment_id=$(printf "%s\n" "${lookup_output}" | tail -n 1)
 
             jq -n --rawfile body "${comment_file}" '{body: $body}' > coverage-comment.json
 

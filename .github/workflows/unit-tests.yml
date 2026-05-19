@@ -66,12 +66,13 @@ jobs:
             --markdown-report .coverage-report.md
 
       - name: Upload Coverage Report
-        if: github.event_name == 'pull_request' && steps.coverage-check.outcome == 'success'
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.WORGARSIDE_DEV_TOKEN }}
         continue-on-error: true
         # yamllint disable rule:line-length
         run: |
+          [[ -f .coverage-report.md ]] || exit 0
           cat .coverage-report.md >> "${GITHUB_STEP_SUMMARY}"
 
           if ! grep -zqE "No lines with coverage information in this diff" .coverage-report.md; then

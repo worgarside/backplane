@@ -33,4 +33,5 @@ def safe_slug(text: str, max_len: int = 60) -> str:
     ascii_text = normalized.encode("ascii", "ignore").decode()
     cleaned = re.sub(r"[^\w\s-]", "", ascii_text).strip().lower()
     slug = re.sub(r"[-\s]+", "-", cleaned).strip("-")
-    return slug[:max_len] or "task"
+
+    return (slug or "task")[:max_len]

@@ -16,8 +16,8 @@ from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from ruamel.yaml import YAML
 
-from backplane.utils.helpers.files import atomic_write_text
-from backplane.utils.settings import SETTINGS
+from .helpers.files import atomic_write_text
+from .settings import SETTINGS
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence

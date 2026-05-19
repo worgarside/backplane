@@ -75,39 +75,68 @@ jobs:
           [[ -f .coverage-report.md ]] || exit 0
           cat .coverage-report.md >> "${GITHUB_STEP_SUMMARY}"
 
+          marker="<!-- backplane:coverage-report -->"
+          comment_file=".coverage-comment.md"
+
+          upsert_coverage_comment() {
+            local output
+            local status
+            local comment_id
+
+            comment_id=$(
+              gh api \
+                "/repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
+                --paginate \
+                --jq ".[] | select(.body | contains(\"${marker}\")) | .id" \
+                | tail -n 1
+            )
+
+            jq -n --rawfile body "${comment_file}" '{body: $body}' > coverage-comment.json
+
+            set +e
+            if [[ -n "${comment_id}" ]]; then
+              output=$(
+                gh api \
+                  --method PATCH \
+                  "/repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+                  --input coverage-comment.json \
+                  2>&1
+              )
+            else
+              output=$(
+                gh api \
+                  --method POST \
+                  "/repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
+                  --input coverage-comment.json \
+                  2>&1
+              )
+            fi
+            status=$?
+            set -e
+
+            echo -e "Coverage comment API output: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
+            echo -e "Coverage comment API status: \`${status}\`" >> "${GITHUB_STEP_SUMMARY}"
+
+            if [ "${status}" -ne 0 ]; then
+              echo -e "Coverage comment API failed: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
+              exit "${status}"
+            fi
+          }
+
           if ! grep -zqE "No lines with coverage information in this diff" .coverage-report.md; then
 
             echo "There is coverage to report." >> "${GITHUB_STEP_SUMMARY}"
             echo "Commenting on PR." >> "${GITHUB_STEP_SUMMARY}"
 
-            set +e  # Disable exit on error
-            output=$(gh pr comment ${{ github.event.pull_request.number }} --edit-last --body-file .coverage-report.md 2>&1)
-            status=$?
-            set -e  # Re-enable exit on error
-
-            echo -e "Output: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
-            echo -e "Status: \`${status}\`" >> "${GITHUB_STEP_SUMMARY}"
-
-            if [ $status -ne 0 ]; then
-                if [[ "$output" == *"no comments found for current user"* ]]; then
-                    # Re-run without --edit-last
-
-                    echo -e "No comments found for current user, re-running without \`--edit-last\`" >> "${GITHUB_STEP_SUMMARY}"
-
-                    gh pr comment ${{ github.event.pull_request.number }} --body-file .coverage-report.md
-                else
-                    echo -e "Error: \`${output}\`" >> "${GITHUB_STEP_SUMMARY}"
-                    exit $status
-                fi
-            else
-                # Worked fine, output to summary
-                echo "${output}" >> "${GITHUB_STEP_SUMMARY}"
-            fi
+            printf "%s\n\n" "${marker}" > "${comment_file}"
+            cat .coverage-report.md >> "${comment_file}"
+            upsert_coverage_comment
 
           else
             echo "No coverage to report." >> "${GITHUB_STEP_SUMMARY}"
 
-            gh pr comment ${{ github.event.pull_request.number }} --edit-last --body "No coverage to report! 🙅‍♂️" || :
+            printf "%s\n\nNo coverage to report! 🙅‍♂️\n" "${marker}" > "${comment_file}"
+            upsert_coverage_comment
           fi
         # yamllint enable rule:line-length
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime as dt
+
 import pytest
 
 from backplane.utils.kanban import add_card_to_list
@@ -58,3 +60,29 @@ def test__add_card_to_list_other_column() -> None:
     assert result == (
         "## Backlog\n\n## Todo\n- [ ] [[old]]\n- [ ] [[new-todo]]\n## Done\n"
     )
+
+
+def test__add_card_to_list_with_due_date() -> None:
+    """Due dates use Obsidian Kanban ``@{YYYY-MM-DD}`` metadata."""
+    board = "## ToDo\n- [ ] todo1 @{2026-05-16}\n## Done\n"
+    result = add_card_to_list(
+        board,
+        "new-task",
+        "ToDo",
+        due=dt.date(2026, 5, 20),
+    )
+    assert result == (
+        "## ToDo\n- [ ] todo1 @{2026-05-16}\n- [ ] [[new-task]] @{2026-05-20}\n## Done\n"
+    )
+
+
+def test__add_card_to_list_with_due_datetime() -> None:
+    """Due datetimes use separate ``@{date}`` and ``@@{HH:MM}`` tokens in local time."""
+    board = "## ToDo\n\n## Done\n"
+    result = add_card_to_list(
+        board,
+        "timed",
+        "ToDo",
+        due=dt.datetime(2026, 5, 20, 14, 30, tzinfo=dt.UTC),
+    )
+    assert result == "## ToDo\n- [ ] [[timed]] @{2026-05-20} @@{14:30}\n## Done\n"

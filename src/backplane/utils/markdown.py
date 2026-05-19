@@ -16,7 +16,8 @@ from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from ruamel.yaml import YAML
 
-from backplane.utils.settings import SETTINGS
+from .helpers.files import atomic_write_text
+from .settings import SETTINGS
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence
@@ -325,8 +326,7 @@ class MarkdownDocument(BaseModel):
                 raise
 
             text = self.initial_content if self.initial_content is not None else ""
-            await self._async_file_path.parent.mkdir(parents=True, exist_ok=True)
-            _ = await self._async_file_path.write_text(text, encoding="utf-8")
+            await atomic_write_text(self._async_file_path, text)
 
         self._loaded_rendered = _render_text(text)
         self._frontmatter, body_text = _parse_frontmatter(text)
@@ -410,7 +410,7 @@ class MarkdownDocument(BaseModel):
                 msg = "File was modified externally since it was loaded."
                 raise ValueError(msg)
 
-        _ = await self._async_file_path.write_text(self.render(), encoding="utf-8")
+        await atomic_write_text(self._async_file_path, self.render())
 
     def get_section(
         self,

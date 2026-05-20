@@ -107,6 +107,14 @@ class SectionNotFoundError(NotFoundError):
         self.parent = parent
         self.siblings = siblings
 
+        message = f"Section {section!r} not found"
+        if parent is not None:
+            message += f" under {parent!r}"
+        message += "."
+        if siblings is not None:
+            message += f" Available sections: {', '.join(siblings)}."
+
         super().__init__(
-            f"Section {section!r} not found under {parent!r}. Available sections: {siblings!r}.",
+            message,
+            detail={"section": section, "parent": parent, "siblings": siblings},
         )

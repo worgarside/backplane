@@ -56,3 +56,5 @@ def test__section_not_found_error_minimal_constructor() -> None:
 
     assert err.parent is None
     assert err.siblings is None
+    assert str(err) == "Section 'Backlog' not found."
+    assert "None" not in str(err)

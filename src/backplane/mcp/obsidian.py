@@ -12,7 +12,7 @@ from loguru import logger
 from pydantic import Field, PastDate
 
 from backplane.services.obsidian import ObsidianService
-from backplane.utils import format_human_date, today
+from backplane.utils import exc, format_human_date, today
 from backplane.utils.settings import SETTINGS
 
 from .server import mcp
@@ -172,7 +172,7 @@ async def add_to_daily_note(
         The updated section, rendered as markdown.
 
     Raises:
-        ValueError: If the section is missing and ``create_section_if_not_exists`` is false.
+        InformationRequiredError: If the section is missing and ``create_section_if_not_exists`` is false.
     """
     date = date or today()
     logger.info(
@@ -196,9 +196,14 @@ async def add_to_daily_note(
                 heading_path,
                 create_if_not_exists=create_section_if_not_exists,
             )
-        except ValueError as exc:
-            msg = f"{exc} Retry with an existing section, or set `create_section_if_not_exists=true` to create it."
-            raise ValueError(msg) from exc
+        except exc.SectionNotFoundError as err:
+            raise exc.InformationRequiredError(
+                message=(
+                    f"{err} Retry with an existing section, or set "
+                    "`create_section_if_not_exists=true` to create it."
+                ),
+                detail=err.detail,
+            ) from err
 
         if not section.content or mode == "replace":
             section.replace_content(content)

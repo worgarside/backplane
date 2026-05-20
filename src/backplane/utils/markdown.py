@@ -8,7 +8,7 @@ import io
 import pathlib
 from dataclasses import dataclass
 from functools import cache, lru_cache
-from typing import TYPE_CHECKING, Annotated, Self
+from typing import TYPE_CHECKING, Annotated, Self, cast
 
 import mdformat
 from loguru import logger
@@ -16,6 +16,7 @@ from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
 from ruamel.yaml import YAML
 
+from .exceptions import SectionNotFoundError, UserError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
 
@@ -433,9 +434,11 @@ class MarkdownDocument(BaseModel):
             The section at the given path.
 
         Raises:
-            ValueError: If the section is not found and ``create_if_not_exists`` is ``False``.
+            UserError: If the heading path is empty.
+            SectionNotFoundError: If the section is not found and ``create_if_not_exists`` is ``False``.
         """
-        path_parts = list(heading_path)
+        if not (path_parts := list(heading_path)):
+            raise UserError(message="Heading path cannot be empty")
 
         section: MarkdownSection | None = None
         prev_heading: str | None = None
@@ -452,22 +455,14 @@ class MarkdownDocument(BaseModel):
                 ),
                 None,
             )
+
             if found is None:
                 if not create_if_not_exists:
-                    siblings = [s.heading for s in container]
-                    siblings_repr = (
-                        ", ".join(repr(s) for s in siblings) if siblings else "(none)"
+                    raise SectionNotFoundError(
+                        heading,
+                        prev_heading,
+                        [s.heading for s in container],
                     )
-                    parent_repr = (
-                        f"section {prev_heading!r}"
-                        if prev_heading
-                        else "the document root"
-                    )
-                    msg = (
-                        f"Section {heading!r} not found under {parent_repr}. "
-                        f"Available sections: {siblings_repr}."
-                    )
-                    raise ValueError(msg)
 
                 found = MarkdownSection(
                     heading=heading,
@@ -479,11 +474,8 @@ class MarkdownDocument(BaseModel):
             container = section.sections
             prev_heading = heading
 
-        if section is None:
-            msg = f"Section not found at path {heading_path!r}"
-            raise ValueError(msg)
-
-        return section
+        # We know section is not None because we checked for empty heading_path above.
+        return cast("MarkdownSection", section)
 
     def iter_sections(self) -> Generator[MarkdownSection]:
         """Yield every section in the document in document order.

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
+from .exceptions import SectionNotFoundError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
 
@@ -35,6 +37,7 @@ def _format_card_line(slug: str, *, due: dt.date | dt.datetime | None = None) ->
     return f"{line} @{{{due.isoformat()}}}"
 
 
+@lru_cache(maxsize=1024)
 def _section_heading_re(section: str) -> re.Pattern[str]:
     return re.compile(rf"^## {re.escape(section)}\s*$", re.MULTILINE)
 
@@ -58,22 +61,21 @@ def add_card_to_list(
         Updated board markdown.
 
     Raises:
-        ValueError: If the section heading is not found in the board file.
+        SectionNotFoundError: If the section heading is not found in the board file.
     """
-    match = _section_heading_re(section).search(text)
-    if match is None:
-        msg = f"## {section} section not found in Tasks/Board.md"
-        raise ValueError(msg)
+    if (match := _section_heading_re(section).search(text)) is None:
+        raise SectionNotFoundError(section)
 
     card_line = _format_card_line(slug, due=due)
     after_header = text[match.end() :]
-    next_section = _NEXT_SECTION_RE.search(after_header)
-    if next_section is None:
+
+    if (next_section := _NEXT_SECTION_RE.search(after_header)) is None:
         return f"{text.rstrip()}\n{card_line}\n"
 
     insert_pos = match.end() + next_section.start()
     before = text[:insert_pos].rstrip()
     after = text[insert_pos:]
+
     return f"{before}\n{card_line}\n{after}"
 
 

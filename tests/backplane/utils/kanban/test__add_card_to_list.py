@@ -6,6 +6,7 @@ import datetime as dt
 
 import pytest
 
+from backplane.utils.exceptions import SectionNotFoundError
 from backplane.utils.kanban import add_card_to_list
 
 _SAMPLE_BOARD = """---
@@ -49,8 +50,10 @@ def test__add_card_to_list_empty_section() -> None:
 
 def test__add_card_to_list_missing_section() -> None:
     """Missing section heading raises a clear error."""
-    with pytest.raises(ValueError, match="## Backlog"):
+    with pytest.raises(SectionNotFoundError, match="Backlog") as exc_info:
         _ = add_card_to_list("## Todo\n", "x", "Backlog")
+
+    assert exc_info.value.section == "Backlog"
 
 
 def test__add_card_to_list_other_column() -> None:

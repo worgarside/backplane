@@ -202,6 +202,7 @@ async def add_to_daily_note(
                     f"{err} Retry with an existing section, or set "
                     "`create_section_if_not_exists=true` to create it."
                 ),
+                detail=err.detail,
             ) from err
 
         if not section.content or mode == "replace":

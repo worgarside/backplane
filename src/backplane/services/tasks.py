@@ -8,6 +8,7 @@ import io
 import operator
 import pathlib
 from dataclasses import dataclass
+from functools import cache
 from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
 
 from loguru import logger
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 _TASKS_DIR: Final = pathlib.PurePath("Tasks")
 _DOMAINS_DIR: Final = pathlib.PurePath("Domains")
 _RESOURCES_DIR: Final = pathlib.PurePath("Resources")
+_PEOPLE_DIR: Final = pathlib.PurePath("People")
 _BOARD_PATH: Final = pathlib.PurePath("Tasks/Board.md")
 _INBOX_DAYS: Final = 30
 _SCORE_AUTO: Final = 70.0
@@ -63,20 +65,25 @@ class TaskMetadata(BaseModel):
     next_action: str = ""
 
 
-_metadata_agent: Agent[None, TaskMetadata] = Agent(
-    SETTINGS.task_metadata_model,
-    output_type=TaskMetadata,
-    system_prompt=(
-        "Extract structured task metadata from the user's description. "
-        "Return concise, actionable values. "
-        "For domains: high-level system or knowledge areas (e.g. 'Home Assistant', 'Obsidian'). "
-        "For resources: specific tools, APIs, or services mentioned (e.g. 'Open Banking', 'MQTT'). "
-        "For people: names of people mentioned. "
-        "For title: a concise imperative phrase under 60 characters. "
-        "For next_action: one concrete first step as an imperative sentence. "
-        "For effort: 'small' under 1 hour, 'medium' 1-4 hours, 'large' over 4 hours."
-    ),
-)
+@cache
+def _metadata_agent() -> Agent[None, TaskMetadata]:
+    """Return the pydantic-ai agent used for task metadata extraction."""
+    return Agent(
+        SETTINGS.task_metadata_model,
+        output_type=TaskMetadata,
+        system_prompt=(
+            "Extract structured task metadata from the user's description. "
+            "Return concise, actionable values. "
+            "For domains: high-level system or knowledge areas (e.g. 'Home Assistant', 'Obsidian'). "
+            "For resources: specific tools, APIs, or services mentioned (e.g. 'Open Banking', 'MQTT'). "
+            "For people: names of people mentioned. "
+            "When the user message lists existing domains, resources, or people, prefer those "
+            "exact spellings when they clearly apply; only add new names when nothing in the list fits. "
+            "For title: a concise imperative phrase under 60 characters. "
+            "For next_action: one concrete first step as an imperative sentence. "
+            "For effort: 'small' under 1 hour, 'medium' 1-4 hours, 'large' over 4 hours."
+        ),
+    )
 
 
 def _log_metadata_agent_run(result: AgentRunResult[TaskMetadata]) -> None:
@@ -210,6 +217,79 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
     return None
 
 
+def _note_title_from_markdown(text: str) -> str | None:
+    """Return the first level-1 heading text, skipping YAML frontmatter."""
+    in_frontmatter = False
+    frontmatter_closed = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not frontmatter_closed and stripped == "---":
+            in_frontmatter = not in_frontmatter
+            if not in_frontmatter:
+                frontmatter_closed = True
+            continue
+        if in_frontmatter:
+            continue
+        if line.startswith("# ") and not line.startswith("## "):
+            return line.removeprefix("# ").strip()
+    return None
+
+
+async def _list_vault_entity_names(directory: pathlib.PurePath) -> list[str]:
+    """List display names of notes in a vault subdirectory (from their H1 heading).
+
+    Returns:
+        Sorted unique note titles, or an empty list if the directory is missing.
+    """
+    dir_path = resolve_under_root(SETTINGS.obsidian_vault_path, directory)
+    if not await dir_path.is_dir():
+        return []
+
+    names: list[str] = []
+    async for entry in dir_path.iterdir():
+        if entry.suffix != ".md" or not await entry.is_file():
+            continue
+
+        text = await entry.read_text(encoding="utf-8")
+
+        if title := _note_title_from_markdown(text):
+            names.append(title)
+
+    return sorted({name.casefold(): name for name in names}.values(), key=str.casefold)
+
+
+async def _metadata_catalog_prompt() -> str:
+    """Build a user-prompt section listing existing vault entity names.
+
+    Returns:
+        Catalog lines for the metadata agent user prompt, or an empty string.
+    """
+    domains, resources, people = await asyncio.gather(
+        _list_vault_entity_names(_DOMAINS_DIR),
+        _list_vault_entity_names(_RESOURCES_DIR),
+        _list_vault_entity_names(_PEOPLE_DIR),
+    )
+    lines: list[str] = []
+    if domains:
+        lines.append(
+            "Existing domains (prefer exact spelling when applicable): "
+            + ", ".join(domains),
+        )
+    if resources:
+        lines.append(
+            "Existing resources (prefer exact spelling when applicable): "
+            + ", ".join(resources),
+        )
+    if people:
+        lines.append(
+            "Existing people (prefer exact spelling when applicable): "
+            + ", ".join(people),
+        )
+    if not lines:
+        return ""
+    return "\n".join(lines)
+
+
 async def _extract_metadata(
     description: str,
     title: str | None,
@@ -226,6 +306,9 @@ async def _extract_metadata(
         Extracted (or fallback) TaskMetadata.
     """
     prompt_parts = [f"Task description: {description}"]
+    catalog = await _metadata_catalog_prompt()
+    if catalog:
+        prompt_parts.append(catalog)
     if title:
         prompt_parts.append(f"Title already provided: {title!r} - keep it unchanged.")
     if priority:
@@ -234,7 +317,7 @@ async def _extract_metadata(
         )
 
     try:
-        result = await _metadata_agent.run("\n".join(prompt_parts))
+        result = await _metadata_agent().run("\n".join(prompt_parts))
         _log_metadata_agent_run(result)
         metadata = result.output
     except Exception:  # noqa: BLE001

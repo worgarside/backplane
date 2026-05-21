@@ -9,7 +9,7 @@ import operator
 import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
+from typing import TYPE_CHECKING, Annotated, Final, cast, final
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -57,12 +57,48 @@ class TaskMetadata(BaseModel):
     """LLM-extracted metadata for a task."""
 
     title: str
-    domains: Annotated[list[str], Field(default_factory=list)]
-    resources: Annotated[list[str], Field(default_factory=list)]
-    people: Annotated[list[str], Field(default_factory=list)]
-    priority: Literal["low", "medium", "high"] = "medium"
-    effort: Literal["small", "medium", "large"] = "medium"
-    next_action: str = ""
+    domains: Annotated[
+        list[str],
+        Field(
+            default_factory=list,
+            description=(
+                "Platforms or broad knowledge areas the task belongs under "
+                "(e.g. a home automation stack), not integrations or APIs."
+            ),
+        ),
+    ]
+    resources: Annotated[
+        list[str],
+        Field(
+            default_factory=list,
+            description=(
+                "Specific integrations, APIs, vendors, or services to touch "
+                "(e.g. a named API or device integration), not parent platforms."
+            ),
+        ),
+    ]
+    people: Annotated[
+        list[str],
+        Field(
+            default_factory=list,
+            description=(
+                "People named or clearly implied in the task, including from possessives "
+                "(e.g. 'Jordan' from \"Jordan's laptop\") or pronouns when a name appears "
+                "in the same sentence."
+            ),
+        ),
+    ]
+    priority: enums.Priority = enums.Priority.MEDIUM
+    effort: enums.Effort = enums.Effort.MEDIUM
+    next_action: Annotated[
+        str,
+        Field(
+            description=(
+                "One concrete first step as a short imperative sentence "
+                "(e.g. 'Research available API authentication options')."
+            ),
+        ),
+    ] = ""
 
 
 @cache
@@ -74,8 +110,15 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
         system_prompt=(
             "Extract structured task metadata from the user's description. "
             "Return concise, actionable values. "
-            "For domains: high-level system or knowledge areas (e.g. 'Automation', 'Inventory'). "
-            "For resources: specific tools, APIs, or services mentioned (e.g. 'REST API', 'MQTT'). "
+            "Domains are platforms or broad areas the work lives under "
+            "(e.g. 'Automation Platform', 'Inventory'). "
+            "Resources are specific integrations, APIs, vendors, or services you will "
+            "configure or call (e.g. 'Acme API', 'MQTT'). "
+            "Never put the same name in both domains and resources. "
+            "If a task mentions adding or updating an integration inside a platform, "
+            "put the platform in domains and the integration in resources only — "
+            "e.g. 'Add the Acme API to the automation platform' → domains: "
+            "['Automation Platform'], resources: ['Acme API']. "
             "For people: every person named or clearly implied in the task (e.g. 'Jordan' from "
             "\"Jordan's laptop\", or the person behind 'their' when a name appears in the same "
             "sentence). "
@@ -298,6 +341,43 @@ async def _metadata_catalog_prompt() -> str:
     return "\n".join(lines)
 
 
+def _dedupe_entity_names(names: list[str]) -> list[str]:
+    """Return unique entity names, preserving first-seen order (case-insensitive)."""
+    seen: set[str] = set()
+    unique: list[str] = []
+    for name in names:
+        stripped = name.strip()
+        if not stripped:
+            continue
+        key = stripped.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(stripped)
+    return unique
+
+
+def _normalize_domains_and_resources(
+    domains: list[str],
+    resources: list[str],
+) -> tuple[list[str], list[str]]:
+    """Dedupe lists and resolve cross-list duplicates in favour of resources.
+
+    Integrations/APIs should not also appear as domains when the model assigns both.
+
+    Returns:
+        Normalized domain and resource name lists.
+    """
+    normalized_resources = _dedupe_entity_names(resources)
+    resource_keys = {name.casefold() for name in normalized_resources}
+    normalized_domains = [
+        name
+        for name in _dedupe_entity_names(domains)
+        if name.casefold() not in resource_keys
+    ]
+    return normalized_domains, normalized_resources
+
+
 async def _extract_metadata(
     description: str,
     title: str | None,
@@ -338,6 +418,12 @@ async def _extract_metadata(
             resources=[],
             people=[],
         )
+
+    domains, resources = _normalize_domains_and_resources(
+        metadata.domains,
+        metadata.resources,
+    )
+    metadata = metadata.model_copy(update={"domains": domains, "resources": resources})
 
     if title:
         metadata = metadata.model_copy(update={"title": title})

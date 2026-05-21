@@ -68,7 +68,7 @@ typeCheckingMode = "all"
 include = ["src", "tests"]
 
 executionEnvironments = [
-  { root = "tests", reportPrivateUsage = false, extraPaths = ["src"] },
+  { root = "tests", reportPrivateUsage = false, reportUnusedCallResult = false, extraPaths = ["src"] },
   { root = "src" },
 ]
 

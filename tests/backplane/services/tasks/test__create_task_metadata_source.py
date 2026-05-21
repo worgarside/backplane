@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from backplane.services.obsidian import ObsidianService
-from backplane.services.tasks import TaskMetadata, TaskService, _BOARD_PATH
-from backplane.utils import today
+from backplane.services.tasks import _BOARD_PATH, TaskMetadata, TaskService
+from backplane.utils import enums, today
 
 if TYPE_CHECKING:
     import anyio
@@ -46,8 +46,8 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
         domains=[],
         resources=[],
         people=["Jordan"],
-        priority="medium",
-        effort="medium",
+        priority=enums.Priority.MEDIUM,
+        effort=enums.Effort.MEDIUM,
         next_action="",
     )
     extract = mocker.patch(

@@ -19,19 +19,19 @@ def sample_captures() -> list[Capture]:
     path = pathlib.PurePath("Inbox/Ideas.md")
     return [
         Capture(
-            id="2026-05-17T01:44",
-            date="2026-05-17",
-            time="01:44",
-            text="I need to create reminder notifications for the mood tracker",
+            id="2026-01-10T09:00",
+            date="2026-01-10",
+            time="09:00",
+            text="Schedule weekly backup verification for the database server",
             path=path,
         ),
         Capture(
-            id="2026-05-17T14:29",
-            date="2026-05-17",
-            time="14:29",
+            id="2026-01-10T14:30",
+            date="2026-01-10",
+            time="14:30",
             text=(
-                "Update the Open Banking integration in Home Assistant to include "
-                "Vic's Amex card and send her notifications of how much she's spent."
+                "Add Jordan's calendar feed to the shared dashboard and notify them "
+                "when meetings change."
             ),
             path=path,
         ),
@@ -41,11 +41,11 @@ def sample_captures() -> list[Capture]:
 def test__find_match_accepts_high_confidence(sample_captures: list[Capture]) -> None:
     """A strong match returns the best capture automatically."""
     match = _find_match(
-        "create reminder notifications for the mood tracker",
+        "weekly backup verification database",
         sample_captures,
     )
     assert match is not None
-    assert match.id == "2026-05-17T01:44"
+    assert match.id == "2026-01-10T09:00"
 
 
 def test__find_match_returns_none_for_weak_match(sample_captures: list[Capture]) -> None:
@@ -63,4 +63,4 @@ def test__find_match_raises_for_ambiguous_scores(
         side_effect=[60.0, 60.0],
     )
     with pytest.raises(ValueError, match="Ambiguous match"):
-        _ = _find_match("something vague about banking", sample_captures)
+        _ = _find_match("something vague about calendars", sample_captures)

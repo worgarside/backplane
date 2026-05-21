@@ -74,11 +74,14 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
         system_prompt=(
             "Extract structured task metadata from the user's description. "
             "Return concise, actionable values. "
-            "For domains: high-level system or knowledge areas (e.g. 'Home Assistant', 'Obsidian'). "
-            "For resources: specific tools, APIs, or services mentioned (e.g. 'Open Banking', 'MQTT'). "
-            "For people: names of people mentioned. "
+            "For domains: high-level system or knowledge areas (e.g. 'Automation', 'Inventory'). "
+            "For resources: specific tools, APIs, or services mentioned (e.g. 'REST API', 'MQTT'). "
+            "For people: every person named or clearly implied in the task (e.g. 'Jordan' from "
+            "\"Jordan's laptop\", or the person behind 'their' when a name appears in the same "
+            "sentence). "
             "When the user message lists existing domains, resources, or people, prefer those "
-            "exact spellings when they clearly apply; only add new names when nothing in the list fits. "
+            "exact spellings when they clearly apply; add new names when the task mentions someone "
+            "not in the list. "
             "For title: a concise imperative phrase under 60 characters. "
             "For next_action: one concrete first step as an imperative sentence. "
             "For effort: 'small' under 1 hour, 'medium' 1-4 hours, 'large' over 4 hours."
@@ -269,24 +272,29 @@ async def _metadata_catalog_prompt() -> str:
         _list_vault_entity_names(_RESOURCES_DIR),
         _list_vault_entity_names(_PEOPLE_DIR),
     )
+
     lines: list[str] = []
     if domains:
         lines.append(
             "Existing domains (prefer exact spelling when applicable): "
             + ", ".join(domains),
         )
+
     if resources:
         lines.append(
             "Existing resources (prefer exact spelling when applicable): "
             + ", ".join(resources),
         )
+
     if people:
         lines.append(
             "Existing people (prefer exact spelling when applicable): "
             + ", ".join(people),
         )
+
     if not lines:
         return ""
+
     return "\n".join(lines)
 
 
@@ -309,8 +317,10 @@ async def _extract_metadata(
     catalog = await _metadata_catalog_prompt()
     if catalog:
         prompt_parts.append(catalog)
+
     if title:
         prompt_parts.append(f"Title already provided: {title!r} - keep it unchanged.")
+
     if priority:
         prompt_parts.append(
             f"Priority already provided: {priority!r} - keep it unchanged.",
@@ -483,7 +493,7 @@ class TaskService:
 
         Returns:
             Dict with keys: slug, path, title, matched_capture_id,
-            domains_created, resources_created.
+            domains_created, resources_created, people_created.
         """
         captures: list[Capture] = []
 
@@ -497,7 +507,10 @@ class TaskService:
             logger.error("Idea inbox not found; skipping capture matching")
 
         matched_capture = _find_match(description, captures)
-        metadata = await _extract_metadata(description, title, priority)
+        metadata_source = (
+            matched_capture.text if matched_capture is not None else description
+        )
+        metadata = await _extract_metadata(metadata_source, title, priority)
 
         base_slug = safe_slug(metadata.title)
         slug = base_slug
@@ -532,6 +545,11 @@ class TaskService:
             _RESOURCES_DIR,
             "resource",
         )
+        people_created = await _create_stubs(
+            metadata.people,
+            _PEOPLE_DIR,
+            "person",
+        )
 
         if matched_capture is not None:
             await _annotate_capture(matched_capture, slug)
@@ -543,4 +561,5 @@ class TaskService:
             "matched_capture_id": matched_capture.id if matched_capture else None,
             "domains_created": domains_created,
             "resources_created": resources_created,
+            "people_created": people_created,
         }

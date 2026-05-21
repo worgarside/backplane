@@ -241,7 +241,7 @@ async def _list_vault_entity_names(directory: pathlib.PurePath) -> list[str]:
     Returns:
         Sorted unique note titles, or an empty list if the directory is missing.
     """
-    dir_path = resolve_under_root(SETTINGS.obsidian_vault_path, directory)
+    dir_path = await resolve_under_root(directory)
     if not await dir_path.is_dir():
         return []
 
@@ -413,7 +413,7 @@ async def _ensure_stub(
         True if the note was created, False if it already existed.
     """
     slug = safe_slug(name)
-    path = resolve_under_root(SETTINGS.obsidian_vault_path, directory / f"{slug}.md")
+    path = await resolve_under_root(directory / f"{slug}.md")
     if await path.exists():
         return False
     content = (
@@ -502,10 +502,7 @@ class TaskService:
         base_slug = safe_slug(metadata.title)
         slug = base_slug
         counter = 2
-        while await resolve_under_root(
-            SETTINGS.obsidian_vault_path,
-            _TASKS_DIR / f"{slug}.md",
-        ).exists():
+        while await (await resolve_under_root(_TASKS_DIR / f"{slug}.md")).exists():
             slug = f"{base_slug}-{counter}"
             counter += 1
 
@@ -518,14 +515,11 @@ class TaskService:
             description=description,
             due=due,
         )
-        task_path = resolve_under_root(
-            SETTINGS.obsidian_vault_path,
-            _TASKS_DIR / f"{slug}.md",
-        )
+        task_path = await resolve_under_root(_TASKS_DIR / f"{slug}.md")
         await atomic_write_text(task_path, note_content)
         logger.info("Created task note: {}", task_path)
 
-        board_path = resolve_under_root(SETTINGS.obsidian_vault_path, _BOARD_PATH)
+        board_path = await resolve_under_root(_BOARD_PATH)
         await append_board_card(board_path, slug)
 
         domains_created = await _create_stubs(

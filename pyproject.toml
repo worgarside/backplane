@@ -65,9 +65,12 @@ filterwarnings = [
 [tool.basedpyright]
 typeCheckingMode = "all"
 
-include = ["src"]
+include = ["src", "tests"]
 
-executionEnvironments = [{ root = "src" }]
+executionEnvironments = [
+  { root = "tests", reportPrivateUsage = false, extraPaths = ["src"] },
+  { root = "src" },
+]
 
 reportMissingImports = "error"
 reportMissingTypeStubs = "error"

@@ -61,6 +61,15 @@ class Settings(BaseSettings):
             description="Config entry ID of the Backplane MCP integration in Home Assistant.",
         ),
     ]
+    task_metadata_model: Annotated[
+        str,
+        Field(
+            description=(
+                "PydanticAI model string used for task metadata extraction, "
+                "e.g. 'anthropic:claude-haiku-4-5-20251001' or 'openai:gpt-4o-mini'."
+            ),
+        ),
+    ] = "openai:gpt-4o-mini"
 
     @field_validator("home_assistant_url", mode="before")
     @classmethod

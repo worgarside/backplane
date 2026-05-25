@@ -26,19 +26,42 @@ async def create_task(
     *,
     description: Annotated[
         str,
-        Field(description="Natural-language task or idea description."),
+        Field(
+            description=(
+                "Natural-language task or idea description. This is fuzzy-matched "
+                "against existing inbox captures, so include distinctive nouns, "
+                "names, and phrases from the original capture when available. "
+                "Exact wording is helpful but not required; keep extra context "
+                "that may help extract task metadata."
+            ),
+        ),
     ],
     title: Annotated[
         str | None,
-        Field(description="Task title. Inferred from the description if not provided."),
+        Field(
+            description=(
+                "Optional task title override. Omit unless the user supplied a clear "
+                "title; otherwise inferred from the matched capture or description."
+            ),
+        ),
     ] = None,
     due: Annotated[
         str | None,
-        Field(description="Due date in YYYY-MM-DD format."),
+        Field(
+            description=(
+                "Optional due date in YYYY-MM-DD format. Ask before setting if timing "
+                "is implied but not explicit."
+            ),
+        ),
     ] = None,
     priority: Annotated[
         enums.Priority | None,
-        Field(description="Priority: 'low', 'medium', or 'high'."),
+        Field(
+            description=(
+                "Optional priority override: 'low', 'medium', or 'high'. Omit unless "
+                "the user explicitly indicates urgency or importance."
+            ),
+        ),
     ] = None,
 ) -> str:
     """Create a structured task note from a voice capture or description.

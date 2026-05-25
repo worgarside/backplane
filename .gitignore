@@ -6,6 +6,7 @@
 *.pyc
 *.csv
 *.json
+!basedpyright-tests.json
 *.xlsx
 *.xlsm
 *.docx

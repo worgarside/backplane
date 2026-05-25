@@ -381,7 +381,7 @@ def _normalize_domains_and_resources(
 async def _extract_metadata(
     description: str,
     title: str | None,
-    priority: str | None,
+    priority: enums.Priority | None,
 ) -> TaskMetadata:
     """Extract structured task metadata using PydanticAI.
 

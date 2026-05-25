@@ -48,6 +48,11 @@ def test__find_match_accepts_high_confidence(sample_captures: list[Capture]) -> 
     assert match.id == "2026-01-10T09:00"
 
 
+def test__find_match_returns_none_without_candidates() -> None:
+    """No captures means there is nothing to match."""
+    assert _find_match("weekly backup verification database", []) is None
+
+
 def test__find_match_returns_none_for_weak_match(sample_captures: list[Capture]) -> None:
     """Unrelated descriptions do not match any capture."""
     assert _find_match("xyzzy plugh unrelated qwerty", sample_captures) is None

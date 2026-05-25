@@ -35,7 +35,7 @@ async def create_task(
     due: Annotated[
         str | None,
         Field(description="Due date in YYYY-MM-DD format."),
-    ],
+    ] = None,
     priority: Annotated[
         enums.Priority | None,
         Field(description="Priority: 'low', 'medium', or 'high'."),
@@ -52,7 +52,7 @@ async def create_task(
     Returns:
         Concise confirmation suitable for voice assistant output.
     """
-    logger.info("create_task: description={!r}", description)
+    logger.info("create_task called (description_length={})", len(description))
 
     result = await TaskService().create_task(
         description,

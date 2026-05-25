@@ -81,7 +81,10 @@ repos:
     rev: 1.39.4
     hooks:
       - id: basedpyright
-        additional_dependencies:
+        name: basedpyright-src
+        files: ^(src/|pyproject\.toml$)
+        pass_filenames: false
+        additional_dependencies: &basedpyright_additional_dependencies
           - aiohttp==3.13.5
           - fastmcp==3.3.1
           - loguru==0.7.3
@@ -90,6 +93,13 @@ repos:
           - pydantic-settings==2.14.1
           - ruamel-yaml==0.19.1
           - uvloop==0.22.1
+      - id: basedpyright
+        name: basedpyright-tests
+        args:
+          - --project=basedpyright-tests.json
+        files: ^(tests/|basedpyright-tests\.json$)
+        pass_filenames: false
+        additional_dependencies: *basedpyright_additional_dependencies
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0

@@ -65,10 +65,9 @@ filterwarnings = [
 [tool.basedpyright]
 typeCheckingMode = "all"
 
-include = ["src", "tests"]
+include = ["src"]
 
 executionEnvironments = [
-  { root = "tests", reportPrivateUsage = false, reportUnusedCallResult = false, extraPaths = ["src"] },
   { root = "src" },
 ]
 

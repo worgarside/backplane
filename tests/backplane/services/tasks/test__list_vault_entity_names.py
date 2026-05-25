@@ -28,6 +28,11 @@ type: domain
     assert _note_title_from_markdown(text) == "Home Assistant"
 
 
+def test__note_title_from_markdown_returns_none_without_h1() -> None:
+    """Markdown without a level-1 heading has no note title."""
+    assert _note_title_from_markdown("---\ntype: domain\n---\n\n## Notes\n") is None
+
+
 async def test__list_vault_entity_names_returns_sorted_titles(
     obsidian_vault: anyio.Path,
 ) -> None:
@@ -46,6 +51,21 @@ async def test__list_vault_entity_names_returns_sorted_titles(
     names = await _list_vault_entity_names(_DOMAINS_DIR)
 
     assert names == ["Home Assistant", "Obsidian"]
+
+
+async def test__list_vault_entity_names_skips_non_markdown_and_untitled_notes(
+    obsidian_vault: anyio.Path,
+) -> None:
+    """Only Markdown notes with level-1 headings are included."""
+    domains = obsidian_vault / "Domains"
+    await domains.mkdir(parents=True)
+    await atomic_write_text(domains / "README.txt", "# Ignored\n")
+    await atomic_write_text(domains / "untitled.md", "## Notes\n")
+    await atomic_write_text(domains / "zigbee.md", "# Zigbee\n")
+
+    names = await _list_vault_entity_names(_DOMAINS_DIR)
+
+    assert names == ["Zigbee"]
 
 
 async def test__list_vault_entity_names_missing_directory(

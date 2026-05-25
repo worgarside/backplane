@@ -54,3 +54,37 @@ Too old
         f"{yesterday}T10:00",
     ]
     assert captures[0].text == "Today's capture"
+
+
+async def test__parse_inbox_skips_invalid_dates_and_empty_captures(
+    obsidian_vault: anyio.Path,
+) -> None:
+    """Non-date headings and empty capture sections are ignored."""
+    today_iso = today().isoformat()
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
+    await inbox.parent.mkdir(parents=True, exist_ok=True)
+    _ = await inbox.write_text(
+        f"""# Not a date
+
+## 09:15
+
+Ignored capture
+
+# {today_iso}
+
+## 10:00
+
+## 11:00
+
+Included capture
+""",
+        encoding="utf-8",
+    )
+
+    async with MarkdownDocument(
+        vault_path=ObsidianService.IDEA_INBOX_PATH,
+        read_only=True,
+    ) as doc:
+        captures = _parse_inbox(doc, days=30)
+
+    assert [c.id for c in captures] == [f"{today_iso}T11:00"]

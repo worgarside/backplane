@@ -1,0 +1,26 @@
+{
+  "executionEnvironments": [
+    {
+      "extraPaths": [
+        "src"
+      ],
+      "root": "."
+    }
+  ],
+  "include": [
+    "tests"
+  ],
+  "pythonVersion": "3.14",
+  "reportAny": "none",
+  "reportExplicitAny": "none",
+  "reportImplicitStringConcatenation": "none",
+  "reportImportCycles": "none",
+  "reportMissingTypeStubs": "none",
+  "reportPrivateUsage": "none",
+  "reportUnannotatedClassAttribute": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnusedCallResult": "none",
+  "reportUnusedFunction": "none",
+  "reportUnusedParameter": "none",
+  "typeCheckingMode": "standard"
+}

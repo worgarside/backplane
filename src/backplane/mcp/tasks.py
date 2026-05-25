@@ -52,7 +52,7 @@ async def create_task(
     Returns:
         Concise confirmation suitable for voice assistant output.
     """
-    logger.info("create_task called (description_length={})", len(description))
+    logger.info("create_task: description={!r}", description)
 
     result = await TaskService().create_task(
         description,

@@ -9,20 +9,9 @@ import pytest
 
 from backplane.utils.exceptions import SectionNotFoundError, UserError
 from backplane.utils.markdown import MarkdownDocument
-from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     import anyio
-
-
-@pytest.fixture
-def obsidian_vault(
-    vault_path: anyio.Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> anyio.Path:
-    """Point application settings at a temporary vault root."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
-    return vault_path
 
 
 async def test__get_section__rejects_empty_heading_path(

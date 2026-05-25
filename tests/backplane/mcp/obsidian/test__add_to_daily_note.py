@@ -10,20 +10,9 @@ import pytest
 
 from backplane.mcp.obsidian import add_to_daily_note
 from backplane.utils import exc, format_human_date
-from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     import anyio
-
-
-@pytest.fixture
-def obsidian_vault(
-    vault_path: anyio.Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> anyio.Path:
-    """Point application settings at a temporary vault root."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
-    return vault_path
 
 
 async def test__add_to_daily_note__wraps_missing_section_as_information_required(

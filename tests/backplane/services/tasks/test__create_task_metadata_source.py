@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 @pytest.mark.anyio
 async def test__create_task_uses_matched_capture_text_for_metadata(
-    vault_settings: anyio.Path,
+    obsidian_vault: anyio.Path,
     mocker: MockerFixture,
 ) -> None:
     """Metadata extraction should use the inbox capture text, not the short query."""
@@ -26,8 +26,8 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
         "Add Jordan's calendar feed to the shared dashboard and notify them "
         "when meetings change."
     )
-    inbox = vault_settings / ObsidianService.IDEA_INBOX_PATH
-    board = vault_settings / _BOARD_PATH
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
+    board = obsidian_vault / _BOARD_PATH
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     await board.parent.mkdir(parents=True, exist_ok=True)
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")

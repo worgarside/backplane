@@ -14,12 +14,12 @@ if TYPE_CHECKING:
     import anyio
 
 
-async def test__parse_inbox_returns_recent_captures(vault_path: anyio.Path) -> None:
+async def test__parse_inbox_returns_recent_captures(obsidian_vault: anyio.Path) -> None:
     """Captures within the lookback window are parsed with stable IDs."""
     today_iso = today().isoformat()
     yesterday = (today() - dt.timedelta(days=1)).isoformat()
     old = (today() - dt.timedelta(days=40)).isoformat()
-    inbox = vault_path / ObsidianService.IDEA_INBOX_PATH
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     _ = await inbox.write_text(
         f"""# {today_iso}

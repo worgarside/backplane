@@ -74,6 +74,7 @@ executionEnvironments = [
 
 reportMissingImports = "error"
 reportMissingTypeStubs = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
 
 pythonVersion = "3.14"
 

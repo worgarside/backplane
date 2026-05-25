@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import difflib
 import io
 import pathlib
@@ -14,37 +13,17 @@ import mdformat
 from loguru import logger
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, Field, PrivateAttr, computed_field
-from ruamel.yaml import YAML
 
 from .exceptions import SectionNotFoundError, UserError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
+from .yaml import YAML_LOADER, FrontmatterValue
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence
 
     import anyio
     from markdown_it.token import Token
-
-
-# YAML 1.2 produces these scalar Python types under ``YAML(typ="rt")``. Order matters
-# for Pydantic union resolution: ``bool`` must precede ``int`` (since ``True`` is
-# also an ``int``) and ``datetime`` must precede ``date`` (since ``datetime``
-# subclasses ``date``). ruamel.yaml's tagged subclasses (``DoubleQuotedScalarString``,
-# ``ScalarBoolean``, ``TimeStamp``, ...) all inherit from these natives, so the
-# loaded values satisfy this union without coercion.
-type FrontmatterScalar = bool | int | float | str | dt.datetime | dt.date | None
-
-# Frontmatter values are arbitrary YAML scalars or nested containers
-type FrontmatterValue = (
-    FrontmatterScalar | list[FrontmatterValue] | dict[str, FrontmatterValue]
-)
-
-YAML_LOADER = YAML(typ="rt")
-YAML_LOADER.explicit_start = True
-YAML_LOADER.preserve_quotes = True
-YAML_LOADER.indent(mapping=2, sequence=4, offset=2)  # pyright: ignore[reportAny]
-YAML_LOADER.width = 4096
 
 
 @cache

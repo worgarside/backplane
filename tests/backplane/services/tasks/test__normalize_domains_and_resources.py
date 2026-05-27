@@ -23,10 +23,10 @@ def test__normalize_domains_and_resources_dedupes_within_lists() -> None:
 def test__normalize_domains_and_resources_prefers_resources_on_overlap() -> None:
     """The same name cannot appear as both domain and resource."""
     domains, resources = _normalize_domains_and_resources(
-        ["Acme API", "Automation Platform"],
+        ["Acme API", "Home Assistant"],
         ["Acme API"],
     )
-    assert domains == ["Automation Platform"]
+    assert domains == ["Home Assistant"]
     assert resources == ["Acme API"]
 
 
@@ -37,7 +37,7 @@ def test__normalize_domains_and_resources_logs_removed_domains(
     mock_info = mocker.patch("backplane.services.tasks.logger.info")
 
     _normalize_domains_and_resources(
-        ["Acme API", "Automation Platform"],
+        ["Acme API", "Home Assistant"],
         ["Acme API"],
     )
 

@@ -13,7 +13,13 @@ if TYPE_CHECKING:
 
 async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:
     """A missing entity note is created as a minimal stub."""
-    created = await _ensure_stub(_DOMAINS_DIR, "Home Assistant", "domain")
+    created = await _ensure_stub(
+        _DOMAINS_DIR,
+        "Home Assistant",
+        "domain",
+        "review-home-assistant",
+        "Review Home Assistant",
+    )
 
     assert created is True
     assert await (obsidian_vault / "Domains/home-assistant.md").read_text(
@@ -25,7 +31,8 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> 
         "---\n\n"
         "# Home Assistant\n\n"
         "## Notes\n\n"
-        "Created automatically from task intake.\n"
+        "Created automatically from task intake for "
+        "[[review-home-assistant|Review Home Assistant]].\n"
     )
 
 
@@ -38,7 +45,13 @@ async def test__ensure_stub_returns_false_for_existing_note(
     existing = domains / "home-assistant.md"
     await atomic_write_text(existing, "# Existing\n")
 
-    created = await _ensure_stub(_DOMAINS_DIR, "Home Assistant", "domain")
+    created = await _ensure_stub(
+        _DOMAINS_DIR,
+        "Home Assistant",
+        "domain",
+        "review-home-assistant",
+        "Review Home Assistant",
+    )
 
     assert created is False
     assert await existing.read_text(encoding="utf-8") == "# Existing\n"
@@ -56,6 +69,8 @@ async def test__create_stubs_returns_only_newly_created_names(
         ["Existing", "New Domain"],
         _DOMAINS_DIR,
         "domain",
+        "review-home-assistant",
+        "Review Home Assistant",
     )
 
     assert created == ["New Domain"]

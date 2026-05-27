@@ -113,14 +113,14 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
             "Extract structured task metadata from the user's description. "
             "Return concise, actionable values. "
             "Domains are platforms or broad areas the work lives under "
-            "(e.g. 'Automation Platform', 'Inventory'). "
+            "(e.g. 'Home Assistant', 'Inventory'). "
             "Resources are specific integrations, APIs, vendors, or services you will "
             "configure or call (e.g. 'Acme API', 'MQTT'). "
             "Never put the same name in both domains and resources. "
             "If a task mentions adding or updating an integration inside a platform, "
             "put the platform in domains and the integration in resources only — "
             "e.g. 'Add the Acme API to the automation platform' → domains: "
-            "['Automation Platform'], resources: ['Acme API']. "
+            "['Home Assistant'], resources: ['Acme API']. "
             "For people: every person named or clearly implied in the task (e.g. 'Jordan' from "
             "\"Jordan's laptop\", or the person behind 'their' when a name appears in the same "
             "sentence). "
@@ -624,6 +624,8 @@ async def _ensure_stub(
     directory: pathlib.PurePath,
     name: str,
     note_type: str,
+    source_task_slug: str,
+    source_task_title: str,
 ) -> bool:
     """Create a minimal stub note if it does not already exist.
 
@@ -631,6 +633,8 @@ async def _ensure_stub(
         directory: Relative vault path for the note directory.
         name: Human-readable name (used as heading and for slug generation).
         note_type: Value for the ``type`` frontmatter field.
+        source_task_slug: Slug of the task that caused this stub to be created.
+        source_task_title: Human-readable title of the source task.
 
     Returns:
         True if the note was created, False if it already existed.
@@ -642,7 +646,9 @@ async def _ensure_stub(
         return False
     content = (
         f"---\ntype: {note_type}\nstatus: active\n---\n\n"
-        f"# {name}\n\n## Notes\n\nCreated automatically from task intake.\n"
+        f"# {name}\n\n## Notes\n\n"
+        "Created automatically from task intake for "
+        f"[[{source_task_slug}|{source_task_title}]].\n"
     )
     await atomic_write_text(path, content)
     logger.info("Created stub note: {}/{}.md", directory, slug)
@@ -653,6 +659,8 @@ async def _create_stubs(
     names: list[str],
     directory: pathlib.PurePath,
     note_type: str,
+    source_task_slug: str,
+    source_task_title: str,
 ) -> list[str]:
     """Create stub notes for each name that doesn't exist.
 
@@ -660,6 +668,8 @@ async def _create_stubs(
         names: Human-readable names to stub out.
         directory: Relative vault path for the note directory.
         note_type: Value for the ``type`` frontmatter field.
+        source_task_slug: Slug of the task that caused these stubs to be created.
+        source_task_title: Human-readable title of the source task.
 
     Returns:
         Names of notes that were newly created.
@@ -668,7 +678,16 @@ async def _create_stubs(
         return []
 
     stubs_created = await asyncio.gather(
-        *(_ensure_stub(directory, name, note_type) for name in names),
+        *(
+            _ensure_stub(
+                directory,
+                name,
+                note_type,
+                source_task_slug,
+                source_task_title,
+            )
+            for name in names
+        ),
     )
     created = [
         name
@@ -792,16 +811,22 @@ class TaskService:
             metadata.domains,
             _DOMAINS_DIR,
             "domain",
+            slug,
+            metadata.title,
         )
         resources_created = await _create_stubs(
             metadata.resources,
             _RESOURCES_DIR,
             "resource",
+            slug,
+            metadata.title,
         )
         people_created = await _create_stubs(
             metadata.people,
             _PEOPLE_DIR,
             "person",
+            slug,
+            metadata.title,
         )
 
         if matched_capture is not None:

@@ -58,6 +58,27 @@ def test__find_match_returns_none_for_weak_match(sample_captures: list[Capture])
     assert _find_match("xyzzy plugh unrelated qwerty", sample_captures) is None
 
 
+def test__find_match_rejects_loose_long_capture_match() -> None:
+    """Loose long-text WRatio matches are not accepted automatically."""
+    capture = Capture(
+        id="2026-05-17T14:29",
+        date="2026-05-17",
+        time="14:29",
+        text=(
+            "Update the Open Banking integration in Home Assistant to include "
+            "Vic's Amex card and send her notifications of how much she's spent."
+        ),
+        path=pathlib.PurePath("Inbox/Ideas.md"),
+    )
+
+    match = _find_match(
+        "sort that plant database thing, then log all my plants and care routines",
+        [capture],
+    )
+
+    assert match is None
+
+
 def test__find_match_raises_for_ambiguous_scores(
     sample_captures: list[Capture],
     mocker: MockerFixture,

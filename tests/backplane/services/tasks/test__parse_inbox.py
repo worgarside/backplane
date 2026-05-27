@@ -56,6 +56,36 @@ Too old
     assert captures[0].text == "Today's capture"
 
 
+async def test__parse_inbox_strips_task_backlink_annotations(
+    obsidian_vault: anyio.Path,
+) -> None:
+    """Generated task back-links are not treated as capture text."""
+    today_iso = today().isoformat()
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
+    await inbox.parent.mkdir(parents=True, exist_ok=True)
+    _ = await inbox.write_text(
+        f"""# {today_iso}
+
+## 09:15
+
+Update the Open Banking integration.
+
+↗ [[open-banking]]
+
+↗ \\[[escaped-task-link]\\]
+""",
+        encoding="utf-8",
+    )
+
+    async with MarkdownDocument(
+        vault_path=ObsidianService.IDEA_INBOX_PATH,
+        read_only=True,
+    ) as doc:
+        captures = _parse_inbox(doc, days=30)
+
+    assert captures[0].text == "Update the Open Banking integration."
+
+
 async def test__parse_inbox_skips_invalid_dates_and_empty_captures(
     obsidian_vault: anyio.Path,
 ) -> None:

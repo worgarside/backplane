@@ -7,6 +7,8 @@ import re
 from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
+from loguru import logger
+
 from .exceptions import SectionNotFoundError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
@@ -97,3 +99,9 @@ async def append_board_card(
     text = await board_path.read_text(encoding="utf-8")
     new_text = add_card_to_list(text, slug, section, due=due)
     await atomic_write_text(board_path, new_text)
+    logger.info(
+        "Appended Kanban card: board={} section={} slug={}",
+        board_path,
+        section,
+        slug,
+    )

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from backplane.services.tasks import _normalize_domains_and_resources
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 
 def test__normalize_domains_and_resources_dedupes_within_lists() -> None:
@@ -23,3 +28,18 @@ def test__normalize_domains_and_resources_prefers_resources_on_overlap() -> None
     )
     assert domains == ["Automation Platform"]
     assert resources == ["Acme API"]
+
+
+def test__normalize_domains_and_resources_logs_removed_domains(
+    mocker: MockerFixture,
+) -> None:
+    """Overlapping domain names removed in favour of resources are logged."""
+    mock_info = mocker.patch("backplane.services.tasks.logger.info")
+
+    _normalize_domains_and_resources(
+        ["Acme API", "Automation Platform"],
+        ["Acme API"],
+    )
+
+    mock_info.assert_called_once()
+    assert "Acme API" in str(mock_info.call_args.args[1])

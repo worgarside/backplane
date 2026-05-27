@@ -40,6 +40,8 @@ _BOARD_PATH: Final = pathlib.PurePath("Tasks/Board.md")
 _INBOX_DAYS: Final = 30
 _SCORE_AUTO: Final = 70.0
 _SCORE_CANDIDATE: Final = 55.0
+_LOG_TEXT_MAX_LEN: Final = 80
+_MATCH_TOP_CANDIDATES: Final = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +134,14 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
     )
 
 
+def _truncate_for_log(text: str, *, max_len: int = _LOG_TEXT_MAX_LEN) -> str:
+    """Return a single-line snippet safe for debug logs."""
+    normalized = " ".join(text.split())
+    if len(normalized) <= max_len:
+        return normalized
+    return f"{normalized[: max_len - 1]}…"
+
+
 def _log_metadata_agent_run(result: AgentRunResult[TaskMetadata]) -> None:
     """Log token usage and estimated cost for a metadata extraction run."""
     usage = cast("RunUsage", result.usage)
@@ -193,7 +203,8 @@ def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture
             continue
 
         for time_section in date_section.sections:
-            if not time_section.content:
+            capture_text = _clean_capture_text(time_section.content)
+            if not capture_text:
                 continue
 
             captures.append(
@@ -201,7 +212,7 @@ def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture
                     id=f"{date_section.heading}T{time_section.heading}",
                     date=date_section.heading,
                     time=time_section.heading,
-                    text=time_section.content.strip(),
+                    text=capture_text,
                     path=ObsidianService.IDEA_INBOX_PATH,
                 ),
             )
@@ -209,14 +220,67 @@ def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture
     return captures
 
 
+def _is_task_backlink_line(line: str) -> bool:
+    """Return whether a line is an appended task back-link annotation."""
+    normalized = line.strip().replace("\\", "")
+    return normalized.startswith("↗ [[") and normalized.endswith("]]")
+
+
+def _clean_capture_text(text: str | None) -> str:
+    """Return capture text without generated task back-link annotations."""
+    if text is None:
+        return ""
+
+    return "\n".join(
+        line.rstrip()
+        for line in text.strip().splitlines()
+        if not _is_task_backlink_line(line)
+    ).strip()
+
+
+def _fuzzy_score_breakdown(query: str, text: str) -> tuple[float, float, float]:
+    """Return token-set, partial, and combined fuzzy scores."""
+    token_set = fuzz.token_set_ratio(query, text)
+    partial = fuzz.partial_ratio(query, text)
+    return token_set, partial, max(token_set, partial)
+
+
 def _fuzzy_score(query: str, text: str) -> float:
-    """Return the best rapidfuzz score between query and text."""
-    scores: list[float] = [
-        fuzz.token_set_ratio(query, text),
-        fuzz.partial_ratio(query, text),
-        fuzz.WRatio(query, text),
-    ]
-    return max(scores)
+    """Return a conservative fuzzy score between query and text."""
+    _, _, score = _fuzzy_score_breakdown(query, text)
+    return score
+
+
+def _log_match_candidates(
+    description: str,
+    scored: list[tuple[Capture, float]],
+) -> None:
+    """Log top fuzzy-match candidates at DEBUG for investigation."""
+    if not scored:
+        return
+
+    logger.debug(
+        "Fuzzy match query (len={}): {}",
+        len(description),
+        _truncate_for_log(description),
+    )
+    for capture, score in scored[:_MATCH_TOP_CANDIDATES]:
+        token_set, partial, _ = _fuzzy_score_breakdown(description, capture.text)
+        logger.debug(
+            "Fuzzy match candidate id={} score={:.0f} token_set={:.0f} partial={:.0f} text={}",
+            capture.id,
+            score,
+            token_set,
+            partial,
+            _truncate_for_log(capture.text),
+        )
+
+
+def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
+    """Return score gap between best and second-best candidates."""
+    if len(scored) <= 1:
+        return None
+    return scored[0][1] - scored[1][1]
 
 
 def _find_match(description: str, captures: list[Capture]) -> Capture | None:
@@ -234,6 +298,7 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
             details for the calling LLM to use for disambiguation.
     """
     if not captures:
+        logger.debug("Fuzzy match skipped: no inbox captures in lookback window")
         return None
 
     scored: list[tuple[Capture, float]] = sorted(
@@ -241,17 +306,28 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
         key=operator.itemgetter(1),
         reverse=True,
     )
+    _log_match_candidates(description, scored)
     best_capture, best_score = scored[0]
+    gap = _runner_up_gap(scored)
 
     if best_score >= _SCORE_AUTO:
+        gap_text = f"{gap:.0f}" if gap is not None else "n/a"
         logger.info(
-            "Fuzzy match accepted (score={:.0f}): {}",
+            "Fuzzy match accepted (score={:.0f}, runner_up_gap={}): {}",
             best_score,
+            gap_text,
             best_capture.id,
         )
         return best_capture
 
     if best_score >= _SCORE_CANDIDATE:
+        top_ids = [capture.id for capture, _ in scored[:_MATCH_TOP_CANDIDATES]]
+        logger.warning(
+            "Fuzzy match ambiguous (score={:.0f}, candidates={}): {}",
+            best_score,
+            top_ids,
+            best_capture.id,
+        )
         candidates_text = "; ".join(f"{c.id!r}: {c.text!r}" for c, _ in scored[:3])
         msg = (
             f"Ambiguous match (score={best_score:.0f}). "
@@ -260,6 +336,11 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
         )
         raise ValueError(msg)
 
+    logger.info(
+        "Fuzzy match rejected (best_score={:.0f}, best_id={})",
+        best_score,
+        best_capture.id,
+    )
     return None
 
 
@@ -336,8 +417,15 @@ async def _metadata_catalog_prompt() -> str:
         )
 
     if not lines:
+        logger.debug("Metadata catalog empty (no domain/resource/person notes)")
         return ""
 
+    logger.debug(
+        "Metadata catalog: domains={} resources={} people={}",
+        len(domains),
+        len(resources),
+        len(people),
+    )
     return "\n".join(lines)
 
 
@@ -370,12 +458,37 @@ def _normalize_domains_and_resources(
     """
     normalized_resources = _dedupe_entity_names(resources)
     resource_keys = {name.casefold() for name in normalized_resources}
+    deduped_domains = _dedupe_entity_names(domains)
     normalized_domains = [
-        name
-        for name in _dedupe_entity_names(domains)
-        if name.casefold() not in resource_keys
+        name for name in deduped_domains if name.casefold() not in resource_keys
     ]
+    removed_domains = [
+        name for name in deduped_domains if name.casefold() in resource_keys
+    ]
+    if removed_domains:
+        logger.info(
+            "Metadata normalization removed domains also listed as resources: {}",
+            removed_domains,
+        )
     return normalized_domains, normalized_resources
+
+
+def _log_task_metadata(metadata: TaskMetadata, *, context: str) -> None:
+    """Log extracted task metadata fields at INFO."""
+    logger.info(
+        (
+            "Task metadata {}: title={!r} domains={} resources={} people={} "
+            "priority={} effort={} next_action_len={}"
+        ),
+        context,
+        metadata.title,
+        metadata.domains,
+        metadata.resources,
+        metadata.people,
+        metadata.priority,
+        metadata.effort,
+        len(metadata.next_action),
+    )
 
 
 async def _extract_metadata(
@@ -400,24 +513,37 @@ async def _extract_metadata(
 
     if title:
         prompt_parts.append(f"Title already provided: {title!r} - keep it unchanged.")
+        logger.debug("Metadata extraction title override supplied")
 
     if priority:
         prompt_parts.append(
             f"Priority already provided: {priority!r} - keep it unchanged.",
         )
+        logger.debug("Metadata extraction priority override supplied: {}", priority)
+
+    prompt = "\n".join(prompt_parts)
+    logger.debug(
+        "Metadata extraction prompt: description_len={} catalog_present={} prompt_len={}",
+        len(description),
+        bool(catalog),
+        len(prompt),
+    )
 
     try:
-        result = await _metadata_agent().run("\n".join(prompt_parts))
+        result = await _metadata_agent().run(prompt)
         _log_metadata_agent_run(result)
         metadata = result.output
+        _log_task_metadata(metadata, context="extracted")
     except Exception:  # noqa: BLE001
         logger.exception("Metadata extraction failed; using defaults")
-        return TaskMetadata(
+        fallback = TaskMetadata(
             title=title or description[:60],
             domains=[],
             resources=[],
             people=[],
         )
+        _log_task_metadata(fallback, context="fallback")
+        return fallback
 
     domains, resources = _normalize_domains_and_resources(
         metadata.domains,
@@ -429,6 +555,7 @@ async def _extract_metadata(
         metadata = metadata.model_copy(update={"title": title})
     if priority:
         metadata = metadata.model_copy(update={"priority": priority})
+    _log_task_metadata(metadata, context="final")
     return metadata
 
 
@@ -511,6 +638,7 @@ async def _ensure_stub(
     slug = safe_slug(name)
     path = await resolve_under_root(directory / f"{slug}.md")
     if await path.exists():
+        logger.debug("Stub note already exists: {}/{}.md", directory, slug)
         return False
     content = (
         f"---\ntype: {note_type}\nstatus: active\n---\n\n"
@@ -536,11 +664,26 @@ async def _create_stubs(
     Returns:
         Names of notes that were newly created.
     """
+    if not names:
+        return []
+
     stubs_created = await asyncio.gather(
         *(_ensure_stub(directory, name, note_type) for name in names),
     )
-
-    return [name for name, created in zip(names, stubs_created, strict=True) if created]
+    created = [
+        name
+        for name, was_created in zip(names, stubs_created, strict=True)
+        if was_created
+    ]
+    skipped = len(names) - len(created)
+    logger.info(
+        "Stub notes for {}: created={} skipped_existing={} names={}",
+        note_type,
+        len(created),
+        skipped,
+        created or names,
+    )
+    return created
 
 
 async def _annotate_capture(match: Capture, slug: str) -> None:
@@ -554,6 +697,7 @@ async def _annotate_capture(match: Capture, slug: str) -> None:
         async with ObsidianService().idea_inbox() as inbox:
             section = inbox.get_section((match.date, match.time))
             section.append_content(f"\n↗ [[{slug}]]")
+        logger.debug("Annotated inbox capture {} with task [[{}]]", match.id, slug)
     except (ValueError, FileNotFoundError) as exc:
         logger.warning("Could not annotate inbox capture: {}", exc)
 
@@ -591,17 +735,40 @@ class TaskService:
                 captures = _parse_inbox(inbox)
         except FileNotFoundError:
             logger.error("Idea inbox not found; skipping capture matching")
+        else:
+            logger.info(
+                "Parsed {} inbox captures (lookback_days={})",
+                len(captures),
+                _INBOX_DAYS,
+            )
 
         matched_capture = _find_match(description, captures)
         metadata_source = (
             matched_capture.text if matched_capture is not None else description
         )
+        if matched_capture is not None:
+            logger.info(
+                "Task metadata source: capture {} (description_len={} capture_len={})",
+                matched_capture.id,
+                len(description),
+                len(matched_capture.text),
+            )
+        else:
+            logger.info(
+                "Task metadata source: description only (len={})",
+                len(description),
+            )
         metadata = await _extract_metadata(metadata_source, title, priority)
 
         base_slug = safe_slug(metadata.title)
         slug = base_slug
         counter = 2
         while await (await resolve_under_root(_TASKS_DIR / f"{slug}.md")).exists():
+            logger.debug(
+                "Task slug collision: {} already exists, trying {}",
+                slug,
+                f"{base_slug}-{counter}",
+            )
             slug = f"{base_slug}-{counter}"
             counter += 1
 
@@ -639,6 +806,18 @@ class TaskService:
 
         if matched_capture is not None:
             await _annotate_capture(matched_capture, slug)
+
+        logger.info(
+            (
+                "Task intake complete: slug={} matched_capture_id={} "
+                "domains_created={} resources_created={} people_created={}"
+            ),
+            slug,
+            matched_capture.id if matched_capture else None,
+            domains_created,
+            resources_created,
+            people_created,
+        )
 
         return {
             "slug": slug,

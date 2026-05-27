@@ -74,15 +74,28 @@ async def create_task(
 
     Returns:
         Concise confirmation suitable for voice assistant output.
-    """
-    logger.info("create_task: description={!r}", description)
 
-    result = await TaskService().create_task(
-        description,
-        title=title,
-        due=due,
-        priority=priority,
+    Raises:
+        ValueError: If inbox capture matching is ambiguous.
+    """
+    logger.info(
+        ("create_task called: description_len={} title={!r} due={!r} priority={!r}"),
+        len(description),
+        title,
+        due,
+        priority,
     )
+
+    try:
+        result = await TaskService().create_task(
+            description,
+            title=title,
+            due=due,
+            priority=priority,
+        )
+    except ValueError as exc:
+        logger.warning("create_task failed (ambiguous inbox match): {}", exc)
+        raise
 
     task_title = result["title"]
     slug = result["slug"]
@@ -92,4 +105,11 @@ async def create_task(
     if matched:
         parts.append(f"Matched inbox capture from {matched}.")
 
-    return " ".join(parts)
+    response = " ".join(parts)
+    logger.info(
+        "create_task succeeded: slug={} matched_capture_id={} response={!r}",
+        slug,
+        matched,
+        response,
+    )
+    return response

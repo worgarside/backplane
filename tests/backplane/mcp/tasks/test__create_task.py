@@ -13,14 +13,48 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 
-async def test__create_task__omitted_due_defaults_to_none(
+@pytest.mark.parametrize(
+    (
+        "description",
+        "title",
+        "due",
+        "priority",
+        "returned_title",
+        "returned_slug",
+    ),
+    [
+        (
+            "Review backup logs",
+            None,
+            None,
+            None,
+            "Review backup logs",
+            "review-backup-logs",
+        ),
+        (
+            "Install the hallway sensor before Friday",
+            "Install hallway sensor",
+            "2026-05-29",
+            enums.Priority.HIGH,
+            "Install hallway sensor",
+            "install-hallway-sensor",
+        ),
+    ],
+)
+async def test__create_task__forwards_fields_to_task_service(
     mocker: MockerFixture,
+    description: str,
+    title: str | None,
+    due: str | None,
+    priority: enums.Priority | None,
+    returned_title: str,
+    returned_slug: str,
 ) -> None:
-    """An omitted due date should be forwarded to the service as None."""
+    """Task fields are forwarded while omitted optional values default to None."""
     mock_create_task = mocker.AsyncMock(
         return_value={
-            "title": "Review backup logs",
-            "slug": "review-backup-logs",
+            "title": returned_title,
+            "slug": returned_slug,
             "matched_capture_id": None,
         },
     )
@@ -28,50 +62,20 @@ async def test__create_task__omitted_due_defaults_to_none(
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
 
     result = await tasks.create_task(
-        description="Review backup logs",
+        description=description,
+        title=title,
+        due=due,
+        priority=priority,
     )
 
-    assert result == "Task 'Review backup logs' created at Tasks/review-backup-logs.md."
+    assert result == f"Task '{returned_title}' created at Tasks/{returned_slug}.md."
     assert "Matched inbox capture" not in result
     mock_task_service.assert_called_once_with()
     mock_create_task.assert_awaited_once_with(
-        "Review backup logs",
-        title=None,
-        due=None,
-        priority=None,
-    )
-
-
-async def test__create_task__provided_due_is_forwarded_to_task_service(
-    mocker: MockerFixture,
-) -> None:
-    """A provided due date should be forwarded with the other task fields."""
-    mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": "Install hallway sensor",
-            "slug": "install-hallway-sensor",
-            "matched_capture_id": None,
-        },
-    )
-    mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
-    mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
-
-    result = await tasks.create_task(
-        description="Install the hallway sensor before Friday",
-        title="Install hallway sensor",
-        due="2026-05-29",
-        priority=enums.Priority.HIGH,
-    )
-
-    assert (
-        result
-        == "Task 'Install hallway sensor' created at Tasks/install-hallway-sensor.md."
-    )
-    mock_create_task.assert_awaited_once_with(
-        "Install the hallway sensor before Friday",
-        title="Install hallway sensor",
-        due="2026-05-29",
-        priority=enums.Priority.HIGH,
+        description,
+        title=title,
+        due=due,
+        priority=priority,
     )
 
 

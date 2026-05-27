@@ -12,8 +12,9 @@ from .helpers import (
     today,
 )
 from .kanban import append_board_card
-from .markdown import YAML_LOADER, MarkdownDocument
+from .markdown import MarkdownDocument
 from .settings import SETTINGS
+from .yaml import YAML_LOADER
 
 __all__ = [
     "SETTINGS",

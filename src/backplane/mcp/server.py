@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
+
+from fastmcp.server.lifespan import lifespan
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -14,7 +15,7 @@ from backplane import __version__
 from backplane.services.home_assistant import notify_startup, reload_mcp_integration
 
 
-@asynccontextmanager
+@lifespan
 async def _lifespan(mcp: FastMCP[None]) -> AsyncGenerator[None]:
     raw_tools = await mcp.list_tools()
     raw_resources = await mcp.list_resources()

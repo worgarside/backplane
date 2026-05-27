@@ -8,7 +8,10 @@ below.
 
 from __future__ import annotations
 
-from . import obsidian  # noqa: F401  # pyright: ignore[reportUnusedImport]
+from . import (
+    obsidian,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+    tasks,  # noqa: F401  # pyright: ignore[reportUnusedImport]
+)
 from .server import mcp
 
 __all__ = ["mcp"]

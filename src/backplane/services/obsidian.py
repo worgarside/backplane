@@ -5,39 +5,18 @@ from __future__ import annotations
 import datetime as dt  # noqa: TC003
 import json
 import pathlib
-import re
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final, cast, final
 
-from backplane.utils import today
-from backplane.utils.helpers import format_obsidian_moment_date
-from backplane.utils.markdown import MarkdownDocument
-from backplane.utils.settings import SETTINGS
+from backplane.utils import (
+    SETTINGS,
+    MarkdownDocument,
+    substitute_obsidian_core_date_variables,
+    today,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-
-_DATE_TEMPLATE = re.compile(r"\{\{\s*date\s*(?::([^}]*))?\s*\}\}", re.IGNORECASE)
-
-
-def substitute_obsidian_core_date_variables(template: str, date: dt.date) -> str:
-    """Replace ``{{date}}`` and ``{{date:...}}`` placeholders (Obsidian core template syntax).
-
-    Args:
-        template: Raw template file contents.
-        date: Calendar date used for substitution.
-
-    Returns:
-        Template text with date placeholders expanded.
-    """
-
-    def _replace(match: re.Match[str]) -> str:
-        inner = match.group(1)
-        if inner is None or not inner.strip():
-            return date.isoformat()
-        return format_obsidian_moment_date(date, inner.strip())
-
-    return _DATE_TEMPLATE.sub(_replace, template)
 
 
 @final
@@ -45,7 +24,7 @@ class ObsidianService:
     """Service for interacting with the Obsidian vault."""
 
     DAILY_NOTE_DIRECTORY: Final = pathlib.PurePath("Daily Notes")
-    INBOX_DIRECTORY: Final = pathlib.PurePath("Inbox")
+    IDEA_INBOX_PATH: Final = pathlib.PurePath("Inbox") / "Ideas.md"
 
     @staticmethod
     async def _daily_note_template_source() -> str | None:
@@ -128,7 +107,7 @@ class ObsidianService:
             Loaded markdown document for the idea inbox.
         """
         async with MarkdownDocument(
-            vault_path=self.INBOX_DIRECTORY / "Ideas.md",
+            vault_path=self.IDEA_INBOX_PATH,
             read_only=False,
         ) as idea_inbox:
             yield idea_inbox

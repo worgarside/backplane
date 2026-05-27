@@ -10,8 +10,8 @@ from backplane.utils.helpers.slug import safe_slug
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
-        ("Open Banking Vic Amex", "open-banking-vic-amex"),
-        ("  Mood Tracker Reminders!  ", "mood-tracker-reminders"),
+        ("Team Calendar Jordan Reminders", "team-calendar-jordan-reminders"),
+        ("  Deploy Staging Alerts!  ", "deploy-staging-alerts"),
         ("", "task"),
         ("!!!", "task"),
         ("café résumé", "cafe-resume"),

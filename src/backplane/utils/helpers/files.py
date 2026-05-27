@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-import pathlib
+from typing import TYPE_CHECKING
 
 import anyio
 from anyio import NamedTemporaryFile
+
+from backplane.utils.settings import SETTINGS
+
+if TYPE_CHECKING:
+    import pathlib
 
 
 async def atomic_write_text(path: anyio.Path, content: str) -> None:
@@ -32,28 +37,24 @@ async def atomic_write_text(path: anyio.Path, content: str) -> None:
         _ = await anyio.Path(tmp_file.wrapped.name).replace(path)
 
 
-def resolve_under_root(
-    root: anyio.Path,
-    relative: pathlib.PurePath,
-) -> anyio.Path:
-    """Resolve a path relative to ``root`` and ensure it stays inside that root.
+async def resolve_under_root(relative: anyio.Path | pathlib.PurePath) -> anyio.Path:
+    """Resolve a path relative to the Obsidian vault and ensure it stays inside.
 
     Args:
-        root: Absolute path to the enclosing directory (e.g. an Obsidian vault).
-        relative: Path relative to ``root``.
+        relative: Path relative to the configured vault root.
 
     Returns:
-        Resolved absolute path under ``root``.
+        Resolved absolute path under the vault.
 
     Raises:
-        ValueError: If ``relative`` is absolute, contains ``..``, or escapes ``root``.
+        ValueError: If ``relative`` is absolute, contains ``..``, or escapes the vault.
     """
     if relative.is_absolute() or ".." in relative.parts:
         msg = f"Unsafe path: {relative!s}"
         raise ValueError(msg)
 
-    root_resolved = pathlib.Path(str(root)).resolve()
-    resolved = (root_resolved / relative).resolve()
+    root_resolved = await SETTINGS.obsidian_vault_path.resolve()
+    resolved = await (root_resolved / relative).resolve()
 
     try:
         _ = resolved.relative_to(root_resolved)
@@ -61,4 +62,4 @@ def resolve_under_root(
         msg = f"Path escapes root: {relative!s}"
         raise ValueError(msg) from exc
 
-    return anyio.Path(resolved)
+    return resolved

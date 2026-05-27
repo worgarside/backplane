@@ -67,10 +67,13 @@ typeCheckingMode = "all"
 
 include = ["src"]
 
-executionEnvironments = [{ root = "src" }]
+executionEnvironments = [
+  { root = "src" },
+]
 
 reportMissingImports = "error"
 reportMissingTypeStubs = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
 
 pythonVersion = "3.14"
 

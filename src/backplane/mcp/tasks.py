@@ -15,9 +15,13 @@ from .server import mcp
 
 @mcp.tool(
     description=(
-        "Save something as a task or action item.\n\n"
+        "Create a structured task note for something actionable.\n\n"
         "Use this when the user mentions something they need to do, want to remember "
-        "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', etc.\n\n"
+        "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
+        "'I should...', 'I need to...', etc.\n\n"
+        "Do not use this for loose, non-committal ideas unless the user asks to turn "
+        "one into a task. Use record_idea for speculative captures like 'maybe', "
+        "'I could', 'I wonder if', or 'worth investigating'.\n\n"
         "Ask for a due date before calling if the request sounds time-sensitive "
         "(e.g. 'before the weekend', 'by Friday', 'i need to...')."
     ),
@@ -28,7 +32,7 @@ async def create_task(
         str,
         Field(
             description=(
-                "Natural-language task or idea description. This is fuzzy-matched "
+                "Natural-language task or action description. This is fuzzy-matched "
                 "against existing inbox captures, so include distinctive nouns, "
                 "names, and phrases from the original capture when available. "
                 "Exact wording is helpful but not required; keep extra context "

@@ -243,22 +243,34 @@ async def get_daily_note(
 
 @mcp.tool(
     description=(
-        """Record a new idea in the Obsidian idea inbox.
+        """Record a loose, non-actionable idea in the Obsidian idea inbox.
 
-Use this when the user mentions:
-- an idea
-- something they could build
-- something worth investigating
-- a possible automation/improvement
-- a future project
+Use this for speculative captures such as:
+- "maybe..."
+- "I could..."
+- "I wonder if..."
+- "worth investigating..."
+- a possible automation, improvement, or future project that the user has not committed to doing
 
-You should convert the idea from a spoken phrase to a written sentence, but the user's original wording
-should be preserved as closely as possible."""
+Do not use this for tasks or action items. If the user says they need to do something,
+should do something, want to remember to act on something, or asks for a task/reminder/list item,
+use create_task instead.
+
+Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
+as possible."""
     ),
 )
 async def record_idea(
     *,
-    idea: Annotated[str, Field(description="The idea to record.")],
+    idea: Annotated[
+        str,
+        Field(
+            description=(
+                "The loose, non-actionable idea to record. Preserve the user's "
+                "wording as closely as possible."
+            ),
+        ),
+    ],
 ) -> str:
     """Record a new idea in the Obsidian idea inbox.
 

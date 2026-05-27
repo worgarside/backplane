@@ -13,6 +13,26 @@ from backplane.utils.settings import SETTINGS
 _TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 
+async def _log_ha_response(
+    response: aiohttp.ClientResponse,
+    domain: str,
+    service: str,
+) -> None:
+    """Log success or error details for a Home Assistant service response."""
+    if response.ok:
+        logger.info("{}/{} → {}", domain, service, response.status)
+        return
+
+    body = await response.text()
+    logger.error(
+        "{}/{} returned {} — {}",
+        domain,
+        service,
+        response.status,
+        body,
+    )
+
+
 async def _call_ha_service(
     domain: str,
     service: str,
@@ -38,17 +58,7 @@ async def _call_ha_service(
             aiohttp.ClientSession(timeout=_TIMEOUT) as session,
             session.post(url, json=data, headers=headers) as response,
         ):
-            if response.ok:
-                logger.info("{}/{} → {}", domain, service, response.status)
-            else:
-                body = await response.text()
-                logger.error(
-                    "{}/{} returned {} — {}",
-                    domain,
-                    service,
-                    response.status,
-                    body,
-                )
+            await _log_ha_response(response, domain, service)
     except Exception as exc:  # noqa: BLE001
         logger.exception("{}/{} failed (url={}) — {}", domain, service, url, exc)
 

@@ -110,7 +110,7 @@ async def create_task(
         link_capture_id,
     )
 
-    result = await TaskService().create_task(
+    task = await TaskService().create_task(
         description,
         title=title,
         due=due,
@@ -118,31 +118,26 @@ async def create_task(
         link_capture_id=link_capture_id,
     )
 
-    task_title = result.title
-    slug = result.slug
-    matched = result.matched_capture_id
-
-    parts = [f"Task '{task_title}' created at Tasks/{slug}.md."]
-    if matched:
-        parts.append(f"Matched inbox capture from {matched}.")
-    elif result.candidate_captures:
-        candidate = result.candidate_captures[0]
+    parts = [f"Task '{task.title}' created at {task.path}"]
+    if task.matched_capture_id:
+        parts.append(f"Matched inbox capture from {task.matched_capture_id}.")
+    elif task.candidate_captures:
+        candidate = task.candidate_captures[0]
         snippet = " ".join(candidate.text.split())
         if len(snippet) > _CANDIDATE_SNIPPET_MAX_LEN:
             snippet = f"{snippet[: _CANDIDATE_SNIPPET_MAX_LEN - 3]}..."
-        candidate_id = candidate.id
         parts.append(
             (
-                f"This looked similar to {candidate_id} ({snippet!r}); "
-                f"say 'link it to {candidate_id}' to connect that capture."
+                f"This looked similar to {candidate.id} ({snippet!r}); "
+                f"say 'link it to {candidate.id}' to connect that capture."
             ),
         )
 
     response = " ".join(parts)
     logger.info(
         "create_task succeeded: slug={} matched_capture_id={} response={!r}",
-        slug,
-        matched,
+        task.slug,
+        task.matched_capture_id,
         response,
     )
     return response

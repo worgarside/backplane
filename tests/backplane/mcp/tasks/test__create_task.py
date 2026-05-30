@@ -77,7 +77,7 @@ async def test__create_task__forwards_fields_to_task_service(
         link_capture_id=None,
     )
 
-    assert result == f"Task '{returned_title}' created at Tasks/{returned_slug}.md."
+    assert result == f"Task '{returned_title}' created at Tasks/Tasks/{returned_slug}.md."
     assert "Matched inbox capture" not in result
     mock_task_service.assert_called_once_with()
     mock_create_task.assert_awaited_once_with(
@@ -113,7 +113,7 @@ async def test__create_task__matched_capture_is_included_in_confirmation(
     )
 
     assert result == (
-        "Task 'Review backup logs' created at Tasks/review-backup-logs.md. "
+        "Task 'Review backup logs' created at Tasks/Tasks/review-backup-logs.md. "
         "Matched inbox capture from 2026-05-25T21:15."
     )
 
@@ -173,7 +173,7 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
 
     assert result == (
         "Task 'Update rain alert notification' created at "
-        "Tasks/update-rain-alert-notification.md. This looked similar to "
+        "Tasks/Tasks/update-rain-alert-notification.md. This looked similar to "
         "2026-05-17T01:44 ('I need to create reminder notifications for the mood "
         "tracker'); say 'link it to 2026-05-17T01:44' to connect that capture."
     )

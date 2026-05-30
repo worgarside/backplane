@@ -1,0 +1,6455 @@
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:31:04.928829+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: >-
+        new task - the rain + roof door open alert notification should update to
+        show the rain amount every time it changes 
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:31:04.928857+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:31:06.335837+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Creating a task**
+
+          I
+    timestamp: "2026-05-28T21:31:07.143318+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:31:07.150611+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:07.200416+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " create"
+    timestamp: "2026-05-28T21:31:07.241774+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:07.270296+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:31:07.294080+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:31:07.306108+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:31:07.322978+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:07.335036+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " seems"
+    timestamp: "2026-05-28T21:31:07.347866+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " like"
+    timestamp: "2026-05-28T21:31:07.363348+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " asking"
+    timestamp: "2026-05-28T21:31:07.374985+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:31:07.386978+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:07.405498+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " due"
+    timestamp: "2026-05-28T21:31:07.419794+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " date"
+    timestamp: "2026-05-28T21:31:07.452820+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:31:07.479884+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " be"
+    timestamp: "2026-05-28T21:31:07.510974+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:07.545027+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " good"
+    timestamp: "2026-05-28T21:31:07.580280+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " idea"
+    timestamp: "2026-05-28T21:31:07.613914+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:31:07.650811+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " even"
+    timestamp: "2026-05-28T21:31:07.682269+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " though"
+    timestamp: "2026-05-28T21:31:07.716408+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:07.755953+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:31:07.784469+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " not"
+    timestamp: "2026-05-28T21:31:07.818443+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " be"
+    timestamp: "2026-05-28T21:31:07.851724+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " very"
+    timestamp: "2026-05-28T21:31:07.881740+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " time"
+    timestamp: "2026-05-28T21:31:07.912122+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "-sensitive"
+    timestamp: "2026-05-28T21:31:07.943343+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:07.975467+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:31:08.002015+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " want"
+    timestamp: "2026-05-28T21:31:08.021354+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:08.051196+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " keep"
+    timestamp: "2026-05-28T21:31:08.075197+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:31:08.093348+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:31:08.127591+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " description"
+    timestamp: "2026-05-28T21:31:08.144444+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " concise"
+    timestamp: "2026-05-28T21:31:08.182773+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " while"
+    timestamp: "2026-05-28T21:31:08.209528+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " preserving"
+    timestamp: "2026-05-28T21:31:08.235891+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:31:08.267118+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " original"
+    timestamp: "2026-05-28T21:31:08.297962+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:31:08.331592+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:08.362258+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " It's"
+    timestamp: "2026-05-28T21:31:08.394709+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " essential"
+    timestamp: "2026-05-28T21:31:08.422118+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:08.451300+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " make"
+    timestamp: "2026-05-28T21:31:08.484336+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:08.511762+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clear"
+    timestamp: "2026-05-28T21:31:08.543108+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:31:08.577877+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " straightforward"
+    timestamp: "2026-05-28T21:31:08.611629+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " so"
+    timestamp: "2026-05-28T21:31:08.641815+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " that"
+    timestamp: "2026-05-28T21:31:08.671681+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:08.703861+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " captures"
+    timestamp: "2026-05-28T21:31:08.736946+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " everything"
+    timestamp: "2026-05-28T21:31:08.772068+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " needed"
+    timestamp: "2026-05-28T21:31:08.806218+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " without"
+    timestamp: "2026-05-28T21:31:08.842705+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " over"
+    timestamp: "2026-05-28T21:31:08.877360+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: comp
+    timestamp: "2026-05-28T21:31:08.915334+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: lic
+    timestamp: "2026-05-28T21:31:08.945703+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ating
+    timestamp: "2026-05-28T21:31:08.979766+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " things"
+    timestamp: "2026-05-28T21:31:09.014891+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:09.045152+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Let"
+    timestamp: "2026-05-28T21:31:09.079449+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:31:09.116317+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " make"
+    timestamp: "2026-05-28T21:31:09.148429+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " sure"
+    timestamp: "2026-05-28T21:31:09.186589+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:09.217135+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " structure"
+    timestamp: "2026-05-28T21:31:09.256634+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:09.286184+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " well"
+    timestamp: "2026-05-28T21:31:09.315521+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:31:09.330971+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Time"
+    timestamp: "2026-05-28T21:31:09.343483+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:09.356147+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " get"
+    timestamp: "2026-05-28T21:31:09.373865+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " this"
+    timestamp: "2026-05-28T21:31:09.384873+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:31:09.400381+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " set"
+    timestamp: "2026-05-28T21:31:09.420824+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " up"
+    timestamp: "2026-05-28T21:31:09.429935+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " properly"
+    timestamp: "2026-05-28T21:31:09.462370+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:09.477978+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:31:09.559215+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: >-
+                the rain + roof door open alert notification should update to
+                show the rain amount every time it changes
+              title: Update rain + roof door open alert notification
+              priority: medium
+              due: null
+            id: call_TBomcUXKzw7pVHqh35FBr7Hy
+            external: false
+    timestamp: "2026-05-28T21:31:09.627090+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_TBomcUXKzw7pVHqh35FBr7Hy
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=57).
+                Did you mean one of these captures: '2026-05-17T01:44': 'I need
+                to create reminder notifications for the mood tracker';
+                '2026-05-17T23:04': 'When I do some kind of interaction with
+                backplane, I should send myself notifications with deep links to
+                that specific note.'; '2026-05-27T10:42': 'I need a guest or
+                cleaner mode to disable all of the light timeouts.'? Please
+                clarify or supply the exact capture text.
+          isError: true
+        created: "2026-05-28T21:31:11.894338+00:00"
+    timestamp: "2026-05-28T21:31:11.894438+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:31:13.457304+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Clarifying user request**
+
+          I
+    timestamp: "2026-05-28T21:31:14.105221+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:31:14.111685+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:14.121024+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " figure"
+    timestamp: "2026-05-28T21:31:14.129803+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " out"
+    timestamp: "2026-05-28T21:31:14.138909+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:31:14.148871+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " exact"
+    timestamp: "2026-05-28T21:31:14.160448+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " text"
+    timestamp: "2026-05-28T21:31:14.170361+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:31:14.180050+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:31:14.189470+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wants"
+    timestamp: "2026-05-28T21:31:14.196982+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:14.205802+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " They"
+    timestamp: "2026-05-28T21:31:14.213800+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " mentioned"
+    timestamp: "2026-05-28T21:31:14.238341+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:14.250863+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " new"
+    timestamp: "2026-05-28T21:31:14.260056+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:31:14.270539+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:31:14.281484+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " so"
+    timestamp: "2026-05-28T21:31:14.294672+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:31:14.304354+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " think"
+    timestamp: "2026-05-28T21:31:14.313590+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:14.325650+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:31:14.335741+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " best"
+    timestamp: "2026-05-28T21:31:14.347566+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:14.353306+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ask"
+    timestamp: "2026-05-28T21:31:14.363748+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " them"
+    timestamp: "2026-05-28T21:31:14.390176+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:31:14.421406+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clarification"
+    timestamp: "2026-05-28T21:31:14.448345+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:14.477525+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " A"
+    timestamp: "2026-05-28T21:31:14.500281+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " more"
+    timestamp: "2026-05-28T21:31:14.507838+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " specific"
+    timestamp: "2026-05-28T21:31:14.518404+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:31:14.527474+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:31:14.535656+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " help"
+    timestamp: "2026-05-28T21:31:14.549968+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:31:14.562154+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " It"
+    timestamp: "2026-05-28T21:31:14.569788+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:31:14.576502+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " possible"
+    timestamp: "2026-05-28T21:31:14.600119+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " there"
+    timestamp: "2026-05-28T21:31:14.607501+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:31:14.640305+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " existing"
+    timestamp: "2026-05-28T21:31:14.879719+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " capture"
+    timestamp: "2026-05-28T21:31:14.880381+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:31:14.881019+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:31:14.881347+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " use"
+    timestamp: "2026-05-28T21:31:14.881786+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:14.882019+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Maybe"
+    timestamp: "2026-05-28T21:31:14.988822+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:31:15.003384+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:31:15.009743+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ask"
+    timestamp: "2026-05-28T21:31:15.015234+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " them"
+    timestamp: "2026-05-28T21:31:15.017536+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:15.019930+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " specify"
+    timestamp: "2026-05-28T21:31:15.022669+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:15.025089+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " more"
+    timestamp: "2026-05-28T21:31:15.026831+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clearly"
+    timestamp: "2026-05-28T21:31:15.028541+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:31:15.031116+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " especially"
+    timestamp: "2026-05-28T21:31:15.032479+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " if"
+    timestamp: "2026-05-28T21:31:15.033811+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:31:15.036414+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " relates"
+    timestamp: "2026-05-28T21:31:15.038344+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:31:15.040369+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:15.042573+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " rain"
+    timestamp: "2026-05-28T21:31:15.044913+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " alert"
+    timestamp: "2026-05-28T21:31:15.046164+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " or"
+    timestamp: "2026-05-28T21:31:15.046477+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:31:15.069633+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " roof"
+    timestamp: "2026-05-28T21:31:15.069810+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " door"
+    timestamp: "2026-05-28T21:31:15.070085+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " being"
+    timestamp: "2026-05-28T21:31:15.070231+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " left"
+    timestamp: "2026-05-28T21:31:15.084249+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " open"
+    timestamp: "2026-05-28T21:31:15.089448+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:31:15.098876+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " That"
+    timestamp: "2026-05-28T21:31:15.107844+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " way"
+    timestamp: "2026-05-28T21:31:15.187957+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:31:15.189137+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:31:15.201679+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " can"
+    timestamp: "2026-05-28T21:31:15.215323+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " assist"
+    timestamp: "2026-05-28T21:31:15.225266+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " them"
+    timestamp: "2026-05-28T21:31:15.233650+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " better"
+    timestamp: "2026-05-28T21:31:15.241299+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:31:15.252004+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:31:15.277521+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:31:15.279282+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " found"
+    timestamp: "2026-05-28T21:31:15.280423+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:31:15.282507+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " few"
+    timestamp: "2026-05-28T21:31:15.283227+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " similar"
+    timestamp: "2026-05-28T21:31:15.285698+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notes"
+    timestamp: "2026-05-28T21:31:15.289148+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:31:15.289984+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Can"
+    timestamp: "2026-05-28T21:31:15.292499+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " you"
+    timestamp: "2026-05-28T21:31:15.293327+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " say"
+    timestamp: "2026-05-28T21:31:15.294480+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:31:15.296146+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:31:15.296445+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:31:15.297575+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " little"
+    timestamp: "2026-05-28T21:31:15.298980+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " more"
+    timestamp: "2026-05-28T21:31:15.300892+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " exactly"
+    timestamp: "2026-05-28T21:31:15.302308+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:31:15.302907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:31:15.303628+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " should"
+    timestamp: "2026-05-28T21:31:15.305403+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:31:15.306218+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " just"
+    timestamp: "2026-05-28T21:31:15.307467+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " add"
+    timestamp: "2026-05-28T21:31:15.310001+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " this"
+    timestamp: "2026-05-28T21:31:15.310897+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " as"
+    timestamp: "2026-05-28T21:31:15.311779+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:31:15.313085+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " new"
+    timestamp: "2026-05-28T21:31:15.316386+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:31:15.318400+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " titled"
+    timestamp: "2026-05-28T21:31:15.318824+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:31:15.320786+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Update
+    timestamp: "2026-05-28T21:31:15.321809+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:31:15.324917+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " +"
+    timestamp: "2026-05-28T21:31:15.325677+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " roof"
+    timestamp: "2026-05-28T21:31:15.326018+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " door"
+    timestamp: "2026-05-28T21:31:15.329077+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " open"
+    timestamp: "2026-05-28T21:31:15.334902+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " alert"
+    timestamp: "2026-05-28T21:31:15.335352+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notification"
+    timestamp: "2026-05-28T21:31:15.335749+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ”?
+    timestamp: "2026-05-28T21:31:15.337681+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                I found a few similar notes. Can you say the task a little more
+                exactly, or should I just add this as a new task titled “Update
+                rain + roof door open alert notification”?
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: true
+    timestamp: "2026-05-28T21:31:15.448565+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:31:15.448687+00:00"
+started: 2026-05-28T21:31:04.928Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: >-
+    new task - the rain + roof door open alert notification should update to
+    show the rain amount every time it changes 
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            I found a few similar notes. Can you say the task a little more
+            exactly, or should I just add this as a new task titled “Update rain
+            + roof door open alert notification”?
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: true
+finished: 2026-05-28T21:31:15.448Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:33:50.589412+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: >-
+        basically when the rain amount changed and the roof door is open, I get
+        a notification from home assistant - the value in the notification
+        should update every time the rain amount changed, plus the notification
+        should disappear when the rain stops or the door is closed
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:33:50.589436+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:33:51.732317+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Considering task creation**
+
+          I
+    timestamp: "2026-05-28T21:33:52.981358+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:33:52.981774+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:52.982339+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " create"
+    timestamp: "2026-05-28T21:33:52.982734+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:52.983101+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:33:52.983481+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " with"
+    timestamp: "2026-05-28T21:33:52.983824+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:52.984117+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " detailed"
+    timestamp: "2026-05-28T21:33:52.984503+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " description"
+    timestamp: "2026-05-28T21:33:52.985077+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:33:52.985432+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " but"
+    timestamp: "2026-05-28T21:33:52.985826+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I'm"
+    timestamp: "2026-05-28T21:33:52.986704+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " feeling"
+    timestamp: "2026-05-28T21:33:52.992374+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:52.994362+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " bit"
+    timestamp: "2026-05-28T21:33:52.994944+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " unsure"
+    timestamp: "2026-05-28T21:33:52.996207+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " about"
+    timestamp: "2026-05-28T21:33:52.996711+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:52.998689+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clarity"
+    timestamp: "2026-05-28T21:33:52.999704+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: —
+    timestamp: "2026-05-28T21:33:53.000441+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: could
+    timestamp: "2026-05-28T21:33:53.000911+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:33:53.001367+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " end"
+    timestamp: "2026-05-28T21:33:53.001709+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " up"
+    timestamp: "2026-05-28T21:33:53.001994+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " being"
+    timestamp: "2026-05-28T21:33:53.002909+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ambiguous"
+    timestamp: "2026-05-28T21:33:53.003766+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " again"
+    timestamp: "2026-05-28T21:33:53.004340+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " due"
+    timestamp: "2026-05-28T21:33:53.004632+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:53.004863+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:53.005359+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " matching"
+    timestamp: "2026-05-28T21:33:53.005664+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "?"
+    timestamp: "2026-05-28T21:33:53.005929+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Maybe"
+    timestamp: "2026-05-28T21:33:53.006213+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:53.006820+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:33:53.007640+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " use"
+    timestamp: "2026-05-28T21:33:53.008422+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " more"
+    timestamp: "2026-05-28T21:33:53.009251+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " precise"
+    timestamp: "2026-05-28T21:33:53.010317+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:33:53.010797+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:53.011226+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " avoid"
+    timestamp: "2026-05-28T21:33:53.013263+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " confusion"
+    timestamp: "2026-05-28T21:33:53.014099+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:53.015199+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:53.015965+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wonder"
+    timestamp: "2026-05-28T21:33:53.016311+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " if"
+    timestamp: "2026-05-28T21:33:53.016559+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " there"
+    timestamp: "2026-05-28T21:33:53.016847+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " are"
+    timestamp: "2026-05-28T21:33:53.017217+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " specific"
+    timestamp: "2026-05-28T21:33:53.017598+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " phrases"
+    timestamp: "2026-05-28T21:33:53.017945+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " that"
+    timestamp: "2026-05-28T21:33:53.020168+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " would"
+    timestamp: "2026-05-28T21:33:53.034221+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " make"
+    timestamp: "2026-05-28T21:33:53.048219+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:33:53.063864+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clearer"
+    timestamp: "2026-05-28T21:33:53.072821+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:53.081876+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Let"
+    timestamp: "2026-05-28T21:33:53.093401+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:33:53.103926+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ensure"
+    timestamp: "2026-05-28T21:33:53.111410+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:33:53.125279+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:33:53.137084+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " easy"
+    timestamp: "2026-05-28T21:33:53.166410+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:53.170445+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " understand"
+    timestamp: "2026-05-28T21:33:53.200681+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " while"
+    timestamp: "2026-05-28T21:33:53.225266+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " still"
+    timestamp: "2026-05-28T21:33:53.232713+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " being"
+    timestamp: "2026-05-28T21:33:53.242962+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " thorough"
+    timestamp: "2026-05-28T21:33:53.257448+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:33:53.263958+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " That"
+    timestamp: "2026-05-28T21:33:53.272324+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " way"
+    timestamp: "2026-05-28T21:33:53.281343+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:33:53.293823+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:53.305474+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " can"
+    timestamp: "2026-05-28T21:33:53.315011+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " help"
+    timestamp: "2026-05-28T21:33:53.321150+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " avoid"
+    timestamp: "2026-05-28T21:33:53.330082+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " any"
+    timestamp: "2026-05-28T21:33:53.338433+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " potential"
+    timestamp: "2026-05-28T21:33:53.350280+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " misunderstand"
+    timestamp: "2026-05-28T21:33:53.354628+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ings
+    timestamp: "2026-05-28T21:33:53.366202+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:53.368503+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:33:53.399223+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: >-
+                When the rain amount changes and the roof door is open, I get a
+                notification from Home Assistant. The value in the notification
+                should update every time the rain amount changes, and the
+                notification should disappear when the rain stops or the door is
+                closed.
+              title: Update rain + roof door open alert notification
+              priority: medium
+              due: null
+            id: call_MlQy97jFkMiiSMLgHgDyTFBi
+            external: false
+    timestamp: "2026-05-28T21:33:53.654535+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_MlQy97jFkMiiSMLgHgDyTFBi
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=68).
+                Did you mean one of these captures: '2026-05-17T21:03': 'Track
+                LLM usage and cost in Home Assistant.'; '2026-05-17T01:44': 'I
+                need to create reminder notifications for the mood tracker';
+                '2026-05-17T14:29': "Update the Open Banking integration in Home
+                Assistant to include Vic's Amex card and send her notifications
+                of how much she's spent."? Please clarify or supply the exact
+                capture text.
+          isError: true
+        created: "2026-05-28T21:33:53.880261+00:00"
+    timestamp: "2026-05-28T21:33:53.880341+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:33:54.601001+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Considering task creation**
+
+          I
+    timestamp: "2026-05-28T21:33:55.573443+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:33:55.580465+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:55.600441+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " think"
+    timestamp: "2026-05-28T21:33:55.600881+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " about"
+    timestamp: "2026-05-28T21:33:55.601218+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " whether"
+    timestamp: "2026-05-28T21:33:55.610990+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:55.630513+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " record"
+    timestamp: "2026-05-28T21:33:55.637635+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " an"
+    timestamp: "2026-05-28T21:33:55.651247+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " idea"
+    timestamp: "2026-05-28T21:33:55.661292+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " or"
+    timestamp: "2026-05-28T21:33:55.672073+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " if"
+    timestamp: "2026-05-28T21:33:55.682844+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:55.715168+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:33:55.750811+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " is"
+    timestamp: "2026-05-28T21:33:55.779057+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " assigning"
+    timestamp: "2026-05-28T21:33:55.810195+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:55.835369+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " new"
+    timestamp: "2026-05-28T21:33:55.851818+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:33:55.865409+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:55.872309+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " It"
+    timestamp: "2026-05-28T21:33:55.884790+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " seems"
+    timestamp: "2026-05-28T21:33:55.896341+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " creating"
+    timestamp: "2026-05-28T21:33:55.903626+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:55.938127+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:33:55.954166+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:33:55.985835+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " be"
+    timestamp: "2026-05-28T21:33:55.997973+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " tricky"
+    timestamp: "2026-05-28T21:33:56.005696+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " due"
+    timestamp: "2026-05-28T21:33:56.017240+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:56.034001+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " some"
+    timestamp: "2026-05-28T21:33:56.057952+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ambiguity"
+    timestamp: "2026-05-28T21:33:56.088189+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:56.107108+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:56.110319+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wonder"
+    timestamp: "2026-05-28T21:33:56.111025+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " if"
+    timestamp: "2026-05-28T21:33:56.135296+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " asking"
+    timestamp: "2026-05-28T21:33:56.155526+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:33:56.189274+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:56.217032+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " exact"
+    timestamp: "2026-05-28T21:33:56.230789+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " text"
+    timestamp: "2026-05-28T21:33:56.250752+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:33:56.257507+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " not"
+    timestamp: "2026-05-28T21:33:56.263512+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " be"
+    timestamp: "2026-05-28T21:33:56.273382+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " necessary"
+    timestamp: "2026-05-28T21:33:56.290621+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ;
+    timestamp: "2026-05-28T21:33:56.300958+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " perhaps"
+    timestamp: "2026-05-28T21:33:56.313842+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:56.325295+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " unique"
+    timestamp: "2026-05-28T21:33:56.334258+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:33:56.344100+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:33:56.358929+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " will"
+    timestamp: "2026-05-28T21:33:56.365644+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " suffice"
+    timestamp: "2026-05-28T21:33:56.377203+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:56.391943+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Still"
+    timestamp: "2026-05-28T21:33:56.414846+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:33:56.422514+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " there"
+    timestamp: "2026-05-28T21:33:56.448411+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:33:56.467709+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:56.481273+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " chance"
+    timestamp: "2026-05-28T21:33:56.490811+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:33:56.526917+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " confusion"
+    timestamp: "2026-05-28T21:33:56.545030+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:56.570643+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Maybe"
+    timestamp: "2026-05-28T21:33:56.571013+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:56.577766+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:33:56.596940+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " confirm"
+    timestamp: "2026-05-28T21:33:56.637223+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:56.660791+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " distinct"
+    timestamp: "2026-05-28T21:33:56.690787+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:33:56.717933+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " with"
+    timestamp: "2026-05-28T21:33:56.737339+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:56.753422+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:33:56.764951+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " before"
+    timestamp: "2026-05-28T21:33:56.772951+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " proceeding"
+    timestamp: "2026-05-28T21:33:56.782164+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:56.801854+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " So"
+    timestamp: "2026-05-28T21:33:56.806435+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:33:56.817683+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " let's"
+    timestamp: "2026-05-28T21:33:56.826147+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " try"
+    timestamp: "2026-05-28T21:33:56.833674+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " using"
+    timestamp: "2026-05-28T21:33:56.862822+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " just"
+    timestamp: "2026-05-28T21:33:56.880955+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:56.888281+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:33:56.898259+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:33:56.910861+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " now"
+    timestamp: "2026-05-28T21:33:56.922115+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:33:56.935115+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:33:56.973953+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: Update rain + roof door open alert notification
+              title: Update rain + roof door open alert notification
+              priority: medium
+              due: null
+            id: call_t2mepUOPNIIQG8nk0WxGM7dC
+            external: false
+    timestamp: "2026-05-28T21:33:57.453935+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_t2mepUOPNIIQG8nk0WxGM7dC
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=60).
+                Did you mean one of these captures: '2026-05-17T14:29': "Update
+                the Open Banking integration in Home Assistant to include Vic's
+                Amex card and send her notifications of how much she's spent.";
+                '2026-05-17T01:44': 'I need to create reminder notifications for
+                the mood tracker'; '2026-05-17T23:04': 'When I do some kind of
+                interaction with backplane, I should send myself notifications
+                with deep links to that specific note.'? Please clarify or
+                supply the exact capture text.
+          isError: true
+        created: "2026-05-28T21:33:57.866304+00:00"
+    timestamp: "2026-05-28T21:33:57.866486+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:33:58.365601+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Clarifying user request**
+
+          I'm
+    timestamp: "2026-05-28T21:33:58.992353+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " considering"
+    timestamp: "2026-05-28T21:33:59.000989+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " how"
+    timestamp: "2026-05-28T21:33:59.014273+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:59.047457+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " respond"
+    timestamp: "2026-05-28T21:33:59.055257+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:59.066953+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:59.080024+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:33:59.092450+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " since"
+    timestamp: "2026-05-28T21:33:59.111498+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " they"
+    timestamp: "2026-05-28T21:33:59.118993+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " provided"
+    timestamp: "2026-05-28T21:33:59.147236+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:59.156150+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " text"
+    timestamp: "2026-05-28T21:33:59.188782+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:59.226228+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:59.257468+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’m
+    timestamp: "2026-05-28T21:33:59.265917+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " thinking"
+    timestamp: "2026-05-28T21:33:59.287881+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " that"
+    timestamp: "2026-05-28T21:33:59.300882+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " maybe"
+    timestamp: "2026-05-28T21:33:59.321469+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:59.343776+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:33:59.367986+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " use"
+    timestamp: "2026-05-28T21:33:59.377794+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:59.402222+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " record"
+    timestamp: "2026-05-28T21:33:59.406845+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: _
+    timestamp: "2026-05-28T21:33:59.422487+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: idea
+    timestamp: "2026-05-28T21:33:59.433157+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " tool"
+    timestamp: "2026-05-28T21:33:59.446324+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:33:59.462298+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " but"
+    timestamp: "2026-05-28T21:33:59.486278+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:33:59.498964+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " seems"
+    timestamp: "2026-05-28T21:33:59.539766+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:59.540652+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " can't"
+    timestamp: "2026-05-28T21:33:59.547107+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " because"
+    timestamp: "2026-05-28T21:33:59.558343+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " of"
+    timestamp: "2026-05-28T21:33:59.590773+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:33:59.624990+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " matching"
+    timestamp: "2026-05-28T21:33:59.662977+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " issue"
+    timestamp: "2026-05-28T21:33:59.702640+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:33:59.733262+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " It"
+    timestamp: "2026-05-28T21:33:59.765635+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " looks"
+    timestamp: "2026-05-28T21:33:59.799907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " like"
+    timestamp: "2026-05-28T21:33:59.829221+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:33:59.834418+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:33:59.855324+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " just"
+    timestamp: "2026-05-28T21:33:59.868649+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " explain"
+    timestamp: "2026-05-28T21:33:59.895180+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:59.904059+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " situation"
+    timestamp: "2026-05-28T21:33:59.916078+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:33:59.939352+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:33:59.952702+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:34:00.038333+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:00.038705+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:00.064262+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’ll
+    timestamp: "2026-05-28T21:34:00.069514+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ask"
+    timestamp: "2026-05-28T21:34:00.070260+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " them"
+    timestamp: "2026-05-28T21:34:00.115893+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:00.148318+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " re"
+    timestamp: "2026-05-28T21:34:00.150471+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: phrase
+    timestamp: "2026-05-28T21:34:00.152746+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " their"
+    timestamp: "2026-05-28T21:34:00.164847+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " request"
+    timestamp: "2026-05-28T21:34:00.180706+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " with"
+    timestamp: "2026-05-28T21:34:00.193548+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " different"
+    timestamp: "2026-05-28T21:34:00.213866+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:34:00.225271+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:00.236266+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " This"
+    timestamp: "2026-05-28T21:34:00.274769+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:34:00.308457+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " help"
+    timestamp: "2026-05-28T21:34:00.337069+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:00.359027+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " clarify"
+    timestamp: "2026-05-28T21:34:00.394312+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:34:00.415511+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " get"
+    timestamp: "2026-05-28T21:34:00.431084+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " us"
+    timestamp: "2026-05-28T21:34:00.445536+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " back"
+    timestamp: "2026-05-28T21:34:00.457033+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " on"
+    timestamp: "2026-05-28T21:34:00.469217+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " track"
+    timestamp: "2026-05-28T21:34:00.485066+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:34:00.503277+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:00.551591+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:34:00.556434+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’m
+    timestamp: "2026-05-28T21:34:00.560031+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " hitting"
+    timestamp: "2026-05-28T21:34:00.561782+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:00.562267+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " match"
+    timestamp: "2026-05-28T21:34:00.562645+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " conflict"
+    timestamp: "2026-05-28T21:34:00.564433+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:00.566464+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " an"
+    timestamp: "2026-05-28T21:34:00.567987+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " existing"
+    timestamp: "2026-05-28T21:34:00.585942+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " note"
+    timestamp: "2026-05-28T21:34:00.586513+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:34:00.587210+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |2
+            
+    timestamp: "2026-05-28T21:34:00.587445+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Please
+    timestamp: "2026-05-28T21:34:00.587999+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " give"
+    timestamp: "2026-05-28T21:34:00.588341+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " me"
+    timestamp: "2026-05-28T21:34:00.588504+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:00.588745+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " more"
+    timestamp: "2026-05-28T21:34:00.588933+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " distinct"
+    timestamp: "2026-05-28T21:34:00.589103+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:34:00.589656+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " title"
+    timestamp: "2026-05-28T21:34:00.589846+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:00.589996+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:34:00.590238+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:00.590787+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:00.591098+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " save"
+    timestamp: "2026-05-28T21:34:00.591286+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:00.591482+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " as"
+    timestamp: "2026-05-28T21:34:00.591928+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          :
+
+    timestamp: "2026-05-28T21:34:00.627708+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: “
+    timestamp: "2026-05-28T21:34:00.627967+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Fix
+    timestamp: "2026-05-28T21:34:00.628121+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:34:00.628296+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " alert"
+    timestamp: "2026-05-28T21:34:00.632075+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notification"
+    timestamp: "2026-05-28T21:34:00.632274+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " so"
+    timestamp: "2026-05-28T21:34:00.632441+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:00.632582+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " updates"
+    timestamp: "2026-05-28T21:34:00.632736+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:00.632892+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:00.633017+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " current"
+    timestamp: "2026-05-28T21:34:00.633208+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:34:00.633560+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " amount"
+    timestamp: "2026-05-28T21:34:00.633724+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:34:00.633880+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " clears"
+    timestamp: "2026-05-28T21:34:00.634003+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " when"
+    timestamp: "2026-05-28T21:34:00.634346+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:34:00.634497+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " stops"
+    timestamp: "2026-05-28T21:34:00.634645+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:34:00.634789+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:00.635156+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " roof"
+    timestamp: "2026-05-28T21:34:00.635321+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " door"
+    timestamp: "2026-05-28T21:34:00.635545+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " closes"
+    timestamp: "2026-05-28T21:34:00.635709+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .”
+    timestamp: "2026-05-28T21:34:00.635848+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                I’m hitting a match conflict with an existing note.  
+
+                Please give me a more distinct task title, or I can save it as:
+
+
+                “Fix rain alert notification so it updates with the current rain
+                amount and clears when rain stops or the roof door closes.”
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:34:00.703638+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:34:00.703725+00:00"
+started: 2026-05-28T21:33:50.589Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: >-
+    basically when the rain amount changed and the roof door is open, I get a
+    notification from home assistant - the value in the notification should
+    update every time the rain amount changed, plus the notification should
+    disappear when the rain stops or the door is closed
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            I’m hitting a match conflict with an existing note.  
+
+            Please give me a more distinct task title, or I can save it as:
+
+
+            “Fix rain alert notification so it updates with the current rain
+            amount and clears when rain stops or the roof door closes.”
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:34:00.703Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:34:08.287025+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: what is the conflict
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:34:08.287075+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:08.760216+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:09.051422+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: It
+    timestamp: "2026-05-28T21:34:09.063684+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’s
+    timestamp: "2026-05-28T21:34:09.064829+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " matching"
+    timestamp: "2026-05-28T21:34:09.065907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " too"
+    timestamp: "2026-05-28T21:34:09.066379+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " closely"
+    timestamp: "2026-05-28T21:34:09.066746+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:09.068202+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " an"
+    timestamp: "2026-05-28T21:34:09.077220+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " existing"
+    timestamp: "2026-05-28T21:34:09.077746+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:34:09.079688+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " note"
+    timestamp: "2026-05-28T21:34:09.081590+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:09.083377+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " so"
+    timestamp: "2026-05-28T21:34:09.084020+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Back"
+    timestamp: "2026-05-28T21:34:09.126057+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: plane
+    timestamp: "2026-05-28T21:34:09.126277+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:09.126430+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’t
+    timestamp: "2026-05-28T21:34:09.126610+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " tell"
+    timestamp: "2026-05-28T21:34:09.126754+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " which"
+    timestamp: "2026-05-28T21:34:09.126887+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " one"
+    timestamp: "2026-05-28T21:34:09.127019+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " you"
+    timestamp: "2026-05-28T21:34:09.127174+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " mean"
+    timestamp: "2026-05-28T21:34:09.127607+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .
+
+    timestamp: "2026-05-28T21:34:09.133149+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: The
+    timestamp: "2026-05-28T21:34:09.133364+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " conflicting"
+    timestamp: "2026-05-28T21:34:09.133508+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " captures"
+    timestamp: "2026-05-28T21:34:09.137258+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:09.137569+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " mentioned"
+    timestamp: "2026-05-28T21:34:09.137731+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " were"
+    timestamp: "2026-05-28T21:34:09.137867+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |
+          :
+    timestamp: "2026-05-28T21:34:09.138066+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-"
+    timestamp: "2026-05-28T21:34:09.139155+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:09.139443+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Update
+    timestamp: "2026-05-28T21:34:09.139880+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:09.140032+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Open"
+    timestamp: "2026-05-28T21:34:09.142488+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Banking"
+    timestamp: "2026-05-28T21:34:09.143019+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " integration"
+    timestamp: "2026-05-28T21:34:09.146382+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " in"
+    timestamp: "2026-05-28T21:34:09.146934+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Home"
+    timestamp: "2026-05-28T21:34:09.147239+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Assistant"
+    timestamp: "2026-05-28T21:34:09.148031+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " to"
+    timestamp: "2026-05-28T21:34:09.148214+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " include"
+    timestamp: "2026-05-28T21:34:09.148433+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Vic"
+    timestamp: "2026-05-28T21:34:09.148882+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "'s"
+    timestamp: "2026-05-28T21:34:09.149058+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Am"
+    timestamp: "2026-05-28T21:34:09.149252+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ex
+    timestamp: "2026-05-28T21:34:09.149746+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " card"
+    timestamp: "2026-05-28T21:34:09.151636+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:34:09.152141+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " send"
+    timestamp: "2026-05-28T21:34:09.152624+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " her"
+    timestamp: "2026-05-28T21:34:09.153082+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notifications"
+    timestamp: "2026-05-28T21:34:09.153698+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " of"
+    timestamp: "2026-05-28T21:34:09.154486+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " how"
+    timestamp: "2026-05-28T21:34:09.158094+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " much"
+    timestamp: "2026-05-28T21:34:09.158474+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " she's"
+    timestamp: "2026-05-28T21:34:09.158779+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " spent"
+    timestamp: "2026-05-28T21:34:09.159294+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |
+          .”
+    timestamp: "2026-05-28T21:34:09.161431+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-"
+    timestamp: "2026-05-28T21:34:09.163256+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:09.163721+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:34:09.166301+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " need"
+    timestamp: "2026-05-28T21:34:09.166873+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " to"
+    timestamp: "2026-05-28T21:34:09.168292+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " create"
+    timestamp: "2026-05-28T21:34:09.168687+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " reminder"
+    timestamp: "2026-05-28T21:34:09.175808+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notifications"
+    timestamp: "2026-05-28T21:34:09.179033+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " for"
+    timestamp: "2026-05-28T21:34:09.182086+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:09.182619+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " mood"
+    timestamp: "2026-05-28T21:34:09.185776+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " tracker"
+    timestamp: "2026-05-28T21:34:09.206935+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |
+          ”
+    timestamp: "2026-05-28T21:34:09.207180+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-"
+    timestamp: "2026-05-28T21:34:09.207501+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:09.218139+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: When
+    timestamp: "2026-05-28T21:34:09.221381+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:09.222112+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " do"
+    timestamp: "2026-05-28T21:34:09.225386+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " some"
+    timestamp: "2026-05-28T21:34:09.229362+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " kind"
+    timestamp: "2026-05-28T21:34:09.231742+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " of"
+    timestamp: "2026-05-28T21:34:09.238251+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " interaction"
+    timestamp: "2026-05-28T21:34:09.238782+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:09.241681+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " back"
+    timestamp: "2026-05-28T21:34:09.243340+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: plane
+    timestamp: "2026-05-28T21:34:09.252664+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:09.253202+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:09.257349+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " should"
+    timestamp: "2026-05-28T21:34:09.257592+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " send"
+    timestamp: "2026-05-28T21:34:09.261373+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " myself"
+    timestamp: "2026-05-28T21:34:09.266479+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notifications"
+    timestamp: "2026-05-28T21:34:09.274791+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:09.275180+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " deep"
+    timestamp: "2026-05-28T21:34:09.277147+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " links"
+    timestamp: "2026-05-28T21:34:09.277507+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " to"
+    timestamp: "2026-05-28T21:34:09.289458+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " that"
+    timestamp: "2026-05-28T21:34:09.290658+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " specific"
+    timestamp: "2026-05-28T21:34:09.292171+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " note"
+    timestamp: "2026-05-28T21:34:09.293073+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .”
+
+    timestamp: "2026-05-28T21:34:09.301780+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: So
+    timestamp: "2026-05-28T21:34:09.309291+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:09.309873+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " needs"
+    timestamp: "2026-05-28T21:34:09.315447+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:09.317427+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " more"
+    timestamp: "2026-05-28T21:34:09.328890+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " unique"
+    timestamp: "2026-05-28T21:34:09.349401+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " title"
+    timestamp: "2026-05-28T21:34:09.364847+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:34:09.365399+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " description"
+    timestamp: "2026-05-28T21:34:09.365757+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " for"
+    timestamp: "2026-05-28T21:34:09.366348+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " your"
+    timestamp: "2026-05-28T21:34:09.370458+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:34:09.371107+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " alert"
+    timestamp: "2026-05-28T21:34:09.376633+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:34:09.377070+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:34:09.377235+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                It’s matching too closely with an existing task note, so
+                Backplane can’t tell which one you mean.
+
+
+                The conflicting captures it mentioned were:
+
+                - “Update the Open Banking integration in Home Assistant to
+                include Vic's Amex card and send her notifications of how much
+                she's spent.”
+
+                - “I need to create reminder notifications for the mood tracker”
+
+                - “When I do some kind of interaction with backplane, I should
+                send myself notifications with deep links to that specific
+                note.”
+
+
+                So it needs a more unique title or description for your rain
+                alert task.
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:34:09.500958+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:34:09.501027+00:00"
+started: 2026-05-28T21:34:08.287Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: what is the conflict
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            It’s matching too closely with an existing task note, so Backplane
+            can’t tell which one you mean.
+
+
+            The conflicting captures it mentioned were:
+
+            - “Update the Open Banking integration in Home Assistant to include
+            Vic's Amex card and send her notifications of how much she's spent.”
+
+            - “I need to create reminder notifications for the mood tracker”
+
+            - “When I do some kind of interaction with backplane, I should send
+            myself notifications with deep links to that specific note.”
+
+
+            So it needs a more unique title or description for your rain alert
+            task.
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:34:09.501Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:34:21.832741+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: none of those are related
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:34:21.832787+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:22.716228+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Apologizing for tool issues**
+
+          I
+    timestamp: "2026-05-28T21:34:23.466247+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " think"
+    timestamp: "2026-05-28T21:34:23.471085+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it's"
+    timestamp: "2026-05-28T21:34:23.482240+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " important"
+    timestamp: "2026-05-28T21:34:23.491238+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:23.497272+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " apologize"
+    timestamp: "2026-05-28T21:34:23.505618+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:34:23.527420+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " suggest"
+    timestamp: "2026-05-28T21:34:23.534282+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " using"
+    timestamp: "2026-05-28T21:34:23.541576+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:23.552467+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " unique"
+    timestamp: "2026-05-28T21:34:23.589642+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:34:23.592738+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " for"
+    timestamp: "2026-05-28T21:34:23.625935+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:23.637292+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:34:23.642458+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:23.651614+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " If"
+    timestamp: "2026-05-28T21:34:23.657814+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:23.666317+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " tool"
+    timestamp: "2026-05-28T21:34:23.672299+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " is"
+    timestamp: "2026-05-28T21:34:23.699829+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " failing"
+    timestamp: "2026-05-28T21:34:23.717430+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " due"
+    timestamp: "2026-05-28T21:34:23.725419+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:23.737136+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " fuzzy"
+    timestamp: "2026-05-28T21:34:23.743231+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " matching"
+    timestamp: "2026-05-28T21:34:23.756582+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:23.765099+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:34:23.775023+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:34:23.779738+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " mean"
+    timestamp: "2026-05-28T21:34:23.786817+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:23.797786+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:34:23.821123+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " needs"
+    timestamp: "2026-05-28T21:34:23.847086+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:23.855054+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " be"
+    timestamp: "2026-05-28T21:34:23.872820+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " word"
+    timestamp: "2026-05-28T21:34:23.883583+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ed
+    timestamp: "2026-05-28T21:34:23.889688+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " precisely"
+    timestamp: "2026-05-28T21:34:23.898435+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " without"
+    timestamp: "2026-05-28T21:34:23.908978+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " any"
+    timestamp: "2026-05-28T21:34:23.921798+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " conflicts"
+    timestamp: "2026-05-28T21:34:23.933154+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:23.941098+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:23.948847+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:23.963181+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " try"
+    timestamp: "2026-05-28T21:34:23.966123+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " creating"
+    timestamp: "2026-05-28T21:34:23.997641+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:24.000865+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:34:24.003974+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " with"
+    timestamp: "2026-05-28T21:34:24.025699+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " different"
+    timestamp: "2026-05-28T21:34:24.036286+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:34:24.054253+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:34:24.065173+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " more"
+    timestamp: "2026-05-28T21:34:24.089426+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " unique"
+    timestamp: "2026-05-28T21:34:24.093416+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " nouns"
+    timestamp: "2026-05-28T21:34:24.100161+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:24.108581+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " That"
+    timestamp: "2026-05-28T21:34:24.115846+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:24.124215+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " help"
+    timestamp: "2026-05-28T21:34:24.132504+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " find"
+    timestamp: "2026-05-28T21:34:24.140456+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:24.146777+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " solution"
+    timestamp: "2026-05-28T21:34:24.214275+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:24.215615+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Let's"
+    timestamp: "2026-05-28T21:34:24.217415+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " go"
+    timestamp: "2026-05-28T21:34:24.219144+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " ahead"
+    timestamp: "2026-05-28T21:34:24.221616+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:34:24.223396+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " make"
+    timestamp: "2026-05-28T21:34:24.233355+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " that"
+    timestamp: "2026-05-28T21:34:24.247507+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " suggestion"
+    timestamp: "2026-05-28T21:34:24.254839+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "!"
+    timestamp: "2026-05-28T21:34:24.262273+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:24.297435+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: >-
+                Update the home assistant rain alert for the roof door: when the
+                roof door is open and rain amount changes, update the
+                notification to show the current rain amount, and clear it when
+                rain stops or the door closes.
+              title: Rain alert notification update for roof door
+              priority: medium
+              due: null
+            id: call_VbV93xO5iNpBRBiW7iqtea2V
+            external: false
+    timestamp: "2026-05-28T21:34:24.600927+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_VbV93xO5iNpBRBiW7iqtea2V
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=55).
+                Did you mean one of these captures: '2026-05-17T01:44': 'I need
+                to create reminder notifications for the mood tracker';
+                '2026-05-17T14:29': "Update the Open Banking integration in Home
+                Assistant to include Vic's Amex card and send her notifications
+                of how much she's spent."; '2026-05-17T23:04': 'When I do some
+                kind of interaction with backplane, I should send myself
+                notifications with deep links to that specific note.'? Please
+                clarify or supply the exact capture text.
+          isError: true
+        created: "2026-05-28T21:34:25.065178+00:00"
+    timestamp: "2026-05-28T21:34:25.065269+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:25.646717+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Figuring out response phrasing**
+
+          I
+    timestamp: "2026-05-28T21:34:26.559636+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:34:26.564113+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:26.580674+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " consider"
+    timestamp: "2026-05-28T21:34:26.599324+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " how"
+    timestamp: "2026-05-28T21:34:26.615801+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:26.630406+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " respond"
+    timestamp: "2026-05-28T21:34:26.645886+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " when"
+    timestamp: "2026-05-28T21:34:26.658946+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:26.673806+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:34:26.687056+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:34:26.699097+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:34:26.720727+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:26.732741+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " provide"
+    timestamp: "2026-05-28T21:34:26.775513+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " exact"
+    timestamp: "2026-05-28T21:34:26.806133+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " text"
+    timestamp: "2026-05-28T21:34:26.819183+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:26.836716+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " It"
+    timestamp: "2026-05-28T21:34:26.857026+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " seems"
+    timestamp: "2026-05-28T21:34:26.880220+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " like"
+    timestamp: "2026-05-28T21:34:26.895295+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " using"
+    timestamp: "2026-05-28T21:34:26.910271+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:26.923660+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " record"
+    timestamp: "2026-05-28T21:34:26.943295+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: _
+    timestamp: "2026-05-28T21:34:26.953525+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: idea
+    timestamp: "2026-05-28T21:34:26.985874+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:27.023057+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " help"
+    timestamp: "2026-05-28T21:34:27.061526+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:27.104434+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " but"
+    timestamp: "2026-05-28T21:34:27.112080+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:34:27.113170+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:34:27.170630+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:27.171255+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " bit"
+    timestamp: "2026-05-28T21:34:27.171736+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " tricky"
+    timestamp: "2026-05-28T21:34:27.194383+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " since"
+    timestamp: "2026-05-28T21:34:27.331402+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:34:27.519098+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’s
+    timestamp: "2026-05-28T21:34:27.519668+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:27.519983+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:34:27.534270+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:27.547996+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:27.597449+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:34:27.602753+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " create"
+    timestamp: "2026-05-28T21:34:27.605445+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " something"
+    timestamp: "2026-05-28T21:34:27.606521+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " with"
+    timestamp: "2026-05-28T21:34:27.607126+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " distinct"
+    timestamp: "2026-05-28T21:34:27.607694+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:34:27.608349+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " related"
+    timestamp: "2026-05-28T21:34:27.609266+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:27.610399+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:27.611150+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " rain"
+    timestamp: "2026-05-28T21:34:27.612636+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " gauge"
+    timestamp: "2026-05-28T21:34:27.613290+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " or"
+    timestamp: "2026-05-28T21:34:27.613846+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " roof"
+    timestamp: "2026-05-28T21:34:27.616228+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " door"
+    timestamp: "2026-05-28T21:34:27.616654+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:27.631100+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " even"
+    timestamp: "2026-05-28T21:34:27.631642+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " though"
+    timestamp: "2026-05-28T21:34:27.632127+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:27.633328+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " conflict"
+    timestamp: "2026-05-28T21:34:27.671004+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " isn"
+    timestamp: "2026-05-28T21:34:27.671413+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ’t
+    timestamp: "2026-05-28T21:34:27.701833+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " directly"
+    timestamp: "2026-05-28T21:34:27.714594+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " related"
+    timestamp: "2026-05-28T21:34:27.773310+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:27.773738+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " Perhaps"
+    timestamp: "2026-05-28T21:34:27.850092+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:27.861004+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " fuzzy"
+    timestamp: "2026-05-28T21:34:27.883093+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "-m"
+    timestamp: "2026-05-28T21:34:27.883737+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: atching
+    timestamp: "2026-05-28T21:34:27.884124+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " tool"
+    timestamp: "2026-05-28T21:34:27.965642+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:27.965975+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " assist"
+    timestamp: "2026-05-28T21:34:27.966314+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:27.966640+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:27.967021+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:27.983844+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " try"
+    timestamp: "2026-05-28T21:34:28.011661+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:28.048066+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " title"
+    timestamp: "2026-05-28T21:34:28.347498+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " like"
+    timestamp: "2026-05-28T21:34:28.347905+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " \""
+    timestamp: "2026-05-28T21:34:28.348878+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: roof
+    timestamp: "2026-05-28T21:34:28.352470+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " door"
+    timestamp: "2026-05-28T21:34:28.355846+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " rain"
+    timestamp: "2026-05-28T21:34:28.358753+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " amount"
+    timestamp: "2026-05-28T21:34:28.360431+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " notification"
+    timestamp: "2026-05-28T21:34:28.362976+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: "\""
+    timestamp: "2026-05-28T21:34:28.363477+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " but"
+    timestamp: "2026-05-28T21:34:28.366018+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " without"
+    timestamp: "2026-05-28T21:34:28.366676+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " \""
+    timestamp: "2026-05-28T21:34:28.400154+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: notification
+    timestamp: "2026-05-28T21:34:28.400874+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ."
+    timestamp: "2026-05-28T21:34:28.409807+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:28.458844+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: >-
+                Roof door rain amount automation: when the roof door is open,
+                update the notification each time the rain amount changes, and
+                clear it when rain stops or the door closes.
+              title: Roof door rain amount automation
+              priority: medium
+              due: null
+            id: call_qVvaPfdDiSvmYG56AFev8MNm
+            external: false
+    timestamp: "2026-05-28T21:34:28.700522+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_qVvaPfdDiSvmYG56AFev8MNm
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=55).
+                Did you mean one of these captures: '2026-05-17T01:44': 'I need
+                to create reminder notifications for the mood tracker';
+                '2026-05-17T20:00': "I could create a sensor that gives me the
+                height of the Thames tide so that I know when it's worth taking
+                the dog on the river or not."; '2026-05-17T22:45': 'Include
+                location and other things like that in the voice recorded
+                ideas'? Please clarify or supply the exact capture text.
+          isError: true
+        created: "2026-05-28T21:34:29.098467+00:00"
+    timestamp: "2026-05-28T21:34:29.098597+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:29.658525+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: |-
+          **Explaining conflict clarification**
+
+          I
+    timestamp: "2026-05-28T21:34:30.312109+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " need"
+    timestamp: "2026-05-28T21:34:30.325038+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:30.336946+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " finalize"
+    timestamp: "2026-05-28T21:34:30.340330+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " my"
+    timestamp: "2026-05-28T21:34:30.370238+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " explanation"
+    timestamp: "2026-05-28T21:34:30.381603+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " about"
+    timestamp: "2026-05-28T21:34:30.392806+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:30.399268+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " failure"
+    timestamp: "2026-05-28T21:34:30.408483+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " and"
+    timestamp: "2026-05-28T21:34:30.416390+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " see"
+    timestamp: "2026-05-28T21:34:30.438812+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " if"
+    timestamp: "2026-05-28T21:34:30.456101+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:30.456731+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " user"
+    timestamp: "2026-05-28T21:34:30.464299+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wants"
+    timestamp: "2026-05-28T21:34:30.471795+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:30.479172+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " consider"
+    timestamp: "2026-05-28T21:34:30.497696+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " an"
+    timestamp: "2026-05-28T21:34:30.511907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " idea"
+    timestamp: "2026-05-28T21:34:30.528277+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:30.538591+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " might"
+    timestamp: "2026-05-28T21:34:30.555551+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " have"
+    timestamp: "2026-05-28T21:34:30.559345+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:30.565501+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " They"
+    timestamp: "2026-05-28T21:34:30.601095+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " asked"
+    timestamp: "2026-05-28T21:34:30.603837+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " about"
+    timestamp: "2026-05-28T21:34:30.628694+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " what"
+    timestamp: "2026-05-28T21:34:30.634168+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " constitutes"
+    timestamp: "2026-05-28T21:34:30.643273+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " a"
+    timestamp: "2026-05-28T21:34:30.650974+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " conflict"
+    timestamp: "2026-05-28T21:34:30.659215+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:30.670482+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " which"
+    timestamp: "2026-05-28T21:34:30.677975+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I've"
+    timestamp: "2026-05-28T21:34:30.686777+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " already"
+    timestamp: "2026-05-28T21:34:30.695885+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " answered"
+    timestamp: "2026-05-28T21:34:30.710376+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:30.724670+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:30.730651+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " think"
+    timestamp: "2026-05-28T21:34:30.742389+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:30.750416+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:34:30.768593+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " mention"
+    timestamp: "2026-05-28T21:34:30.777862+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " that"
+    timestamp: "2026-05-28T21:34:30.786865+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:30.797064+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " system"
+    timestamp: "2026-05-28T21:34:30.807557+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " is"
+    timestamp: "2026-05-28T21:34:30.816336+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " matching"
+    timestamp: "2026-05-28T21:34:30.824412+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " on"
+    timestamp: "2026-05-28T21:34:30.832475+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " general"
+    timestamp: "2026-05-28T21:34:30.843790+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " notification"
+    timestamp: "2026-05-28T21:34:30.851618+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " wording"
+    timestamp: "2026-05-28T21:34:30.860670+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:30.867450+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " If"
+    timestamp: "2026-05-28T21:34:30.886895+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " they're"
+    timestamp: "2026-05-28T21:34:30.903133+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " interested"
+    timestamp: "2026-05-28T21:34:30.909791+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:30.918214+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:30.963448+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " could"
+    timestamp: "2026-05-28T21:34:30.980089+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " save"
+    timestamp: "2026-05-28T21:34:31.013463+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " it"
+    timestamp: "2026-05-28T21:34:31.030014+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " as"
+    timestamp: "2026-05-28T21:34:31.050560+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " an"
+    timestamp: "2026-05-28T21:34:31.058512+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " idea"
+    timestamp: "2026-05-28T21:34:31.068295+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " instead"
+    timestamp: "2026-05-28T21:34:31.081880+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:31.104911+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " However"
+    timestamp: "2026-05-28T21:34:31.119107+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: ","
+    timestamp: "2026-05-28T21:34:31.127708+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " I"
+    timestamp: "2026-05-28T21:34:31.135799+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " should"
+    timestamp: "2026-05-28T21:34:31.148919+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " remember"
+    timestamp: "2026-05-28T21:34:31.157721+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:31.167880+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " stick"
+    timestamp: "2026-05-28T21:34:31.179724+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " to"
+    timestamp: "2026-05-28T21:34:31.187966+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " the"
+    timestamp: "2026-05-28T21:34:31.209993+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " task"
+    timestamp: "2026-05-28T21:34:31.225612+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " at"
+    timestamp: "2026-05-28T21:34:31.229649+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: " hand"
+    timestamp: "2026-05-28T21:34:31.237683+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        thinking_content: .
+    timestamp: "2026-05-28T21:34:31.246759+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:31.275953+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: It
+    timestamp: "2026-05-28T21:34:31.279004+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’s
+    timestamp: "2026-05-28T21:34:31.283409+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " not"
+    timestamp: "2026-05-28T21:34:31.283983+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:31.284717+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " real"
+    timestamp: "2026-05-28T21:34:31.285410+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " semantic"
+    timestamp: "2026-05-28T21:34:31.286706+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " conflict"
+    timestamp: "2026-05-28T21:34:31.289421+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " —"
+    timestamp: "2026-05-28T21:34:31.293189+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:31.295062+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’s
+    timestamp: "2026-05-28T21:34:31.298639+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " just"
+    timestamp: "2026-05-28T21:34:31.300034+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:31.306455+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:34:31.306741+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-m"
+    timestamp: "2026-05-28T21:34:31.307241+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: atching
+    timestamp: "2026-05-28T21:34:31.307997+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " system"
+    timestamp: "2026-05-28T21:34:31.310626+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " being"
+    timestamp: "2026-05-28T21:34:31.315802+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " overly"
+    timestamp: "2026-05-28T21:34:31.320035+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " fuzzy"
+    timestamp: "2026-05-28T21:34:31.323986+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:34:31.328268+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " finding"
+    timestamp: "2026-05-28T21:34:31.328448+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " unrelated"
+    timestamp: "2026-05-28T21:34:31.328603+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notes"
+    timestamp: "2026-05-28T21:34:31.328736+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " because"
+    timestamp: "2026-05-28T21:34:31.352343+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " of"
+    timestamp: "2026-05-28T21:34:31.352645+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " words"
+    timestamp: "2026-05-28T21:34:31.352840+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " like"
+    timestamp: "2026-05-28T21:34:31.353254+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:31.353425+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: notification
+    timestamp: "2026-05-28T21:34:31.353566+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ”
+    timestamp: "2026-05-28T21:34:31.353759+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:34:31.355178+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:31.355732+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: update
+    timestamp: "2026-05-28T21:34:31.356705+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .”
+
+    timestamp: "2026-05-28T21:34:31.358810+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:34:31.361335+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:31.364737+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " still"
+    timestamp: "2026-05-28T21:34:31.365583+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " try"
+    timestamp: "2026-05-28T21:34:31.368426+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " again"
+    timestamp: "2026-05-28T21:34:31.370016+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " with"
+    timestamp: "2026-05-28T21:34:31.374490+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:31.375795+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " more"
+    timestamp: "2026-05-28T21:34:31.378280+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " distinctive"
+    timestamp: "2026-05-28T21:34:31.380396+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " title"
+    timestamp: "2026-05-28T21:34:31.385432+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:31.388585+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:34:31.392549+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:31.396327+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:31.398556+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " save"
+    timestamp: "2026-05-28T21:34:31.401719+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:31.404192+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " as"
+    timestamp: "2026-05-28T21:34:31.412111+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:31.414503+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " separate"
+    timestamp: "2026-05-28T21:34:31.416608+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " idea"
+    timestamp: "2026-05-28T21:34:31.418023+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: /task
+    timestamp: "2026-05-28T21:34:31.419211+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " in"
+    timestamp: "2026-05-28T21:34:31.422613+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:31.423523+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " very"
+    timestamp: "2026-05-28T21:34:31.430487+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " specific"
+    timestamp: "2026-05-28T21:34:31.431783+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " form"
+    timestamp: "2026-05-28T21:34:31.432282+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:34:31.434176+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                It’s not a real semantic conflict — it’s just the task-matching
+                system being overly fuzzy and finding unrelated notes because of
+                words like “notification” and “update.”
+
+
+                I can still try again with a more distinctive title, or I can
+                save it as a separate idea/task in a very specific form.
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:34:31.587319+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:34:31.587370+00:00"
+started: 2026-05-28T21:34:21.832Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: none of those are related
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            It’s not a real semantic conflict — it’s just the task-matching
+            system being overly fuzzy and finding unrelated notes because of
+            words like “notification” and “update.”
+
+
+            I can still try again with a more distinctive title, or I can save
+            it as a separate idea/task in a very specific form.
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:34:31.587Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:34:41.689898+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: "save it as separate "
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:34:41.689927+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:42.698648+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__create_task
+            tool_args:
+              description: >-
+                When the roof door is open, update the Home Assistant
+                notification every time the rain amount changes, and clear the
+                notification when rain stops or the roof door closes.
+              title: Roof door rain alert notification
+              priority: medium
+              due: null
+            id: call_cD2doVZEw1ZGfxqEdbLYQsni
+            external: false
+    timestamp: "2026-05-28T21:34:43.134567+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_cD2doVZEw1ZGfxqEdbLYQsni
+        tool_name: backplane__create_task
+        tool_result:
+          content:
+            - type: text
+              text: >-
+                Error calling tool 'create_task': Ambiguous match (score=58).
+                Did you mean one of these captures: '2026-05-17T01:44': 'I need
+                to create reminder notifications for the mood tracker';
+                '2026-05-17T21:03': 'Track LLM usage and cost in Home
+                Assistant.'; '2026-05-17T14:29': "Update the Open Banking
+                integration in Home Assistant to include Vic's Amex card and
+                send her notifications of how much she's spent."? Please clarify
+                or supply the exact capture text.
+          isError: true
+        created: "2026-05-28T21:34:43.311806+00:00"
+    timestamp: "2026-05-28T21:34:43.311907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:34:43.929434+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:34:43.940326+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " still"
+    timestamp: "2026-05-28T21:34:43.945776+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:43.949572+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’t
+    timestamp: "2026-05-28T21:34:43.954656+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " get"
+    timestamp: "2026-05-28T21:34:43.957578+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " around"
+    timestamp: "2026-05-28T21:34:43.961892+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:34:43.970756+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " fuzzy"
+    timestamp: "2026-05-28T21:34:43.975528+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-match"
+    timestamp: "2026-05-28T21:34:43.977907+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " conflict"
+    timestamp: "2026-05-28T21:34:43.981315+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " in"
+    timestamp: "2026-05-28T21:34:43.987398+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " Back"
+    timestamp: "2026-05-28T21:34:43.996752+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: plane
+    timestamp: "2026-05-28T21:34:43.999522+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .
+
+    timestamp: "2026-05-28T21:34:44.005311+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Best
+    timestamp: "2026-05-28T21:34:44.009020+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " next"
+    timestamp: "2026-05-28T21:34:44.014369+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " step"
+    timestamp: "2026-05-28T21:34:44.027080+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ":"
+    timestamp: "2026-05-28T21:34:44.028585+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:44.032866+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:44.036374+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " record"
+    timestamp: "2026-05-28T21:34:44.040959+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:34:44.042374+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " as"
+    timestamp: "2026-05-28T21:34:44.043629+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " an"
+    timestamp: "2026-05-28T21:34:44.045883+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " idea"
+    timestamp: "2026-05-28T21:34:44.048704+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " instead"
+    timestamp: "2026-05-28T21:34:44.049710+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " of"
+    timestamp: "2026-05-28T21:34:44.055405+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:44.058280+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:34:44.060019+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:44.061291+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " or"
+    timestamp: "2026-05-28T21:34:44.079251+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " you"
+    timestamp: "2026-05-28T21:34:44.104496+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:44.108768+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " give"
+    timestamp: "2026-05-28T21:34:44.118315+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " me"
+    timestamp: "2026-05-28T21:34:44.120243+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:34:44.125146+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " very"
+    timestamp: "2026-05-28T21:34:44.131304+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " unique"
+    timestamp: "2026-05-28T21:34:44.135894+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " exact"
+    timestamp: "2026-05-28T21:34:44.142923+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " title"
+    timestamp: "2026-05-28T21:34:44.143254+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " like"
+    timestamp: "2026-05-28T21:34:44.144619+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |
+          :
+    timestamp: "2026-05-28T21:34:44.148562+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: "-"
+    timestamp: "2026-05-28T21:34:44.149404+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " “"
+    timestamp: "2026-05-28T21:34:44.159724+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: HA
+    timestamp: "2026-05-28T21:34:44.170844+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rain"
+    timestamp: "2026-05-28T21:34:44.174928+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " alert"
+    timestamp: "2026-05-28T21:34:44.186256+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " notification"
+    timestamp: "2026-05-28T21:34:44.203771+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " lifecycle"
+    timestamp: "2026-05-28T21:34:44.213906+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " for"
+    timestamp: "2026-05-28T21:34:44.216156+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " roof"
+    timestamp: "2026-05-28T21:34:44.219288+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " door"
+    timestamp: "2026-05-28T21:34:44.219486+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          ”
+
+    timestamp: "2026-05-28T21:34:44.227067+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: If
+    timestamp: "2026-05-28T21:34:44.237941+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " you"
+    timestamp: "2026-05-28T21:34:44.241655+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " want"
+    timestamp: "2026-05-28T21:34:44.244091+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:34:44.245221+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:34:44.263874+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:34:44.267757+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " save"
+    timestamp: "2026-05-28T21:34:44.271236+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " that"
+    timestamp: "2026-05-28T21:34:44.282786+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " exact"
+    timestamp: "2026-05-28T21:34:44.287286+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " phr"
+    timestamp: "2026-05-28T21:34:44.300357+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: asing
+    timestamp: "2026-05-28T21:34:44.303605+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " now"
+    timestamp: "2026-05-28T21:34:44.312331+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:34:44.313836+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                I still can’t get around the fuzzy-match conflict in Backplane.
+
+
+                Best next step: I can record it as an idea instead of a task, or
+                you can give me a very unique exact title like:
+
+                - “HA rain alert notification lifecycle for roof door”
+
+
+                If you want, I can save that exact phrasing now.
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:34:44.455240+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:34:44.455299+00:00"
+started: 2026-05-28T21:34:41.689Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: "save it as separate "
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            I still can’t get around the fuzzy-match conflict in Backplane.
+
+
+            Best next step: I can record it as an idea instead of a task, or you
+            can give me a very unique exact title like:
+
+            - “HA rain alert notification lifecycle for roof door”
+
+
+            If you want, I can save that exact phrasing now.
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:34:44.455Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:35:53.724966+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: why can't you get around it
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:35:53.724995+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:35:55.328842+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:35:55.607067+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Because
+    timestamp: "2026-05-28T21:35:55.612970+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:35:55.613835+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:35:55.616616+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " tool"
+    timestamp: "2026-05-28T21:35:55.617247+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " is"
+    timestamp: "2026-05-28T21:35:55.621724+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " doing"
+    timestamp: "2026-05-28T21:35:55.622250+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " fuzzy"
+    timestamp: "2026-05-28T21:35:55.622530+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " matching"
+    timestamp: "2026-05-28T21:35:55.625038+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " against"
+    timestamp: "2026-05-28T21:35:55.625520+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " your"
+    timestamp: "2026-05-28T21:35:55.628660+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " existing"
+    timestamp: "2026-05-28T21:35:55.629858+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " captures"
+    timestamp: "2026-05-28T21:35:55.631668+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " before"
+    timestamp: "2026-05-28T21:35:55.634377+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:35:55.636207+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " creates"
+    timestamp: "2026-05-28T21:35:55.640530+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:35:55.641060+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " new"
+    timestamp: "2026-05-28T21:35:55.642129+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " one"
+    timestamp: "2026-05-28T21:35:55.643260+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:35:55.645207+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:35:55.648304+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:35:55.649132+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’s
+    timestamp: "2026-05-28T21:35:55.650273+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " rejecting"
+    timestamp: "2026-05-28T21:35:55.650917+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " anything"
+    timestamp: "2026-05-28T21:35:55.653810+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " that"
+    timestamp: "2026-05-28T21:35:55.655143+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " looks"
+    timestamp: "2026-05-28T21:35:55.656908+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " too"
+    timestamp: "2026-05-28T21:35:55.659007+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " similar"
+    timestamp: "2026-05-28T21:35:55.660320+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " to"
+    timestamp: "2026-05-28T21:35:55.720311+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " something"
+    timestamp: "2026-05-28T21:35:55.720518+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " already"
+    timestamp: "2026-05-28T21:35:55.720705+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " in"
+    timestamp: "2026-05-28T21:35:55.720845+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " your"
+    timestamp: "2026-05-28T21:35:55.721432+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " backlog"
+    timestamp: "2026-05-28T21:35:55.721737+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .
+
+    timestamp: "2026-05-28T21:35:55.721924+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: I
+    timestamp: "2026-05-28T21:35:55.722359+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:35:55.723120+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ’t
+    timestamp: "2026-05-28T21:35:55.724533+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " override"
+    timestamp: "2026-05-28T21:35:55.724965+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " that"
+    timestamp: "2026-05-28T21:35:55.725142+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " matching"
+    timestamp: "2026-05-28T21:35:55.725291+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " behavior"
+    timestamp: "2026-05-28T21:35:55.725485+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " from"
+    timestamp: "2026-05-28T21:35:55.729989+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " my"
+    timestamp: "2026-05-28T21:35:55.742225+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " side"
+    timestamp: "2026-05-28T21:35:55.744873+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " —"
+    timestamp: "2026-05-28T21:35:55.747141+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:35:55.759975+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:35:55.769928+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " only"
+    timestamp: "2026-05-28T21:35:55.775906+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " change"
+    timestamp: "2026-05-28T21:35:55.784889+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:35:55.797702+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " wording"
+    timestamp: "2026-05-28T21:35:55.818611+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " and"
+    timestamp: "2026-05-28T21:35:55.830723+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " try"
+    timestamp: "2026-05-28T21:35:55.832502+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " again"
+    timestamp: "2026-05-28T21:35:55.837083+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:35:55.849070+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " If"
+    timestamp: "2026-05-28T21:35:55.849955+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:35:55.858101+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " wording"
+    timestamp: "2026-05-28T21:35:55.859095+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " still"
+    timestamp: "2026-05-28T21:35:55.864992+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " overlaps"
+    timestamp: "2026-05-28T21:35:55.880763+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " enough"
+    timestamp: "2026-05-28T21:35:55.889850+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:35:55.892597+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " the"
+    timestamp: "2026-05-28T21:35:55.908524+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " tool"
+    timestamp: "2026-05-28T21:35:55.909917+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " keeps"
+    timestamp: "2026-05-28T21:35:55.910852+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " refusing"
+    timestamp: "2026-05-28T21:35:55.920601+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " it"
+    timestamp: "2026-05-28T21:35:55.922634+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: |+
+          .
+
+    timestamp: "2026-05-28T21:35:55.933755+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: If
+    timestamp: "2026-05-28T21:35:55.935909+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " you"
+    timestamp: "2026-05-28T21:35:55.938534+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " want"
+    timestamp: "2026-05-28T21:35:55.951086+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: ","
+    timestamp: "2026-05-28T21:35:55.953075+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " I"
+    timestamp: "2026-05-28T21:35:55.953624+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " can"
+    timestamp: "2026-05-28T21:35:55.954760+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " try"
+    timestamp: "2026-05-28T21:35:55.965237+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:35:55.966643+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " very"
+    timestamp: "2026-05-28T21:35:55.982625+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " unusual"
+    timestamp: "2026-05-28T21:35:55.992127+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " title"
+    timestamp: "2026-05-28T21:35:55.994838+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " to"
+    timestamp: "2026-05-28T21:35:56.005771+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " force"
+    timestamp: "2026-05-28T21:35:56.008969+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " a"
+    timestamp: "2026-05-28T21:35:56.022981+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " clean"
+    timestamp: "2026-05-28T21:35:56.033655+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " separate"
+    timestamp: "2026-05-28T21:35:56.041173+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " task"
+    timestamp: "2026-05-28T21:35:56.048086+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:35:56.048307+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: >-
+                Because the task tool is doing fuzzy matching against your
+                existing captures before it creates a new one, and it’s
+                rejecting anything that looks too similar to something already
+                in your backlog.
+
+
+                I can’t override that matching behavior from my side — I can
+                only change the wording and try again. If the wording still
+                overlaps enough, the tool keeps refusing it.
+
+
+                If you want, I can try a very unusual title to force a clean
+                separate task.
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:35:56.170374+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:35:56.170434+00:00"
+started: 2026-05-28T21:35:53.724Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: why can't you get around it
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: >-
+            Because the task tool is doing fuzzy matching against your existing
+            captures before it creates a new one, and it’s rejecting anything
+            that looks too similar to something already in your backlog.
+
+
+            I can’t override that matching behavior from my side — I can only
+            change the wording and try again. If the wording still overlaps
+            enough, the tool keeps refusing it.
+
+
+            If you want, I can try a very unusual title to force a clean
+            separate task.
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:35:56.170Z
+
+
+stage: done
+run:
+  pipeline: 01krvmy7assgvkbaw6875187s7
+  language: en
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  runner_data:
+    stt_binary_handler_id: null
+    timeout: 300
+events:
+  - type: run-start
+    data:
+      pipeline: 01krvmy7assgvkbaw6875187s7
+      language: en
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      runner_data:
+        stt_binary_handler_id: null
+        timeout: 300
+    timestamp: "2026-05-28T21:36:10.583167+00:00"
+  - type: intent-start
+    data:
+      engine: conversation.gpt_5_4_mini_w_backplane
+      language: en-GB
+      intent_input: "hmm okay just record it as an idea for now "
+      conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+      device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+      satellite_id: null
+      prefer_local_intents: false
+    timestamp: "2026-05-28T21:36:10.584072+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:36:11.525799+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        tool_calls:
+          - tool_name: backplane__record_idea
+            tool_args:
+              idea: >-
+                When the roof door is open, update the Home Assistant
+                notification every time the rain amount changes, and clear the
+                notification when rain stops or the roof door closes.
+            id: call_N0R375ucGNisHt1qG9umsl1D
+            external: false
+    timestamp: "2026-05-28T21:36:11.811396+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: tool_result
+        agent_id: conversation.gpt_5_4_mini_w_backplane
+        tool_call_id: call_N0R375ucGNisHt1qG9umsl1D
+        tool_name: backplane__record_idea
+        tool_result:
+          meta:
+            fastmcp:
+              wrap_result: true
+          content:
+            - type: text
+              text: Idea recorded successfully.
+          structuredContent:
+            result: Idea recorded successfully.
+          isError: false
+        created: "2026-05-28T21:36:11.943765+00:00"
+    timestamp: "2026-05-28T21:36:11.943857+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        role: assistant
+    timestamp: "2026-05-28T21:36:13.955059+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: Recorded
+    timestamp: "2026-05-28T21:36:13.961117+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " as"
+    timestamp: "2026-05-28T21:36:13.964994+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " an"
+    timestamp: "2026-05-28T21:36:13.965400+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: " idea"
+    timestamp: "2026-05-28T21:36:13.965701+00:00"
+  - type: intent-progress
+    data:
+      chat_log_delta:
+        content: .
+    timestamp: "2026-05-28T21:36:13.967977+00:00"
+  - type: intent-end
+    data:
+      processed_locally: false
+      intent_output:
+        response:
+          speech:
+            plain:
+              speech: Recorded as an idea.
+              extra_data: null
+          card: {}
+          language: en-GB
+          response_type: action_done
+          data:
+            success: []
+            failed: []
+        conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+        continue_conversation: false
+    timestamp: "2026-05-28T21:36:14.344897+00:00"
+  - type: run-end
+    data: null
+    timestamp: "2026-05-28T21:36:14.344963+00:00"
+started: 2026-05-28T21:36:10.583Z
+intent:
+  engine: conversation.gpt_5_4_mini_w_backplane
+  language: en-GB
+  intent_input: "hmm okay just record it as an idea for now "
+  conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+  device_id: 51ef7b889dff0e6fbab083c0c2c5974f
+  satellite_id: null
+  prefer_local_intents: false
+  done: true
+  processed_locally: false
+  intent_output:
+    response:
+      speech:
+        plain:
+          speech: Recorded as an idea.
+          extra_data: null
+      card: {}
+      language: en-GB
+      response_type: action_done
+      data:
+        success: []
+        failed: []
+    conversation_id: 01KSR7Z0B04XPR9BYVXVG0W1FX
+    continue_conversation: false
+finished: 2026-05-28T21:36:14.344Z

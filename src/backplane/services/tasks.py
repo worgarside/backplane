@@ -39,7 +39,8 @@ _PEOPLE_DIR: Final = pathlib.PurePath("People")
 _BOARD_PATH: Final = pathlib.PurePath("Tasks/Board.md")
 _INBOX_DAYS: Final = 30
 _SCORE_AUTO: Final = 70.0
-_SCORE_CANDIDATE: Final = 55.0
+_SCORE_CANDIDATE: Final = 60.0
+_MIN_AUTO_GAP: Final = 10.0
 _LOG_TEXT_MAX_LEN: Final = 80
 _MATCH_TOP_CANDIDATES: Final = 3
 
@@ -53,6 +54,14 @@ class Capture:
     time: str
     text: str
     path: pathlib.PurePath
+
+
+@dataclass(frozen=True, slots=True)
+class MatchOutcome:
+    """Result of best-effort inbox capture matching."""
+
+    matched: Capture | None
+    candidates: list[Capture]
 
 
 class TaskMetadata(BaseModel):
@@ -283,23 +292,20 @@ def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
     return scored[0][1] - scored[1][1]
 
 
-def _find_match(description: str, captures: list[Capture]) -> Capture | None:
-    """Return the best-matching capture or None if no confident match exists.
+def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
+    """Return a best-effort inbox capture match.
 
     Args:
         description: Task description to match against.
         captures: Candidate captures to score.
 
     Returns:
-        Best-matching capture if score >= 70, or None if score < 55.
-
-    Raises:
-        ValueError: If the best score is 55-69 (ambiguous), with candidate
-            details for the calling LLM to use for disambiguation.
+        A match outcome. Borderline candidates are surfaced but never block
+        task creation.
     """
     if not captures:
         logger.debug("Fuzzy match skipped: no inbox captures in lookback window")
-        return None
+        return MatchOutcome(matched=None, candidates=[])
 
     scored: list[tuple[Capture, float]] = sorted(
         ((c, _fuzzy_score(description, c.text)) for c in captures),
@@ -310,7 +316,7 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
     best_capture, best_score = scored[0]
     gap = _runner_up_gap(scored)
 
-    if best_score >= _SCORE_AUTO:
+    if best_score >= _SCORE_AUTO and (gap is None or gap >= _MIN_AUTO_GAP):
         gap_text = f"{gap:.0f}" if gap is not None else "n/a"
         logger.info(
             "Fuzzy match accepted (score={:.0f}, runner_up_gap={}): {}",
@@ -318,30 +324,27 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
             gap_text,
             best_capture.id,
         )
-        return best_capture
+        return MatchOutcome(matched=best_capture, candidates=[])
 
     if best_score >= _SCORE_CANDIDATE:
-        top_ids = [capture.id for capture, _ in scored[:_MATCH_TOP_CANDIDATES]]
-        logger.warning(
-            "Fuzzy match ambiguous (score={:.0f}, candidates={}): {}",
+        candidates = [capture for capture, _ in scored[:_MATCH_TOP_CANDIDATES]]
+        top_ids = [capture.id for capture in candidates]
+        gap_text = f"{gap:.0f}" if gap is not None else "n/a"
+        logger.info(
+            "Fuzzy match candidates surfaced (score={:.0f}, runner_up_gap={}, candidates={}): {}",
             best_score,
+            gap_text,
             top_ids,
             best_capture.id,
         )
-        candidates_text = "; ".join(f"{c.id!r}: {c.text!r}" for c, _ in scored[:3])
-        msg = (
-            f"Ambiguous match (score={best_score:.0f}). "
-            f"Did you mean one of these captures: {candidates_text}? "
-            "Please clarify or supply the exact capture text."
-        )
-        raise ValueError(msg)
+        return MatchOutcome(matched=None, candidates=candidates)
 
     logger.info(
         "Fuzzy match rejected (best_score={:.0f}, best_id={})",
         best_score,
         best_capture.id,
     )
-    return None
+    return MatchOutcome(matched=None, candidates=[])
 
 
 def _note_title_from_markdown(text: str) -> str | None:
@@ -360,6 +363,40 @@ def _note_title_from_markdown(text: str) -> str | None:
         if line.startswith("# ") and not line.startswith("## "):
             return line.removeprefix("# ").strip()
     return None
+
+
+async def _load_recent_captures() -> list[Capture]:
+    """Load recent inbox captures.
+
+    Returns:
+        Recent inbox captures, or an empty list when the inbox is absent.
+    """
+    try:
+        async with MarkdownDocument(
+            vault_path=ObsidianService.IDEA_INBOX_PATH,
+            read_only=True,
+        ) as inbox:
+            captures = _parse_inbox(inbox)
+    except FileNotFoundError:
+        logger.error("Idea inbox not found; skipping capture matching")
+        return []
+
+    logger.info(
+        "Parsed {} inbox captures (lookback_days={})",
+        len(captures),
+        _INBOX_DAYS,
+    )
+    return captures
+
+
+def _find_capture_by_id(captures: list[Capture], capture_id: str) -> Capture | None:
+    """Return a capture with the given stable ID."""
+    return next((capture for capture in captures if capture.id == capture_id), None)
+
+
+def _capture_payload(capture: Capture) -> dict[str, str]:
+    """Return the public payload used to offer optional capture linking."""
+    return {"id": capture.id, "text": capture.text}
 
 
 async def _list_vault_entity_names(directory: pathlib.PurePath) -> list[str]:
@@ -726,11 +763,12 @@ class TaskService:
     """Service for creating structured task notes from voice captures."""
 
     @staticmethod
-    async def create_task(
+    async def create_task(  # noqa: PLR0914
         description: str,
         title: str | None = None,
         due: str | None = None,
         priority: enums.Priority | None = None,
+        link_capture_id: str | None = None,
     ) -> dict[str, object]:
         """Create a task note, update the Kanban board, and stub missing domain/resource notes.
 
@@ -739,29 +777,30 @@ class TaskService:
             title: Task title. Inferred via LLM if omitted.
             due: Due date in YYYY-MM-DD format.
             priority: Priority override: 'low', 'medium', or 'high'.
+            link_capture_id: Explicit capture ID to link when the user has
+                confirmed a prior inbox capture.
 
         Returns:
             Dict with keys: slug, path, title, matched_capture_id,
-            domains_created, resources_created, people_created.
+            candidate_captures, domains_created, resources_created, people_created.
         """
-        captures: list[Capture] = []
+        captures = await _load_recent_captures()
+        candidate_captures: list[Capture] = []
 
-        try:
-            async with MarkdownDocument(
-                vault_path=ObsidianService.IDEA_INBOX_PATH,
-                read_only=True,
-            ) as inbox:
-                captures = _parse_inbox(inbox)
-        except FileNotFoundError:
-            logger.error("Idea inbox not found; skipping capture matching")
+        if link_capture_id:
+            matched_capture = _find_capture_by_id(captures, link_capture_id)
+            if matched_capture is None:
+                logger.warning(
+                    "Requested capture link not found: {}; creating task unlinked",
+                    link_capture_id,
+                )
+        elif captures:
+            match = _find_match(description, captures)
+            matched_capture = match.matched
+            candidate_captures = match.candidates
         else:
-            logger.info(
-                "Parsed {} inbox captures (lookback_days={})",
-                len(captures),
-                _INBOX_DAYS,
-            )
+            matched_capture = None
 
-        matched_capture = _find_match(description, captures)
         metadata_source = (
             matched_capture.text if matched_capture is not None else description
         )
@@ -849,7 +888,46 @@ class TaskService:
             "path": str(_TASKS_DIR / f"{slug}.md"),
             "title": metadata.title,
             "matched_capture_id": matched_capture.id if matched_capture else None,
+            "candidate_captures": [
+                _capture_payload(capture) for capture in candidate_captures
+            ],
             "domains_created": domains_created,
             "resources_created": resources_created,
             "people_created": people_created,
         }
+
+    @staticmethod
+    async def link_capture(task_slug: str, capture_id: str) -> str:
+        """Link an existing task to a confirmed inbox capture.
+
+        Args:
+            task_slug: Slug of the task note in ``Tasks``.
+            capture_id: Stable capture ID, e.g. ``2026-05-25T21:15``.
+
+        Returns:
+            Concise confirmation of the linking outcome.
+        """
+        captures = await _load_recent_captures()
+        capture = _find_capture_by_id(captures, capture_id)
+        if capture is None:
+            logger.warning(
+                "Capture {} not found; task {} unchanged",
+                capture_id,
+                task_slug,
+            )
+            return (
+                f"Capture {capture_id} was not found; task {task_slug} was not changed."
+            )
+
+        slug = safe_slug(task_slug)
+        task_path = _TASKS_DIR / f"{slug}.md"
+        try:
+            async with MarkdownDocument(vault_path=task_path) as task:
+                task.frontmatter["source_capture"] = capture.id
+        except FileNotFoundError:
+            logger.warning("Task {} not found while linking capture {}", slug, capture_id)
+            return f"Task {slug} was not found; capture {capture_id} was not linked."
+
+        await _annotate_capture(capture, slug)
+        logger.info("Linked task {} to capture {}", slug, capture_id)
+        return f"Task {slug} linked to capture {capture_id}."

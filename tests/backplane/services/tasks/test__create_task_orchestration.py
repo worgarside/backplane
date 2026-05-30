@@ -48,6 +48,7 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
         "path": "Tasks/review-backup-logs-2.md",
         "title": "Review backup logs",
         "matched_capture_id": None,
+        "candidate_captures": [],
         "domains_created": [],
         "resources_created": [],
         "people_created": [],

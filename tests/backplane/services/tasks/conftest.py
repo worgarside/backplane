@@ -32,3 +32,38 @@ def sample_captures() -> list[Capture]:
             path=path,
         ),
     ]
+
+
+@pytest.fixture
+def rain_alert_unrelated_captures() -> list[Capture]:
+    """Inbox captures that used to block a new rain-alert task."""
+    path = pathlib.PurePath("Inbox/Ideas.md")
+    return [
+        Capture(
+            id="2026-05-17T01:44",
+            date="2026-05-17",
+            time="01:44",
+            text="I need to create reminder notifications for the mood tracker",
+            path=path,
+        ),
+        Capture(
+            id="2026-05-17T14:29",
+            date="2026-05-17",
+            time="14:29",
+            text=(
+                "Update the Open Banking integration in Home Assistant to include "
+                "Vic's Amex card and send her notifications of how much she's spent."
+            ),
+            path=path,
+        ),
+        Capture(
+            id="2026-05-17T23:04",
+            date="2026-05-17",
+            time="23:04",
+            text=(
+                "When I do some kind of interaction with backplane, I should send "
+                "myself notifications with deep links to that specific note."
+            ),
+            path=path,
+        ),
+    ]

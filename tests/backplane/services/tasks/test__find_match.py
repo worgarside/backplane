@@ -5,8 +5,6 @@ from __future__ import annotations
 import pathlib
 from typing import TYPE_CHECKING
 
-import pytest
-
 from backplane.services.tasks import Capture, _find_match
 
 if TYPE_CHECKING:
@@ -15,22 +13,25 @@ if TYPE_CHECKING:
 
 def test__find_match_accepts_high_confidence(sample_captures: list[Capture]) -> None:
     """A strong match returns the best capture automatically."""
-    match = _find_match(
+    outcome = _find_match(
         "weekly backup verification database",
         sample_captures,
     )
-    assert match is not None
-    assert match.id == "2026-01-10T09:00"
+    assert outcome.matched is not None
+    assert outcome.matched.id == "2026-01-10T09:00"
+    assert outcome.candidates == []
 
 
 def test__find_match_returns_none_without_candidates() -> None:
     """No captures means there is nothing to match."""
-    assert _find_match("weekly backup verification database", []) is None
+    assert _find_match("weekly backup verification database", []).matched is None
 
 
 def test__find_match_returns_none_for_weak_match(sample_captures: list[Capture]) -> None:
     """Unrelated descriptions do not match any capture."""
-    assert _find_match("xyzzy plugh unrelated qwerty", sample_captures) is None
+    outcome = _find_match("xyzzy plugh unrelated qwerty", sample_captures)
+    assert outcome.matched is None
+    assert outcome.candidates == []
 
 
 def test__find_match_rejects_loose_long_capture_match() -> None:
@@ -46,22 +47,52 @@ def test__find_match_rejects_loose_long_capture_match() -> None:
         path=pathlib.PurePath("Inbox/Ideas.md"),
     )
 
-    match = _find_match(
+    outcome = _find_match(
         "sort that plant database thing, then log all my plants and care routines",
         [capture],
     )
 
-    assert match is None
+    assert outcome.matched is None
+    assert outcome.candidates == []
 
 
-def test__find_match_raises_for_ambiguous_scores(
+def test__find_match_returns_candidates_for_ambiguous_scores(
     sample_captures: list[Capture],
     mocker: MockerFixture,
 ) -> None:
-    """Borderline scores surface candidates for clarification."""
+    """Borderline scores surface candidates without blocking task creation."""
     _ = mocker.patch(
         "backplane.services.tasks._fuzzy_score",
         side_effect=[60.0, 60.0],
     )
-    with pytest.raises(ValueError, match="Ambiguous match"):
-        _ = _find_match("something vague about calendars", sample_captures)
+    outcome = _find_match("something vague about calendars", sample_captures)
+
+    assert outcome.matched is None
+    assert outcome.candidates == sample_captures
+
+
+def test__find_match_requires_runner_up_gap_for_auto_link(
+    sample_captures: list[Capture],
+    mocker: MockerFixture,
+) -> None:
+    """High scores with a close runner-up are offered instead of auto-linked."""
+    _ = mocker.patch(
+        "backplane.services.tasks._fuzzy_score",
+        side_effect=[72.0, 68.0],
+    )
+    outcome = _find_match("something vague about calendars", sample_captures)
+
+    assert outcome.matched is None
+    assert outcome.candidates == sample_captures
+
+
+def test__find_match_regression_rain_alert_does_not_raise(
+    rain_alert_unrelated_captures: list[Capture],
+) -> None:
+    """The rain-alert wording returns candidates instead of blocking creation."""
+    outcome = _find_match(
+        "Update rain + roof door open alert notification",
+        rain_alert_unrelated_captures,
+    )
+
+    assert outcome.matched is None

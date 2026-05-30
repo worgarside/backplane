@@ -68,3 +68,14 @@ checkout branch="main":
     git pull
     uv sync
     just _mcp-restart
+
+# Pull the current branch, sync deps, and restart the MCP server
+pull:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    branch="$(git branch --show-current)"
+    if [[ -z "${branch}" ]]; then
+        echo "Cannot pull: HEAD is detached"
+        exit 1
+    fi
+    just checkout "${branch}"

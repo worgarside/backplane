@@ -54,10 +54,6 @@ setup log_dir="/var/log/backplane":
         sudo env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
     fi
 
-# Install systemd units, logrotate configs, and service dependencies
-setup log_dir="/var/log/backplane":
-    sudo env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
-
 # Checkout a specific tag, sync deps, and restart via systemd — called by CI
 deploy tag:
     git fetch --tags origin

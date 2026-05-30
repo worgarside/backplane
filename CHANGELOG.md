@@ -2,6 +2,22 @@
 
 <!-- version list -->
 
+## v0.4.2 (2026-05-30)
+
+### Bug Fixes
+
+- Use git reset to ensure clean deploys ([#33](https://github.com/worgarside/backplane/pull/33),
+  [`e6b1fa8`](https://github.com/worgarside/backplane/commit/e6b1fa82bd406c53608a94c6144f6f1a6334d896))
+
+
+## v0.4.1 (2026-05-30)
+
+### Refactoring
+
+- Update log directory handling ([#32](https://github.com/worgarside/backplane/pull/32),
+  [`c6115eb`](https://github.com/worgarside/backplane/commit/c6115ebfdc276a3b8f26809716757d002594ed26))
+
+
 ## v0.4.0 (2026-05-27)
 
 ### Bug Fixes

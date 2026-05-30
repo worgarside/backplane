@@ -57,7 +57,7 @@ setup log_dir="/var/log/backplane":
 # Checkout a specific tag, sync deps, and restart via systemd — called by CI
 deploy tag:
     git fetch --tags origin
-    git checkout {{ tag }}
+    git reset --hard {{ tag }}
     uv sync --frozen --no-dev
     just _mcp-restart
 

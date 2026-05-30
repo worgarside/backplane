@@ -21,15 +21,6 @@ def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
         raise ValueError(msg) from exc
 
 
-def _parse_obsidian_vault_path(v: object) -> anyio.Path:
-    if isinstance(v, anyio.Path):
-        return v
-    if isinstance(v, str):
-        return anyio.Path(v)
-    msg = "obsidian_vault_path must be a string or anyio.Path"
-    raise TypeError(msg)
-
-
 class Settings(BaseSettings):
     """Settings for the Backplane application."""
 
@@ -98,9 +89,15 @@ class Settings(BaseSettings):
 
     obsidian_vault_path: Annotated[
         anyio.Path,
-        BeforeValidator(_parse_obsidian_vault_path),
         Field(description="Absolute path to the Obsidian vault directory."),
     ]
+
+    @field_validator("obsidian_vault_path", mode="before")
+    @classmethod
+    def _parse_obsidian_vault_path(cls, v: anyio.Path | str) -> anyio.Path:
+        if isinstance(v, anyio.Path):
+            return v
+        return anyio.Path(v)
 
 
 @final

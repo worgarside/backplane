@@ -21,7 +21,13 @@ mcp-logs:
 
 # Install systemd units, logrotate configs, and service dependencies
 setup log_dir="/var/log/backplane":
-    sudo env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ "$(id -u)" -eq 0 ]]; then
+        env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
+    else
+        sudo env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
+    fi
 
 # Checkout a specific tag, sync deps, and restart via systemd — called by CI
 deploy tag:

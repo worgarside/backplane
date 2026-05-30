@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v0.4.3 (2026-05-30)
+
+### Bug Fixes
+
+- **tasks**: Prevent task creation from blocking on ambiguous capture matches
+  ([#31](https://github.com/worgarside/backplane/pull/31),
+  [`31c3c09`](https://github.com/worgarside/backplane/commit/31c3c098b55fcd638982bea1c7b8b9526d42ea04))
+
+### Continuous Integration
+
+- Prek autoupdate ([#30](https://github.com/worgarside/backplane/pull/30),
+  [`267f9eb`](https://github.com/worgarside/backplane/commit/267f9eb3a33619cda3e486cf4bd6ef69ae7090ee))
+
+
 ## v0.4.2 (2026-05-30)
 
 ### Bug Fixes

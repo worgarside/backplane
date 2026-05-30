@@ -7,7 +7,7 @@ packages = ["src/backplane"]
 
 [project]
 name = "backplane"
-version = "0.4.0"
+version = "0.4.2"
 description = "AI-facing gateway for local services and smart home orchestration"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -133,6 +133,11 @@ version_variables = [
 ]
 major_on_zero = false
 allow_zero_version = true
+build_command = """
+    python -m pip install uv
+    uv lock --upgrade-package "$PACKAGE_NAME"
+    git add uv.lock
+  """
 
 [tool.semantic_release.commit_parser_options]
 allowed_tags = [
@@ -152,8 +157,3 @@ allowed_tags = [
 minor_tags = ["feat"]
 patch_tags = ["deps", "fix", "hotfix", "perf", "build"]
 parse_squash_commits = false
-build_command = """
-    python -m pip install uv
-    uv lock --upgrade-package "$PACKAGE_NAME"
-    git add uv.lock
-  """

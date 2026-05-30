@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, cast
+from typing import Annotated
 
 from loguru import logger
 from pydantic import Field
@@ -118,30 +118,25 @@ async def create_task(
         link_capture_id=link_capture_id,
     )
 
-    task_title = result["title"]
-    slug = result["slug"]
-    matched = result["matched_capture_id"]
+    task_title = result.title
+    slug = result.slug
+    matched = result.matched_capture_id
 
     parts = [f"Task '{task_title}' created at Tasks/{slug}.md."]
     if matched:
         parts.append(f"Matched inbox capture from {matched}.")
-    else:
-        candidates = cast(
-            "list[dict[str, str]]",
-            result.get("candidate_captures", []),
+    elif result.candidate_captures:
+        candidate = result.candidate_captures[0]
+        snippet = " ".join(candidate.text.split())
+        if len(snippet) > _CANDIDATE_SNIPPET_MAX_LEN:
+            snippet = f"{snippet[: _CANDIDATE_SNIPPET_MAX_LEN - 3]}..."
+        candidate_id = candidate.id
+        parts.append(
+            (
+                f"This looked similar to {candidate_id} ({snippet!r}); "
+                f"say 'link it to {candidate_id}' to connect that capture."
+            ),
         )
-        if candidates:
-            candidate = candidates[0]
-            snippet = " ".join(candidate["text"].split())
-            if len(snippet) > _CANDIDATE_SNIPPET_MAX_LEN:
-                snippet = f"{snippet[: _CANDIDATE_SNIPPET_MAX_LEN - 3]}..."
-            candidate_id = candidate["id"]
-            parts.append(
-                (
-                    f"This looked similar to {candidate_id} ({snippet!r}); "
-                    f"say 'link it to {candidate_id}' to connect that capture."
-                ),
-            )
 
     response = " ".join(parts)
     logger.info(

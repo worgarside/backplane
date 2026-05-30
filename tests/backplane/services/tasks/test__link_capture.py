@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING
 
 from backplane.services.obsidian import ObsidianService
 from backplane.services.tasks import TaskService
-from backplane.utils import today
+from backplane.utils import VAULT_PATHS, today
 from backplane.utils.markdown import MarkdownDocument
 
 if TYPE_CHECKING:
@@ -20,7 +19,7 @@ async def test__link_capture_sets_task_frontmatter_and_annotates_capture(
     """A confirmed capture link updates the task and capture notes."""
     capture_date = today().isoformat()
     inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
-    task_path = obsidian_vault / "Tasks" / "review-backup-logs.md"
+    task_path = obsidian_vault / VAULT_PATHS.task_notes_dir / "review-backup-logs.md"
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     await task_path.parent.mkdir(parents=True, exist_ok=True)
     _ = await inbox.write_text(
@@ -58,7 +57,7 @@ source_capture:
         )
 
     async with MarkdownDocument(
-        vault_path=pathlib.PurePath("Tasks/review-backup-logs.md"),
+        vault_path=VAULT_PATHS.task_notes_dir / "review-backup-logs.md",
         read_only=True,
     ) as task_doc:
         assert task_doc.frontmatter["source_capture"] == f"{capture_date}T09:15"
@@ -68,7 +67,7 @@ async def test__link_capture_unknown_capture_does_not_change_task(
     obsidian_vault: anyio.Path,
 ) -> None:
     """An unknown capture ID returns a safe no-op confirmation."""
-    task_path = obsidian_vault / "Tasks" / "review-backup-logs.md"
+    task_path = obsidian_vault / VAULT_PATHS.task_notes_dir / "review-backup-logs.md"
     await task_path.parent.mkdir(parents=True, exist_ok=True)
     _ = await task_path.write_text(
         """---

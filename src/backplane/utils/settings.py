@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import zoneinfo
-from typing import Annotated
+from typing import Annotated, Final, final
 
 import anyio
 import yarl
@@ -24,11 +24,6 @@ def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
 class Settings(BaseSettings):
     """Settings for the Backplane application."""
 
-    obsidian_vault_path: Annotated[
-        anyio.Path,
-        BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
-        Field(description="Absolute path to the Obsidian vault directory."),
-    ]
     local_timezone: Annotated[
         zoneinfo.ZoneInfo,
         BeforeValidator(_parse_timezone),
@@ -40,6 +35,9 @@ class Settings(BaseSettings):
         ),
     ] = zoneinfo.ZoneInfo("Europe/London")
 
+    # ========================================================================
+    # Home Assistant
+
     home_assistant_url: Annotated[
         yarl.URL | None,
         Field(
@@ -47,6 +45,7 @@ class Settings(BaseSettings):
             description="Base URL of the Home Assistant instance, e.g. http://homeassistant.local:8123.",
         ),
     ]
+
     home_assistant_token: Annotated[
         str | None,
         Field(
@@ -54,6 +53,7 @@ class Settings(BaseSettings):
             description="Long-lived access token for the Home Assistant REST API.",
         ),
     ]
+
     home_assistant_mcp_entry_id: Annotated[
         str | None,
         Field(
@@ -61,6 +61,15 @@ class Settings(BaseSettings):
             description="Config entry ID of the Backplane MCP integration in Home Assistant.",
         ),
     ]
+
+    @field_validator("home_assistant_url", mode="before")
+    @classmethod
+    def _parse_ha_url(cls, v: str | None) -> yarl.URL | None:
+        return yarl.URL(v.rstrip("/")) if v is not None else None
+
+    # ========================================================================
+    # LLM
+
     task_metadata_model: Annotated[
         str,
         Field(
@@ -71,13 +80,32 @@ class Settings(BaseSettings):
         ),
     ] = "openai:gpt-4o-mini"
 
-    @field_validator("home_assistant_url", mode="before")
-    @classmethod
-    def _parse_ha_url(cls, v: str | None) -> yarl.URL | None:
-        return yarl.URL(v.rstrip("/")) if v is not None else None
+    # ========================================================================
+    # Obsidian
+
+    obsidian_vault_path: Annotated[
+        anyio.Path,
+        BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
+        Field(description="Absolute path to the Obsidian vault directory."),
+    ]
+
+
+@final
+class VaultPaths:
+    """Stable relative paths within the Obsidian vault."""
+
+    daily_notes_dir: Final = anyio.Path("Daily Notes")
+    domains_dir: Final = anyio.Path("Domains")
+    inbox_dir: Final = anyio.Path("Inbox")
+    people_dir: Final = anyio.Path("People")
+    resources_dir: Final = anyio.Path("Resources")
+    tasks_dir: Final = anyio.Path("Tasks")
+    task_notes_dir: Final = anyio.Path("Tasks") / "Tasks"
+    task_board_path: Final = anyio.Path("Tasks") / "Board.md"
 
 
 SETTINGS = Settings()  # pyright: ignore[reportCallIssue]
+VAULT_PATHS: Final = VaultPaths()
 
 
-__all__ = ["SETTINGS"]
+__all__ = ["SETTINGS", "VAULT_PATHS", "VaultPaths"]

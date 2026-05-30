@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from backplane.services.obsidian import ObsidianService
-from backplane.services.tasks import _BOARD_PATH, TaskMetadata, TaskService
-from backplane.utils import enums, today
+from backplane.services.tasks import TaskMetadata, TaskService
+from backplane.utils import VAULT_PATHS, enums, today
 
 if TYPE_CHECKING:
     import anyio
@@ -27,7 +27,7 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
         "when meetings change."
     )
     inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
-    board = obsidian_vault / _BOARD_PATH
+    board = obsidian_vault / VAULT_PATHS.task_board_path
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     await board.parent.mkdir(parents=True, exist_ok=True)
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")

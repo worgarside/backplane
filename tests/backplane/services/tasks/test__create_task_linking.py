@@ -5,8 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from backplane.services.obsidian import ObsidianService
-from backplane.services.tasks import _BOARD_PATH, TaskMetadata, TaskService
-from backplane.utils import enums, today
+from backplane.services.tasks import (
+    CaptureCandidate,
+    TaskMetadata,
+    TaskService,
+)
+from backplane.utils import VAULT_PATHS, enums, today
 
 if TYPE_CHECKING:
     import anyio
@@ -21,7 +25,7 @@ async def test__create_task_uses_explicit_capture_link(
     capture_date = today().isoformat()
     capture_text = "Review backup logs before the maintenance window."
     inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
-    board = obsidian_vault / _BOARD_PATH
+    board = obsidian_vault / VAULT_PATHS.task_board_path
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     await board.parent.mkdir(parents=True, exist_ok=True)
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")
@@ -54,8 +58,8 @@ async def test__create_task_uses_explicit_capture_link(
         link_capture_id=f"{capture_date}T09:15",
     )
 
-    assert result["matched_capture_id"] == f"{capture_date}T09:15"
-    assert result["candidate_captures"] == []
+    assert result.matched_capture_id == f"{capture_date}T09:15"
+    assert result.candidate_captures == []
     mock_extract.assert_awaited_once_with(capture_text, None, None)
     mock_find_match.assert_not_called()
 
@@ -65,7 +69,7 @@ async def test__create_task_unknown_explicit_capture_link_creates_unlinked_task(
     mocker: MockerFixture,
 ) -> None:
     """An unknown explicit capture ID does not block task creation."""
-    board = obsidian_vault / _BOARD_PATH
+    board = obsidian_vault / VAULT_PATHS.task_board_path
     await board.parent.mkdir(parents=True, exist_ok=True)
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")
     metadata = TaskMetadata(
@@ -87,8 +91,8 @@ async def test__create_task_unknown_explicit_capture_link_creates_unlinked_task(
         link_capture_id="2026-05-25T21:15",
     )
 
-    assert result["matched_capture_id"] is None
-    assert result["candidate_captures"] == []
+    assert result.matched_capture_id is None
+    assert result.candidate_captures == []
 
 
 async def test__create_task_returns_candidates_without_blocking(
@@ -98,7 +102,7 @@ async def test__create_task_returns_candidates_without_blocking(
     """Borderline capture matches are returned while the task is still created."""
     capture_date = today().isoformat()
     inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
-    board = obsidian_vault / _BOARD_PATH
+    board = obsidian_vault / VAULT_PATHS.task_board_path
     await inbox.parent.mkdir(parents=True, exist_ok=True)
     await board.parent.mkdir(parents=True, exist_ok=True)
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")
@@ -135,14 +139,14 @@ Track LLM usage and cost in Home Assistant.
 
     result = await TaskService.create_task("Update rain alert notification")
 
-    assert result["matched_capture_id"] is None
-    assert result["candidate_captures"] == [
-        {
-            "id": f"{capture_date}T09:15",
-            "text": "I need to create reminder notifications for the mood tracker",
-        },
-        {
-            "id": f"{capture_date}T10:00",
-            "text": "Track LLM usage and cost in Home Assistant.",
-        },
+    assert result.matched_capture_id is None
+    assert result.candidate_captures == [
+        CaptureCandidate(
+            id=f"{capture_date}T09:15",
+            text="I need to create reminder notifications for the mood tracker",
+        ),
+        CaptureCandidate(
+            id=f"{capture_date}T10:00",
+            text="Track LLM usage and cost in Home Assistant.",
+        ),
     ]

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import datetime as dt
-import pathlib
 
 from backplane.services.tasks import Capture, TaskMetadata, _build_task_note
-from backplane.utils import enums
+from backplane.utils import VAULT_PATHS, enums
 
 
 def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
@@ -16,7 +15,7 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
         date="2026-05-25",
         time="21:15",
         text="Review backup logs",
-        path=pathlib.PurePath("Inbox/Ideas.md"),
+        path=VAULT_PATHS.inbox_dir / "Ideas.md",
     )
     metadata = TaskMetadata(
         title="Review backup logs",

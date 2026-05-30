@@ -7,12 +7,13 @@ import io
 import pathlib
 from dataclasses import dataclass
 from functools import cache, lru_cache
-from typing import TYPE_CHECKING, Annotated, Self, cast
+from typing import TYPE_CHECKING, Annotated, ClassVar, Self, cast
 
+import anyio
 import mdformat
 from loguru import logger
 from markdown_it import MarkdownIt
-from pydantic import BaseModel, Field, PrivateAttr, computed_field
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, computed_field
 
 from .exceptions import SectionNotFoundError, UserError
 from .helpers.files import atomic_write_text
@@ -22,7 +23,6 @@ from .yaml import YAML_LOADER, FrontmatterValue
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Sequence
 
-    import anyio
     from markdown_it.token import Token
 
 
@@ -233,12 +233,14 @@ class MarkdownSection(BaseModel):
 class MarkdownDocument(BaseModel):
     """A markdown document split into frontmatter and heading sections."""
 
+    model_config: ClassVar[ConfigDict] = ConfigDict(arbitrary_types_allowed=True)
+
     _frontmatter: dict[str, FrontmatterValue] = PrivateAttr(default_factory=dict)
     _body: list[MarkdownSection] = PrivateAttr(default_factory=list)
     _loaded_rendered: Annotated[str, PrivateAttr()] = ""
 
     vault_path: Annotated[
-        pathlib.PurePath,
+        anyio.Path | pathlib.PurePath,
         Field(description="The path within the vault to the markdown file."),
     ]
 

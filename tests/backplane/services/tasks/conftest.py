@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import pathlib
-
 import pytest
 
 from backplane.services.tasks import Capture
+from backplane.utils import VAULT_PATHS
 
 
 @pytest.fixture
 def sample_captures() -> list[Capture]:
     """Recent inbox captures used for matching tests."""
-    path = pathlib.PurePath("Inbox/Ideas.md")
+    path = VAULT_PATHS.inbox_dir / "Ideas.md"
     return [
         Capture(
             id="2026-01-10T09:00",
@@ -37,7 +36,7 @@ def sample_captures() -> list[Capture]:
 @pytest.fixture
 def rain_alert_unrelated_captures() -> list[Capture]:
     """Inbox captures that used to block a new rain-alert task."""
-    path = pathlib.PurePath("Inbox/Ideas.md")
+    path = VAULT_PATHS.inbox_dir / "Ideas.md"
     return [
         Capture(
             id="2026-05-17T01:44",

@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from backplane.mcp import tasks
-from backplane.utils import enums
+from backplane.services.tasks import CaptureCandidate, CreateTaskResult
+from backplane.utils import VAULT_PATHS, enums
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -52,12 +53,16 @@ async def test__create_task__forwards_fields_to_task_service(
 ) -> None:
     """Task fields are forwarded while omitted optional values default to None."""
     mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": returned_title,
-            "slug": returned_slug,
-            "matched_capture_id": None,
-            "candidate_captures": [],
-        },
+        return_value=CreateTaskResult(
+            title=returned_title,
+            slug=returned_slug,
+            path=VAULT_PATHS.task_notes_dir / f"{returned_slug}.md",
+            matched_capture_id=None,
+            candidate_captures=[],
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -87,12 +92,16 @@ async def test__create_task__matched_capture_is_included_in_confirmation(
 ) -> None:
     """A matched inbox capture should be mentioned in the confirmation."""
     mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": "Review backup logs",
-            "slug": "review-backup-logs",
-            "matched_capture_id": "2026-05-25T21:15",
-            "candidate_captures": [],
-        },
+        return_value=CreateTaskResult(
+            title="Review backup logs",
+            slug="review-backup-logs",
+            path=VAULT_PATHS.task_notes_dir / "review-backup-logs.md",
+            matched_capture_id="2026-05-25T21:15",
+            candidate_captures=[],
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -113,12 +122,16 @@ async def test__create_task__logs_success_response(
     """Successful task creation logs the service result and response string."""
     mock_info = mocker.patch("backplane.mcp.tasks.logger.info")
     mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": "Review backup logs",
-            "slug": "review-backup-logs",
-            "matched_capture_id": None,
-            "candidate_captures": [],
-        },
+        return_value=CreateTaskResult(
+            title="Review backup logs",
+            slug="review-backup-logs",
+            path=VAULT_PATHS.task_notes_dir / "review-backup-logs.md",
+            matched_capture_id=None,
+            candidate_captures=[],
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -135,17 +148,21 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
 ) -> None:
     """Near matches are offered without failing task creation."""
     mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": "Update rain alert notification",
-            "slug": "update-rain-alert-notification",
-            "matched_capture_id": None,
-            "candidate_captures": [
-                {
-                    "id": "2026-05-17T01:44",
-                    "text": "I need to create reminder notifications for the mood tracker",
-                },
+        return_value=CreateTaskResult(
+            title="Update rain alert notification",
+            slug="update-rain-alert-notification",
+            path=VAULT_PATHS.task_notes_dir / "update-rain-alert-notification.md",
+            matched_capture_id=None,
+            candidate_captures=[
+                CaptureCandidate(
+                    id="2026-05-17T01:44",
+                    text=("I need to create reminder notifications for the mood tracker"),
+                ),
             ],
-        },
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -165,12 +182,16 @@ async def test__create_task__forwards_link_capture_id(
 ) -> None:
     """An explicit capture link is forwarded to the task service."""
     mock_create_task = mocker.AsyncMock(
-        return_value={
-            "title": "Review backup logs",
-            "slug": "review-backup-logs",
-            "matched_capture_id": "2026-05-25T21:15",
-            "candidate_captures": [],
-        },
+        return_value=CreateTaskResult(
+            title="Review backup logs",
+            slug="review-backup-logs",
+            path=VAULT_PATHS.task_notes_dir / "review-backup-logs.md",
+            matched_capture_id="2026-05-25T21:15",
+            candidate_captures=[],
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]

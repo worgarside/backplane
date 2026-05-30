@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING
 
 from backplane.services.tasks import Capture, _find_match
+from backplane.utils import VAULT_PATHS
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -44,7 +44,7 @@ def test__find_match_rejects_loose_long_capture_match() -> None:
             "Update the Open Banking integration in Home Assistant to include "
             "Vic's Amex card and send her notifications of how much she's spent."
         ),
-        path=pathlib.PurePath("Inbox/Ideas.md"),
+        path=VAULT_PATHS.inbox_dir / "Ideas.md",
     )
 
     outcome = _find_match(

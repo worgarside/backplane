@@ -15,6 +15,14 @@ from .server import mcp
 _CANDIDATE_SNIPPET_MAX_LEN = 80
 
 
+def _display_task_path(path: object) -> str:
+    path_text = str(path)
+    prefix = "Tasks/Tasks/"
+    if path_text.startswith(prefix):
+        return f"Tasks/{path_text.removeprefix(prefix)}"
+    return path_text
+
+
 @mcp.tool(
     description=(
         "Create a structured task note for something actionable.\n\n"
@@ -118,7 +126,7 @@ async def create_task(
         link_capture_id=link_capture_id,
     )
 
-    parts = [f"Task '{task.title}' created at {task.path}"]
+    parts = [f"Task '{task.title}' created at {_display_task_path(task.path)}."]
     if task.matched_capture_id:
         parts.append(f"Matched inbox capture from {task.matched_capture_id}.")
     elif task.candidate_captures:

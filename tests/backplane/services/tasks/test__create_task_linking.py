@@ -69,8 +69,19 @@ async def test__create_task_unknown_explicit_capture_link_creates_unlinked_task(
     mocker: MockerFixture,
 ) -> None:
     """An unknown explicit capture ID does not block task creation."""
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
     board = obsidian_vault / VAULT_PATHS.task_board_path
+    await inbox.parent.mkdir(parents=True, exist_ok=True)
     await board.parent.mkdir(parents=True, exist_ok=True)
+    _ = await inbox.write_text(
+        """# 2026-05-25
+
+## 20:00
+
+Rotate the hallway camera battery.
+""",
+        encoding="utf-8",
+    )
     _ = await board.write_text("## Backlog\n\n", encoding="utf-8")
     metadata = TaskMetadata(
         title="Review backup logs",

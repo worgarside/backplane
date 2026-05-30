@@ -67,8 +67,19 @@ async def test__link_capture_unknown_capture_does_not_change_task(
     obsidian_vault: anyio.Path,
 ) -> None:
     """An unknown capture ID returns a safe no-op confirmation."""
+    inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH
     task_path = obsidian_vault / VAULT_PATHS.task_notes_dir / "review-backup-logs.md"
+    await inbox.parent.mkdir(parents=True, exist_ok=True)
     await task_path.parent.mkdir(parents=True, exist_ok=True)
+    _ = await inbox.write_text(
+        """# 2026-05-25
+
+## 20:00
+
+Rotate the hallway camera battery.
+""",
+        encoding="utf-8",
+    )
     _ = await task_path.write_text(
         """---
 type: task

@@ -21,6 +21,15 @@ def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
         raise ValueError(msg) from exc
 
 
+def _parse_obsidian_vault_path(v: object) -> anyio.Path:
+    if isinstance(v, anyio.Path):
+        return v
+    if isinstance(v, str):
+        return anyio.Path(v)
+    msg = "obsidian_vault_path must be a string or anyio.Path"
+    raise TypeError(msg)
+
+
 class Settings(BaseSettings):
     """Settings for the Backplane application."""
 
@@ -64,8 +73,12 @@ class Settings(BaseSettings):
 
     @field_validator("home_assistant_url", mode="before")
     @classmethod
-    def _parse_ha_url(cls, v: str | None) -> yarl.URL | None:
-        return yarl.URL(v.rstrip("/")) if v is not None else None
+    def _parse_ha_url(cls, v: yarl.URL | str | None) -> yarl.URL | None:
+        if v is None:
+            return None
+        if isinstance(v, yarl.URL):
+            return v
+        return yarl.URL(v.rstrip("/"))
 
     # ========================================================================
     # LLM
@@ -85,7 +98,7 @@ class Settings(BaseSettings):
 
     obsidian_vault_path: Annotated[
         anyio.Path,
-        BeforeValidator(lambda x: anyio.Path(x) if isinstance(x, str) else x),  # pyright: ignore[reportAny]
+        BeforeValidator(_parse_obsidian_vault_path),
         Field(description="Absolute path to the Obsidian vault directory."),
     ]
 

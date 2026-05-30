@@ -10,6 +10,8 @@ from backplane.mcp import tasks
 from backplane.services.tasks import CaptureCandidate, CreateTaskResult
 from backplane.utils import VAULT_PATHS, enums
 
+_CANDIDATE_SNIPPET_MAX_LEN = 80
+
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
@@ -175,6 +177,38 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
         "2026-05-17T01:44 ('I need to create reminder notifications for the mood "
         "tracker'); say 'link it to 2026-05-17T01:44' to connect that capture."
     )
+
+
+async def test__create_task__long_candidate_snippet_is_truncated(
+    mocker: MockerFixture,
+) -> None:
+    """Long candidate snippets are truncated in the confirmation."""
+    long_text = (
+        "I need to investigate the automated backup verification system because "
+        "the notifications have been failing intermittently for the past week"
+    )
+    mock_create_task = mocker.AsyncMock(
+        return_value=CreateTaskResult(
+            title="Fix backup notifications",
+            slug="fix-backup-notifications",
+            path=VAULT_PATHS.task_notes_dir / "fix-backup-notifications.md",
+            matched_capture_id=None,
+            candidate_captures=[
+                CaptureCandidate(id="2026-05-17T01:44", text=long_text),
+            ],
+            domains_created=[],
+            resources_created=[],
+            people_created=[],
+        ),
+    )
+    mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
+    mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
+
+    result = await tasks.create_task(description="Fix backup notifications")
+
+    snippet = result.split("'")[3]
+    assert snippet.endswith("...")
+    assert len(snippet) == _CANDIDATE_SNIPPET_MAX_LEN
 
 
 async def test__create_task__forwards_link_capture_id(

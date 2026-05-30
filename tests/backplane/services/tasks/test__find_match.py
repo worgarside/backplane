@@ -68,6 +68,7 @@ def test__find_match_returns_candidates_for_ambiguous_scores(
     outcome = _find_match("something vague about calendars", sample_captures)
 
     assert outcome.matched is None
+    assert outcome.candidates
     assert outcome.candidates == sample_captures
 
 

@@ -242,17 +242,17 @@ def _log_metadata_agent_run(result: AgentRunResult[TaskMetadata]) -> None:
     )
 
 
-def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture]:
-    """Parse recent captures from the inbox document.
+def _parse_inbox(doc: MarkdownDocument, days: int | None = _INBOX_DAYS) -> list[Capture]:
+    """Parse captures from the inbox document.
 
     Args:
         doc: Loaded inbox MarkdownDocument.
-        days: How many calendar days back to search.
+        days: How many calendar days back to search, or None for all captures.
 
     Returns:
         List of captures within the lookback window, in document order.
     """
-    cutoff = today() - dt.timedelta(days=days)
+    cutoff = today() - dt.timedelta(days=days) if days is not None else None
     captures: list[Capture] = []
 
     for date_section in doc.body:
@@ -261,7 +261,7 @@ def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture
         except ValueError:
             continue
 
-        if section_date < cutoff:
+        if cutoff is not None and section_date < cutoff:
             continue
 
         for time_section in date_section.sections:
@@ -369,7 +369,9 @@ def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
         return MatchOutcome(matched=best_capture, candidates=[])
 
     if best_score >= _SCORE_CANDIDATE:
-        candidates = [capture for capture, _ in scored[:_MATCH_TOP_CANDIDATES]]
+        candidates = [capture for capture, score in scored if score >= _SCORE_CANDIDATE][
+            :_MATCH_TOP_CANDIDATES
+        ]
         top_ids = [capture.id for capture in candidates]
         logger.info(
             "Fuzzy match candidates surfaced (score={:.0f}, runner_up_gap={}, candidates={}): {}",
@@ -428,6 +430,23 @@ async def _load_recent_captures() -> list[Capture]:
         len(captures),
         _INBOX_DAYS,
     )
+    return captures
+
+
+async def _load_all_captures() -> list[Capture]:
+    """Load all inbox captures for exact-ID linking.
+
+    Returns:
+        All inbox captures, or an empty list when the inbox is absent.
+    """
+    try:
+        async with ObsidianService().idea_inbox(read_only=True) as inbox:
+            captures = _parse_inbox(inbox, days=None)
+    except FileNotFoundError:
+        logger.error("Idea inbox not found; skipping capture linking")
+        return []
+
+    logger.info("Parsed {} inbox captures for exact lookup", len(captures))
     return captures
 
 
@@ -803,9 +822,8 @@ async def _select_task_capture(
     Returns:
         Matched capture and any candidates for optional manual linking.
     """
-    captures = await _load_recent_captures()
-
     if link_capture_id:
+        captures = await _load_all_captures()
         matched_capture = _find_capture_by_id(captures, link_capture_id)
         if matched_capture is None:
             logger.warning(
@@ -814,6 +832,7 @@ async def _select_task_capture(
             )
         return MatchOutcome(matched=matched_capture, candidates=[])
 
+    captures = await _load_recent_captures()
     if not captures:
         return MatchOutcome(matched=None, candidates=[])
 
@@ -1009,7 +1028,7 @@ class TaskService:
         Returns:
             Concise confirmation of the linking outcome.
         """
-        captures = await _load_recent_captures()
+        captures = await _load_all_captures()
         capture = _find_capture_by_id(captures, capture_id)
         if capture is None:
             logger.warning(

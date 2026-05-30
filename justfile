@@ -36,12 +36,12 @@ mcp-stop:
     fi
 
 # Tail MCP server logs
-mcp-logs:
+mcp-logs lines="100":
     #!/usr/bin/env bash
     if systemctl cat backplane.service &>/dev/null; then
-        tail -f /var/log/backplane/backplane.log -n 100
+        tail -f /var/log/backplane/backplane.log -n "{{ lines }}"
     else
-        tail -f /tmp/backplane-mcp.log -n 100
+        tail -f /tmp/backplane-mcp.log -n "{{ lines }}"
     fi
 
 # Install systemd units, logrotate configs, and service dependencies

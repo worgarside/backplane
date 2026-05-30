@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import datetime as dt
 
-from backplane.services.tasks import Capture, TaskMetadata, _build_task_note
+from backplane.services.tasks import (
+    Capture,
+    TaskFrontmatter,
+    TaskMetadata,
+    _build_task_note,
+)
 from backplane.utils import VAULT_PATHS, enums
 
 
@@ -40,3 +45,38 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
     assert "effort: small\n" in note
     assert "source_capture: 2026-05-25T21:15\n" in note
     assert "> Review backup logs\n" in note
+
+
+def test__task_frontmatter_defaults_fixed_task_fields() -> None:
+    """Task frontmatter defaults the stable task note fields."""
+    frontmatter = TaskFrontmatter(
+        id="task-20260525-213000",
+        created="2026-05-25T21:30:00",
+        updated="2026-05-25T21:30:00",
+        source_capture=None,
+        domains=[],
+        resources=[],
+        people=[],
+        priority=enums.Priority.MEDIUM,
+        effort=enums.Effort.SMALL,
+        due=None,
+    )
+
+    assert frontmatter.model_dump(mode="python") == {
+        "id": "task-20260525-213000",
+        "type": "task",
+        "status": "backlog",
+        "created": "2026-05-25T21:30:00",
+        "updated": "2026-05-25T21:30:00",
+        "source": "voice-capture",
+        "source_capture": None,
+        "domains": [],
+        "resources": [],
+        "people": [],
+        "priority": enums.Priority.MEDIUM,
+        "effort": enums.Effort.SMALL,
+        "due": None,
+        "completed": None,
+        "tags": ["task"],
+    }
+    assert "id: task-20260525-213000\n" in frontmatter.model_dump_yaml()

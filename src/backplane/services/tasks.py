@@ -8,7 +8,7 @@ import io
 import operator
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Final, cast, final
+from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
 
 import anyio
 from loguru import logger
@@ -133,6 +133,36 @@ class TaskMetadata(BaseModel):
             ),
         ),
     ] = ""
+
+
+class TaskFrontmatter(BaseModel, frozen=True):
+    """YAML frontmatter contract for task notes."""
+
+    id: str
+    type: Literal["task"] = "task"
+    status: Literal["backlog"] = "backlog"
+    created: str
+    updated: str
+    source: Literal["voice-capture"] = "voice-capture"
+    source_capture: str | None
+    domains: list[str]
+    resources: list[str]
+    people: list[str]
+    priority: enums.Priority
+    effort: enums.Effort
+    due: str | None
+    completed: str | None = None
+    tags: list[str] = Field(default_factory=lambda: ["task"])
+
+    def model_dump_yaml(self) -> str:
+        """Serialize the frontmatter as YAML.
+
+        Returns:
+            YAML frontmatter content without closing delimiters.
+        """
+        buf = io.StringIO()
+        YAML_LOADER.dump(self.model_dump(mode="python"), buf)  # pyright: ignore[reportUnknownMemberType]
+        return buf.getvalue()
 
 
 @cache
@@ -630,43 +660,34 @@ def _build_task_note(
     Returns:
         Complete markdown string including YAML frontmatter.
     """
-    fm: dict[str, object] = {
-        "id": f"task-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}",
-        "type": "task",
-        "status": "backlog",
-        "created": now.strftime("%Y-%m-%dT%H:%M:%S"),
-        "updated": now.strftime("%Y-%m-%dT%H:%M:%S"),
-        "source": "voice-capture",
-        "source_capture": capture.id if capture else None,
-        "domains": metadata.domains,
-        "resources": metadata.resources,
-        "people": metadata.people,
-        "priority": metadata.priority,
-        "effort": metadata.effort,
-        "due": due,
-        "completed": None,
-        "tags": ["task"],
-    }
-    buf = io.StringIO()
-    YAML_LOADER.dump(fm, buf)  # pyright: ignore[reportUnknownMemberType]
-    frontmatter_str = buf.getvalue()
+    timestamp = now.strftime("%Y-%m-%dT%H:%M:%S")
+    fm = TaskFrontmatter(
+        id=f"task-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}",
+        created=timestamp,
+        updated=timestamp,
+        source_capture=capture.id if capture else None,
+        domains=metadata.domains,
+        resources=metadata.resources,
+        people=metadata.people,
+        priority=metadata.priority,
+        effort=metadata.effort,
+        due=due,
+    )
 
     original = (capture.text if capture else description).strip()
     blockquote = "\n".join(
         f"> {line}" if line.strip() else ">" for line in (original.splitlines() or [""])
     )
-    next_action = metadata.next_action.strip()
-    activity_ts = now.strftime("%Y-%m-%d %H:%M")
 
     body = (
         f"# {title}\n\n"
         f"## Original Capture\n\n{blockquote}\n\n"
-        f"## Next Action\n\n{next_action}\n\n"
+        f"## Next Action\n\n{metadata.next_action.strip()}\n\n"
         "## Notes\n\n"
         "## Related\n\n"
-        f"## Activity Log\n\n### {activity_ts}\n\nTask created from voice capture.\n"
+        f"## Activity Log\n\n### {now.strftime('%Y-%m-%d %H:%M')}\n\nTask created from voice capture.\n"
     )
-    return f"{frontmatter_str}---\n{body}"
+    return f"{fm.model_dump_yaml()}---\n{body}"
 
 
 async def _ensure_stub(
@@ -855,8 +876,10 @@ async def _create_task_note(
         description=description,
         due=due,
     )
+
     path_in_vault = VAULT_PATHS.task_notes_dir / f"{slug}.md"
     task_path = await resolve_under_root(path_in_vault)
+
     await atomic_write_text(task_path, note_content)
     logger.info("Created task note: {}", task_path)
 

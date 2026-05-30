@@ -6,11 +6,11 @@ import asyncio
 import datetime as dt
 import io
 import operator
-import pathlib
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Final, cast, final
+from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
 
+import anyio
 from loguru import logger
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, AgentRunResult
@@ -19,6 +19,7 @@ from rapidfuzz import fuzz
 from backplane.services import ObsidianService
 from backplane.utils import (
     SETTINGS,
+    VAULT_PATHS,
     YAML_LOADER,
     MarkdownDocument,
     atomic_write_text,
@@ -32,14 +33,11 @@ from backplane.utils.kanban import append_board_card
 if TYPE_CHECKING:
     from pydantic_ai.usage import RunUsage
 
-_TASKS_DIR: Final = pathlib.PurePath("Tasks")
-_DOMAINS_DIR: Final = pathlib.PurePath("Domains")
-_RESOURCES_DIR: Final = pathlib.PurePath("Resources")
-_PEOPLE_DIR: Final = pathlib.PurePath("People")
-_BOARD_PATH: Final = pathlib.PurePath("Tasks/Board.md")
+
 _INBOX_DAYS: Final = 30
 _SCORE_AUTO: Final = 70.0
-_SCORE_CANDIDATE: Final = 55.0
+_SCORE_CANDIDATE: Final = 60.0
+_MIN_AUTO_GAP: Final = 10.0
 _LOG_TEXT_MAX_LEN: Final = 80
 _MATCH_TOP_CANDIDATES: Final = 3
 
@@ -52,13 +50,42 @@ class Capture:
     date: str
     time: str
     text: str
-    path: pathlib.PurePath
+    path: anyio.Path
+
+
+@dataclass(frozen=True, slots=True)
+class MatchOutcome:
+    """Result of best-effort inbox capture matching."""
+
+    matched: Capture | None
+    candidates: list[Capture]
+
+
+class CaptureCandidate(BaseModel, frozen=True):
+    """Summary of an inbox capture offered for optional linking."""
+
+    id: str
+    text: str
+
+
+class CreateTaskResult(BaseModel, frozen=True, arbitrary_types_allowed=True):
+    """Outcome of creating a task note from a description or capture."""
+
+    slug: str
+    path: anyio.Path
+    title: str
+    matched_capture_id: str | None
+    candidate_captures: list[CaptureCandidate]
+    domains_created: list[str]
+    resources_created: list[str]
+    people_created: list[str]
 
 
 class TaskMetadata(BaseModel):
     """LLM-extracted metadata for a task."""
 
     title: str
+
     domains: Annotated[
         list[str],
         Field(
@@ -69,6 +96,7 @@ class TaskMetadata(BaseModel):
             ),
         ),
     ]
+
     resources: Annotated[
         list[str],
         Field(
@@ -79,6 +107,7 @@ class TaskMetadata(BaseModel):
             ),
         ),
     ]
+
     people: Annotated[
         list[str],
         Field(
@@ -90,8 +119,11 @@ class TaskMetadata(BaseModel):
             ),
         ),
     ]
+
     priority: enums.Priority = enums.Priority.MEDIUM
+
     effort: enums.Effort = enums.Effort.MEDIUM
+
     next_action: Annotated[
         str,
         Field(
@@ -101,6 +133,36 @@ class TaskMetadata(BaseModel):
             ),
         ),
     ] = ""
+
+
+class TaskFrontmatter(BaseModel, frozen=True):
+    """YAML frontmatter contract for task notes."""
+
+    id: str
+    type: Literal["task"] = "task"
+    status: Literal["backlog"] = "backlog"
+    created: str
+    updated: str
+    source: Literal["voice-capture"] = "voice-capture"
+    source_capture: str | None
+    domains: list[str]
+    resources: list[str]
+    people: list[str]
+    priority: enums.Priority
+    effort: enums.Effort
+    due: str | None
+    completed: str | None = None
+    tags: list[str] = Field(default_factory=lambda: ["task"])
+
+    def model_dump_yaml(self) -> str:
+        """Serialize the frontmatter as YAML.
+
+        Returns:
+            YAML frontmatter content without closing delimiters.
+        """
+        buf = io.StringIO()
+        YAML_LOADER.dump(self.model_dump(mode="python"), buf)  # pyright: ignore[reportUnknownMemberType]
+        return buf.getvalue()
 
 
 @cache
@@ -136,9 +198,9 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
 
 def _truncate_for_log(text: str, *, max_len: int = _LOG_TEXT_MAX_LEN) -> str:
     """Return a single-line snippet safe for debug logs."""
-    normalized = " ".join(text.split())
-    if len(normalized) <= max_len:
+    if len(normalized := " ".join(text.split())) <= max_len:
         return normalized
+
     return f"{normalized[: max_len - 1]}…"
 
 
@@ -180,17 +242,17 @@ def _log_metadata_agent_run(result: AgentRunResult[TaskMetadata]) -> None:
     )
 
 
-def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture]:
-    """Parse recent captures from the inbox document.
+def _parse_inbox(doc: MarkdownDocument, days: int | None = _INBOX_DAYS) -> list[Capture]:
+    """Parse captures from the inbox document.
 
     Args:
         doc: Loaded inbox MarkdownDocument.
-        days: How many calendar days back to search.
+        days: How many calendar days back to search, or None for all captures.
 
     Returns:
         List of captures within the lookback window, in document order.
     """
-    cutoff = today() - dt.timedelta(days=days)
+    cutoff = today() - dt.timedelta(days=days) if days is not None else None
     captures: list[Capture] = []
 
     for date_section in doc.body:
@@ -199,7 +261,7 @@ def _parse_inbox(doc: MarkdownDocument, days: int = _INBOX_DAYS) -> list[Capture
         except ValueError:
             continue
 
-        if section_date < cutoff:
+        if cutoff is not None and section_date < cutoff:
             continue
 
         for time_section in date_section.sections:
@@ -238,17 +300,9 @@ def _clean_capture_text(text: str | None) -> str:
     ).strip()
 
 
-def _fuzzy_score_breakdown(query: str, text: str) -> tuple[float, float, float]:
-    """Return token-set, partial, and combined fuzzy scores."""
-    token_set = fuzz.token_set_ratio(query, text)
-    partial = fuzz.partial_ratio(query, text)
-    return token_set, partial, max(token_set, partial)
-
-
 def _fuzzy_score(query: str, text: str) -> float:
     """Return a conservative fuzzy score between query and text."""
-    _, _, score = _fuzzy_score_breakdown(query, text)
-    return score
+    return max(fuzz.token_set_ratio(query, text), fuzz.partial_ratio(query, text))
 
 
 def _log_match_candidates(
@@ -265,13 +319,10 @@ def _log_match_candidates(
         _truncate_for_log(description),
     )
     for capture, score in scored[:_MATCH_TOP_CANDIDATES]:
-        token_set, partial, _ = _fuzzy_score_breakdown(description, capture.text)
         logger.debug(
-            "Fuzzy match candidate id={} score={:.0f} token_set={:.0f} partial={:.0f} text={}",
+            "Fuzzy match candidate id={} score={:.0f} text={}",
             capture.id,
             score,
-            token_set,
-            partial,
             _truncate_for_log(capture.text),
         )
 
@@ -283,23 +334,20 @@ def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
     return scored[0][1] - scored[1][1]
 
 
-def _find_match(description: str, captures: list[Capture]) -> Capture | None:
-    """Return the best-matching capture or None if no confident match exists.
+def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
+    """Return a best-effort inbox capture match.
 
     Args:
         description: Task description to match against.
         captures: Candidate captures to score.
 
     Returns:
-        Best-matching capture if score >= 70, or None if score < 55.
-
-    Raises:
-        ValueError: If the best score is 55-69 (ambiguous), with candidate
-            details for the calling LLM to use for disambiguation.
+        A match outcome. Borderline candidates are surfaced but never block
+        task creation.
     """
     if not captures:
         logger.debug("Fuzzy match skipped: no inbox captures in lookback window")
-        return None
+        return MatchOutcome(matched=None, candidates=[])
 
     scored: list[tuple[Capture, float]] = sorted(
         ((c, _fuzzy_score(description, c.text)) for c in captures),
@@ -307,41 +355,39 @@ def _find_match(description: str, captures: list[Capture]) -> Capture | None:
         reverse=True,
     )
     _log_match_candidates(description, scored)
+
     best_capture, best_score = scored[0]
     gap = _runner_up_gap(scored)
 
-    if best_score >= _SCORE_AUTO:
-        gap_text = f"{gap:.0f}" if gap is not None else "n/a"
+    if best_score >= _SCORE_AUTO and (gap is None or gap >= _MIN_AUTO_GAP):
         logger.info(
             "Fuzzy match accepted (score={:.0f}, runner_up_gap={}): {}",
             best_score,
-            gap_text,
+            f"{gap:.0f}" if gap is not None else "n/a",
             best_capture.id,
         )
-        return best_capture
+        return MatchOutcome(matched=best_capture, candidates=[])
 
     if best_score >= _SCORE_CANDIDATE:
-        top_ids = [capture.id for capture, _ in scored[:_MATCH_TOP_CANDIDATES]]
-        logger.warning(
-            "Fuzzy match ambiguous (score={:.0f}, candidates={}): {}",
+        candidates = [capture for capture, score in scored if score >= _SCORE_CANDIDATE][
+            :_MATCH_TOP_CANDIDATES
+        ]
+        top_ids = [capture.id for capture in candidates]
+        logger.info(
+            "Fuzzy match candidates surfaced (score={:.0f}, runner_up_gap={}, candidates={}): {}",
             best_score,
+            f"{gap:.0f}" if gap is not None else "n/a",
             top_ids,
             best_capture.id,
         )
-        candidates_text = "; ".join(f"{c.id!r}: {c.text!r}" for c, _ in scored[:3])
-        msg = (
-            f"Ambiguous match (score={best_score:.0f}). "
-            f"Did you mean one of these captures: {candidates_text}? "
-            "Please clarify or supply the exact capture text."
-        )
-        raise ValueError(msg)
+        return MatchOutcome(matched=None, candidates=candidates)
 
     logger.info(
         "Fuzzy match rejected (best_score={:.0f}, best_id={})",
         best_score,
         best_capture.id,
     )
-    return None
+    return MatchOutcome(matched=None, candidates=[])
 
 
 def _note_title_from_markdown(text: str) -> str | None:
@@ -350,19 +396,71 @@ def _note_title_from_markdown(text: str) -> str | None:
     frontmatter_closed = False
     for line in text.splitlines():
         stripped = line.strip()
+
         if not frontmatter_closed and stripped == "---":
             in_frontmatter = not in_frontmatter
             if not in_frontmatter:
                 frontmatter_closed = True
             continue
+
         if in_frontmatter:
             continue
+
         if line.startswith("# ") and not line.startswith("## "):
             return line.removeprefix("# ").strip()
+
     return None
 
 
-async def _list_vault_entity_names(directory: pathlib.PurePath) -> list[str]:
+async def _load_recent_captures() -> list[Capture]:
+    """Load recent inbox captures.
+
+    Returns:
+        Recent inbox captures, or an empty list when the inbox is absent.
+    """
+    try:
+        async with ObsidianService().idea_inbox(read_only=True) as inbox:
+            captures = _parse_inbox(inbox)
+    except FileNotFoundError:
+        logger.error("Idea inbox not found; skipping capture matching")
+        return []
+
+    logger.info(
+        "Parsed {} inbox captures (lookback_days={})",
+        len(captures),
+        _INBOX_DAYS,
+    )
+    return captures
+
+
+async def _load_all_captures() -> list[Capture]:
+    """Load all inbox captures for exact-ID linking.
+
+    Returns:
+        All inbox captures, or an empty list when the inbox is absent.
+    """
+    try:
+        async with ObsidianService().idea_inbox(read_only=True) as inbox:
+            captures = _parse_inbox(inbox, days=None)
+    except FileNotFoundError:
+        logger.error("Idea inbox not found; skipping capture linking")
+        return []
+
+    logger.info("Parsed {} inbox captures for exact lookup", len(captures))
+    return captures
+
+
+def _find_capture_by_id(captures: list[Capture], capture_id: str) -> Capture | None:
+    """Return a capture with the given stable ID."""
+    return next((capture for capture in captures if capture.id == capture_id), None)
+
+
+def _capture_payload(capture: Capture) -> CaptureCandidate:
+    """Return the public payload used to offer optional capture linking."""
+    return CaptureCandidate(id=capture.id, text=capture.text)
+
+
+async def _list_vault_entity_names(directory: anyio.Path) -> list[str]:
     """List display names of notes in a vault subdirectory (from their H1 heading).
 
     Returns:
@@ -392,9 +490,9 @@ async def _metadata_catalog_prompt() -> str:
         Catalog lines for the metadata agent user prompt, or an empty string.
     """
     domains, resources, people = await asyncio.gather(
-        _list_vault_entity_names(_DOMAINS_DIR),
-        _list_vault_entity_names(_RESOURCES_DIR),
-        _list_vault_entity_names(_PEOPLE_DIR),
+        _list_vault_entity_names(VAULT_PATHS.domains_dir),
+        _list_vault_entity_names(VAULT_PATHS.resources_dir),
+        _list_vault_entity_names(VAULT_PATHS.people_dir),
     )
 
     lines: list[str] = []
@@ -581,47 +679,38 @@ def _build_task_note(
     Returns:
         Complete markdown string including YAML frontmatter.
     """
-    fm: dict[str, object] = {
-        "id": f"task-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}",
-        "type": "task",
-        "status": "backlog",
-        "created": now.strftime("%Y-%m-%dT%H:%M:%S"),
-        "updated": now.strftime("%Y-%m-%dT%H:%M:%S"),
-        "source": "voice-capture",
-        "source_capture": capture.id if capture else None,
-        "domains": metadata.domains,
-        "resources": metadata.resources,
-        "people": metadata.people,
-        "priority": metadata.priority,
-        "effort": metadata.effort,
-        "due": due,
-        "completed": None,
-        "tags": ["task"],
-    }
-    buf = io.StringIO()
-    YAML_LOADER.dump(fm, buf)  # pyright: ignore[reportUnknownMemberType]
-    frontmatter_str = buf.getvalue()
+    timestamp = now.strftime("%Y-%m-%dT%H:%M:%S")
+    fm = TaskFrontmatter(
+        id=f"task-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}",
+        created=timestamp,
+        updated=timestamp,
+        source_capture=capture.id if capture else None,
+        domains=metadata.domains,
+        resources=metadata.resources,
+        people=metadata.people,
+        priority=metadata.priority,
+        effort=metadata.effort,
+        due=due,
+    )
 
     original = (capture.text if capture else description).strip()
     blockquote = "\n".join(
         f"> {line}" if line.strip() else ">" for line in (original.splitlines() or [""])
     )
-    next_action = metadata.next_action.strip()
-    activity_ts = now.strftime("%Y-%m-%d %H:%M")
 
     body = (
         f"# {title}\n\n"
         f"## Original Capture\n\n{blockquote}\n\n"
-        f"## Next Action\n\n{next_action}\n\n"
+        f"## Next Action\n\n{metadata.next_action.strip()}\n\n"
         "## Notes\n\n"
         "## Related\n\n"
-        f"## Activity Log\n\n### {activity_ts}\n\nTask created from voice capture.\n"
+        f"## Activity Log\n\n### {now.strftime('%Y-%m-%d %H:%M')}\n\nTask created from voice capture.\n"
     )
-    return f"{frontmatter_str}---\n{body}"
+    return f"{fm.model_dump_yaml()}---\n{body}"
 
 
 async def _ensure_stub(
-    directory: pathlib.PurePath,
+    directory: anyio.Path,
     name: str,
     note_type: str,
     source_task_slug: str,
@@ -641,9 +730,11 @@ async def _ensure_stub(
     """
     slug = safe_slug(name)
     path = await resolve_under_root(directory / f"{slug}.md")
+
     if await path.exists():
         logger.debug("Stub note already exists: {}/{}.md", directory, slug)
         return False
+
     content = (
         f"---\ntype: {note_type}\nstatus: active\n---\n\n"
         f"# {name}\n\n## Notes\n\n"
@@ -651,13 +742,14 @@ async def _ensure_stub(
         f"[[{source_task_slug}|{source_task_title}]].\n"
     )
     await atomic_write_text(path, content)
+
     logger.info("Created stub note: {}/{}.md", directory, slug)
     return True
 
 
 async def _create_stubs(
     names: list[str],
-    directory: pathlib.PurePath,
+    directory: anyio.Path,
     note_type: str,
     source_task_slug: str,
     source_task_title: str,
@@ -721,6 +813,132 @@ async def _annotate_capture(match: Capture, slug: str) -> None:
         logger.warning("Could not annotate inbox capture: {}", exc)
 
 
+async def _select_task_capture(
+    description: str,
+    link_capture_id: str | None,
+) -> MatchOutcome:
+    """Select the capture to link to a new task, if any.
+
+    Returns:
+        Matched capture and any candidates for optional manual linking.
+    """
+    if link_capture_id:
+        captures = await _load_all_captures()
+        matched_capture = _find_capture_by_id(captures, link_capture_id)
+        if matched_capture is None:
+            logger.warning(
+                "Requested capture link not found: {}; creating task unlinked",
+                link_capture_id,
+            )
+        return MatchOutcome(matched=matched_capture, candidates=[])
+
+    captures = await _load_recent_captures()
+    if not captures:
+        return MatchOutcome(matched=None, candidates=[])
+
+    return _find_match(description, captures)
+
+
+def _metadata_source(description: str, capture: Capture | None) -> str:
+    """Return the text used for metadata extraction and log the source choice."""
+    if capture is not None:
+        logger.info(
+            "Task metadata source: capture {} (description_len={} capture_len={})",
+            capture.id,
+            len(description),
+            len(capture.text),
+        )
+        return capture.text
+
+    logger.info(
+        "Task metadata source: description only (len={})",
+        len(description),
+    )
+    return description
+
+
+async def _unique_task_slug(title: str) -> str:
+    """Return a task slug that does not collide with an existing task note."""
+    slug = base_slug = safe_slug(title)
+    counter = 2
+    while await (
+        await resolve_under_root(VAULT_PATHS.task_notes_dir / f"{slug}.md")
+    ).exists():
+        logger.debug(
+            "Task slug collision: {} already exists, trying {}",
+            slug,
+            f"{base_slug}-{counter}",
+        )
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    return slug
+
+
+async def _create_task_note(
+    *,
+    slug: str,
+    metadata: TaskMetadata,
+    capture: Capture | None,
+    description: str,
+    due: str | None,
+) -> anyio.Path:
+    """Create the markdown task note for a new task.
+
+    Returns:
+        Relative path to the created task note within the vault.
+    """
+    note_content = _build_task_note(
+        title=metadata.title,
+        now=dt.datetime.now(tz=dt.UTC).astimezone(),
+        metadata=metadata,
+        capture=capture,
+        description=description,
+        due=due,
+    )
+
+    path_in_vault = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+    task_path = await resolve_under_root(path_in_vault)
+
+    await atomic_write_text(task_path, note_content)
+    logger.info("Created task note: {}", task_path)
+
+    return path_in_vault
+
+
+async def _create_linked_stubs(
+    metadata: TaskMetadata,
+    slug: str,
+) -> tuple[list[str], list[str], list[str]]:
+    """Create domain, resource, and people stub notes for task metadata.
+
+    Returns:
+        Created domain, resource, and people names.
+    """
+    return await asyncio.gather(
+        _create_stubs(
+            metadata.domains,
+            VAULT_PATHS.domains_dir,
+            "domain",
+            slug,
+            metadata.title,
+        ),
+        _create_stubs(
+            metadata.resources,
+            VAULT_PATHS.resources_dir,
+            "resource",
+            slug,
+            metadata.title,
+        ),
+        _create_stubs(
+            metadata.people,
+            VAULT_PATHS.people_dir,
+            "person",
+            slug,
+            metadata.title,
+        ),
+    )
+
+
 @final
 class TaskService:
     """Service for creating structured task notes from voice captures."""
@@ -731,7 +949,8 @@ class TaskService:
         title: str | None = None,
         due: str | None = None,
         priority: enums.Priority | None = None,
-    ) -> dict[str, object]:
+        link_capture_id: str | None = None,
+    ) -> CreateTaskResult:
         """Create a task note, update the Kanban board, and stub missing domain/resource notes.
 
         Args:
@@ -739,98 +958,37 @@ class TaskService:
             title: Task title. Inferred via LLM if omitted.
             due: Due date in YYYY-MM-DD format.
             priority: Priority override: 'low', 'medium', or 'high'.
+            link_capture_id: Explicit capture ID to link when the user has
+                confirmed a prior inbox capture.
 
         Returns:
-            Dict with keys: slug, path, title, matched_capture_id,
-            domains_created, resources_created, people_created.
+            Structured outcome including slug, paths, capture matching, and stubs created.
         """
-        captures: list[Capture] = []
-
-        try:
-            async with MarkdownDocument(
-                vault_path=ObsidianService.IDEA_INBOX_PATH,
-                read_only=True,
-            ) as inbox:
-                captures = _parse_inbox(inbox)
-        except FileNotFoundError:
-            logger.error("Idea inbox not found; skipping capture matching")
-        else:
-            logger.info(
-                "Parsed {} inbox captures (lookback_days={})",
-                len(captures),
-                _INBOX_DAYS,
-            )
-
-        matched_capture = _find_match(description, captures)
-        metadata_source = (
-            matched_capture.text if matched_capture is not None else description
+        capture_selection = await _select_task_capture(description, link_capture_id)
+        metadata = await _extract_metadata(
+            _metadata_source(description, capture_selection.matched),
+            title,
+            priority,
         )
-        if matched_capture is not None:
-            logger.info(
-                "Task metadata source: capture {} (description_len={} capture_len={})",
-                matched_capture.id,
-                len(description),
-                len(matched_capture.text),
-            )
-        else:
-            logger.info(
-                "Task metadata source: description only (len={})",
-                len(description),
-            )
-        metadata = await _extract_metadata(metadata_source, title, priority)
+        slug = await _unique_task_slug(metadata.title)
 
-        base_slug = safe_slug(metadata.title)
-        slug = base_slug
-        counter = 2
-        while await (await resolve_under_root(_TASKS_DIR / f"{slug}.md")).exists():
-            logger.debug(
-                "Task slug collision: {} already exists, trying {}",
-                slug,
-                f"{base_slug}-{counter}",
-            )
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-
-        now = dt.datetime.now(tz=dt.UTC).astimezone()
-        note_content = _build_task_note(
-            title=metadata.title,
-            now=now,
+        note_path = await _create_task_note(
+            slug=slug,
             metadata=metadata,
-            capture=matched_capture,
+            capture=capture_selection.matched,
             description=description,
             due=due,
         )
-        task_path = await resolve_under_root(_TASKS_DIR / f"{slug}.md")
-        await atomic_write_text(task_path, note_content)
-        logger.info("Created task note: {}", task_path)
-
-        board_path = await resolve_under_root(_BOARD_PATH)
+        board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
         await append_board_card(board_path, slug)
 
-        domains_created = await _create_stubs(
-            metadata.domains,
-            _DOMAINS_DIR,
-            "domain",
+        domains_created, resources_created, people_created = await _create_linked_stubs(
+            metadata,
             slug,
-            metadata.title,
-        )
-        resources_created = await _create_stubs(
-            metadata.resources,
-            _RESOURCES_DIR,
-            "resource",
-            slug,
-            metadata.title,
-        )
-        people_created = await _create_stubs(
-            metadata.people,
-            _PEOPLE_DIR,
-            "person",
-            slug,
-            metadata.title,
         )
 
-        if matched_capture is not None:
-            await _annotate_capture(matched_capture, slug)
+        if capture_selection.matched is not None:
+            await _annotate_capture(capture_selection.matched, slug)
 
         logger.info(
             (
@@ -838,18 +996,59 @@ class TaskService:
                 "domains_created={} resources_created={} people_created={}"
             ),
             slug,
-            matched_capture.id if matched_capture else None,
+            capture_selection.matched.id if capture_selection.matched else None,
             domains_created,
             resources_created,
             people_created,
         )
 
-        return {
-            "slug": slug,
-            "path": str(_TASKS_DIR / f"{slug}.md"),
-            "title": metadata.title,
-            "matched_capture_id": matched_capture.id if matched_capture else None,
-            "domains_created": domains_created,
-            "resources_created": resources_created,
-            "people_created": people_created,
-        }
+        return CreateTaskResult(
+            slug=slug,
+            path=note_path,
+            title=metadata.title,
+            matched_capture_id=(
+                capture_selection.matched.id if capture_selection.matched else None
+            ),
+            candidate_captures=[
+                _capture_payload(capture) for capture in capture_selection.candidates
+            ],
+            domains_created=domains_created,
+            resources_created=resources_created,
+            people_created=people_created,
+        )
+
+    @staticmethod
+    async def link_capture(task_slug: str, capture_id: str) -> str:
+        """Link an existing task to a confirmed inbox capture.
+
+        Args:
+            task_slug: Slug of the task note in ``Tasks``.
+            capture_id: Stable capture ID, e.g. ``2026-05-25T21:15``.
+
+        Returns:
+            Concise confirmation of the linking outcome.
+        """
+        captures = await _load_all_captures()
+        capture = _find_capture_by_id(captures, capture_id)
+        if capture is None:
+            logger.warning(
+                "Capture {} not found; task {} unchanged",
+                capture_id,
+                task_slug,
+            )
+            return (
+                f"Capture {capture_id} was not found; task {task_slug} was not changed."
+            )
+
+        slug = safe_slug(task_slug)
+        task_path = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+        try:
+            async with MarkdownDocument(vault_path=task_path) as task:
+                task.frontmatter["source_capture"] = capture.id
+        except FileNotFoundError:
+            logger.warning("Task {} not found while linking capture {}", slug, capture_id)
+            return f"Task {slug} was not found; capture {capture_id} was not linked."
+
+        await _annotate_capture(capture, slug)
+        logger.info("Linked task {} to capture {}", slug, capture_id)
+        return f"Task {slug} linked to capture {capture_id}."

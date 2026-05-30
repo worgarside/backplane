@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from backplane.services.tasks import _BOARD_PATH, TaskMetadata, TaskService
-from backplane.utils import enums
+from backplane.services.tasks import (
+    CreateTaskResult,
+    TaskMetadata,
+    TaskService,
+)
+from backplane.utils import VAULT_PATHS, enums
 
 if TYPE_CHECKING:
     import anyio
@@ -17,9 +21,9 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
     mocker: MockerFixture,
 ) -> None:
     """Missing inbox files are skipped and duplicate task slugs get a suffix."""
-    tasks_dir = obsidian_vault / "Tasks"
+    tasks_dir = obsidian_vault / VAULT_PATHS.task_notes_dir
     await tasks_dir.mkdir(parents=True)
-    _ = await (obsidian_vault / _BOARD_PATH).write_text(
+    _ = await (obsidian_vault / VAULT_PATHS.task_board_path).write_text(
         "## Backlog\n\n",
         encoding="utf-8",
     )
@@ -43,13 +47,14 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
 
     result = await TaskService.create_task("Review backup logs")
 
-    assert result == {
-        "slug": "review-backup-logs-2",
-        "path": "Tasks/review-backup-logs-2.md",
-        "title": "Review backup logs",
-        "matched_capture_id": None,
-        "domains_created": [],
-        "resources_created": [],
-        "people_created": [],
-    }
+    assert result == CreateTaskResult(
+        slug="review-backup-logs-2",
+        path=VAULT_PATHS.task_notes_dir / "review-backup-logs-2.md",
+        title="Review backup logs",
+        matched_capture_id=None,
+        candidate_captures=[],
+        domains_created=[],
+        resources_created=[],
+        people_created=[],
+    )
     assert await (tasks_dir / "review-backup-logs-2.md").exists()

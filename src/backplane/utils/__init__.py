@@ -13,11 +13,12 @@ from .helpers import (
 )
 from .kanban import append_board_card
 from .markdown import MarkdownDocument
-from .settings import SETTINGS
+from .settings import SETTINGS, VAULT_PATHS
 from .yaml import YAML_LOADER
 
 __all__ = [
     "SETTINGS",
+    "VAULT_PATHS",
     "YAML_LOADER",
     "MarkdownDocument",
     "append_board_card",

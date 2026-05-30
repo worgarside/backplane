@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import datetime as dt  # noqa: TC003
 import json
-import pathlib
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final, cast, final
 
 from backplane.utils import (
     SETTINGS,
+    VAULT_PATHS,
     MarkdownDocument,
     substitute_obsidian_core_date_variables,
     today,
@@ -23,8 +23,7 @@ if TYPE_CHECKING:
 class ObsidianService:
     """Service for interacting with the Obsidian vault."""
 
-    DAILY_NOTE_DIRECTORY: Final = pathlib.PurePath("Daily Notes")
-    IDEA_INBOX_PATH: Final = pathlib.PurePath("Inbox") / "Ideas.md"
+    IDEA_INBOX_PATH: Final = VAULT_PATHS.inbox_dir / "Ideas.md"
 
     @staticmethod
     async def _daily_note_template_source() -> str | None:
@@ -60,7 +59,7 @@ class ObsidianService:
             return None
 
     @asynccontextmanager
-    async def daily_note(
+    async def daily_note(  # noqa: PLR6301
         self,
         date: dt.date | None = None,
         *,
@@ -79,7 +78,7 @@ class ObsidianService:
             Loaded markdown document for the requested daily note.
         """
         date = date or today()
-        vault_path = self.DAILY_NOTE_DIRECTORY / f"{date.isoformat()}.md"
+        vault_path = VAULT_PATHS.daily_notes_dir / f"{date.isoformat()}.md"
         full_path = SETTINGS.obsidian_vault_path / vault_path
 
         initial_content: str | None = None
@@ -100,14 +99,21 @@ class ObsidianService:
             yield daily_note
 
     @asynccontextmanager
-    async def idea_inbox(self) -> AsyncGenerator[MarkdownDocument]:
+    async def idea_inbox(
+        self,
+        *,
+        read_only: bool = False,
+    ) -> AsyncGenerator[MarkdownDocument]:
         """Open the idea inbox for editing, flushing on successful exit.
+
+        Args:
+            read_only: When true, require file content unchanged on exit.
 
         Yields:
             Loaded markdown document for the idea inbox.
         """
         async with MarkdownDocument(
             vault_path=self.IDEA_INBOX_PATH,
-            read_only=False,
+            read_only=read_only,
         ) as idea_inbox:
             yield idea_inbox

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from backplane.services.tasks import _DOMAINS_DIR, _create_stubs, _ensure_stub
+from backplane.services.tasks import _create_stubs, _ensure_stub
+from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:
     """A missing entity note is created as a minimal stub."""
     created = await _ensure_stub(
-        _DOMAINS_DIR,
+        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
@@ -46,7 +47,7 @@ async def test__ensure_stub_returns_false_for_existing_note(
     await atomic_write_text(existing, "# Existing\n")
 
     created = await _ensure_stub(
-        _DOMAINS_DIR,
+        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
@@ -67,7 +68,7 @@ async def test__create_stubs_returns_only_newly_created_names(
 
     created = await _create_stubs(
         ["Existing", "New Domain"],
-        _DOMAINS_DIR,
+        VAULT_PATHS.domains_dir,
         "domain",
         "review-home-assistant",
         "Review Home Assistant",

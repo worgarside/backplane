@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from backplane.services.tasks import (
-    _DOMAINS_DIR,
     _list_vault_entity_names,
     _note_title_from_markdown,
 )
+from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ async def test__list_vault_entity_names_returns_sorted_titles(
         "---\ntype: domain\n---\n\n# Home Assistant\n",
     )
 
-    names = await _list_vault_entity_names(_DOMAINS_DIR)
+    names = await _list_vault_entity_names(VAULT_PATHS.domains_dir)
 
     assert names == ["Home Assistant", "Obsidian"]
 
@@ -63,7 +63,7 @@ async def test__list_vault_entity_names_skips_non_markdown_and_untitled_notes(
     await atomic_write_text(domains / "untitled.md", "## Notes\n")
     await atomic_write_text(domains / "zigbee.md", "# Zigbee\n")
 
-    names = await _list_vault_entity_names(_DOMAINS_DIR)
+    names = await _list_vault_entity_names(VAULT_PATHS.domains_dir)
 
     assert names == ["Zigbee"]
 
@@ -73,4 +73,4 @@ async def test__list_vault_entity_names_missing_directory(
 ) -> None:
     """A missing catalog directory yields an empty list."""
     _ = obsidian_vault
-    assert await _list_vault_entity_names(_DOMAINS_DIR) == []
+    assert await _list_vault_entity_names(VAULT_PATHS.domains_dir) == []

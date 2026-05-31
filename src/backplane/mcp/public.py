@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
 _VALID_SCOPES: Final = ["openid", "profile", "email"]
+_MCP_ACCEPT_HEADER: Final = b"application/json, text/event-stream"
 
 
 class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
@@ -39,22 +40,36 @@ class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
         Returns:
             Downstream HTTP response.
         """
-        if (
-            request.url.path == "/mcp"
-            and request.method == "POST"
-            and request.headers.get("content-type") == "application/octet-stream"
-        ):
-            logger.warning(
-                "Rewriting ChatGPT /mcp content-type from octet-stream to JSON",
-            )
+        if request.url.path == "/mcp" and request.method == "POST":
             headers = cast("list[tuple[bytes, bytes]]", request.scope["headers"])
-            request.scope["headers"] = [
-                (
-                    name,
-                    b"application/json" if name == b"content-type" else value,
-                )
-                for name, value in headers
-            ]
+            content_type = request.headers.get("content-type")
+            accept = request.headers.get("accept")
+            logger.warning(
+                "ChatGPT /mcp request content-type={} accept={}",
+                content_type,
+                accept,
+            )
+            if content_type != "application/octet-stream":
+                return await call_next(request)
+
+            logger.warning(
+                "Rewriting ChatGPT /mcp content-type and accept headers",
+            )
+            rewritten_headers: list[tuple[bytes, bytes]] = []
+            has_accept = False
+            for name, value in headers:
+                if name == b"content-type":
+                    rewritten_headers.append((name, b"application/json"))
+                elif name == b"accept":
+                    has_accept = True
+                    rewritten_headers.append((name, _MCP_ACCEPT_HEADER))
+                else:
+                    rewritten_headers.append((name, value))
+
+            if not has_accept:
+                rewritten_headers.append((b"accept", _MCP_ACCEPT_HEADER))
+
+            request.scope["headers"] = rewritten_headers
 
         return await call_next(request)
 

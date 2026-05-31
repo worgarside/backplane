@@ -108,9 +108,14 @@ Backplane can also run a separate public streamable HTTP MCP server:
 python -m backplane.mcp.public
 ```
 
-This starts an unauthenticated HTTP server on port `8001`. Keep the private SSE
-server on your LAN only. If you expose the public server, terminate TLS at your
-reverse proxy and restrict access (for example VPN, allowlist, or forward-auth).
+This starts the authenticated public streamable HTTP MCP server on port `8001`.
+The MCP OAuth environment variables in `.env.example` are required; the server
+refuses to start without them. It uses FastMCP's `OIDCProxy` against Authentik.
+See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+Terminate TLS at your reverse proxy (for example NGINX Proxy Manager) and forward
+`backplane-mcp.example.com` to port `8001`.
+
+Keep the private SSE server on your LAN only.
 
 Add a ChatGPT custom connector pointing at your public MCP URL, for example:
 

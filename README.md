@@ -57,6 +57,9 @@ This will:
 - Install Python 3.14 and sync dependencies
 - Install and enable the `backplane` and `obsidian-sync` systemd services
 
+To also enable the public ChatGPT-facing MCP service, run setup with
+`INSTALL_PUBLIC_MCP=true` after configuring the public OAuth environment variables.
+
 ### Updating
 
 ```bash
@@ -69,8 +72,10 @@ Pulls the latest code, syncs dependencies, and restarts the service.
 
 ```bash
 systemctl status backplane
+systemctl status backplane-public
 systemctl status obsidian-sync
 journalctl -u backplane -f
+journalctl -u backplane-public -f
 journalctl -u obsidian-sync -f
 ```
 
@@ -91,4 +96,32 @@ Run the server locally:
 
 ```bash
 python -m backplane.mcp
+```
+
+This starts the private Home Assistant-compatible SSE server on port `8000`.
+
+### ChatGPT MCP Connector
+
+Backplane can also run a separate public streamable HTTP MCP server for ChatGPT:
+
+```bash
+python -m backplane.mcp.public
+```
+
+This starts the Authentik-protected HTTP server on port `8001`. Keep the private SSE
+server reachable only from your LAN, and expose only the public server through HTTPS
+at your public MCP hostname, for example `https://backplane-mcp.example.com`.
+
+Create an Authentik OAuth2/OpenID provider for Backplane with redirect URI:
+
+```text
+https://backplane-mcp.example.com/auth/callback
+```
+
+Set the public MCP environment variables from `.env.example`, confirming the exact
+issuer, authorization, token, and JWKS URLs from Authentik's OpenID configuration.
+Then add the custom MCP connector in ChatGPT using the public MCP URL, typically:
+
+```text
+https://backplane-mcp.example.com/mcp
 ```

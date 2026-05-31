@@ -14,6 +14,7 @@ from pydantic_settings import BaseSettings
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
+from starlette.responses import Response as StarletteResponse
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
@@ -241,6 +242,12 @@ class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
         )
         _log_mcp_post_body(body)
 
+        if not body and not request.headers.get("authorization"):
+            logger.warning(
+                "ChatGPT /mcp allowing empty unauthenticated discovery probe",
+            )
+            return StarletteResponse(status_code=200)
+
         headers = cast("list[tuple[bytes, bytes]]", request.scope["headers"])
         if content_type == "application/octet-stream":
             logger.warning("Rewriting ChatGPT /mcp content-type and accept headers")
@@ -336,10 +343,7 @@ if __name__ == "__main__":
     )
     settings = PublicMcpOAuthSettings()  # pyright: ignore[reportCallIssue]
     auth_provider = create_auth_provider()
-    mcp = create_mcp_server()
-    mcp._additional_http_routes.extend(  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-        auth_provider.get_routes(mcp_path="/mcp"),
-    )
+    mcp = create_mcp_server(auth=auth_provider)
     middleware: list[Middleware] = [Middleware(ChatGptMcpCompatibilityMiddleware)]
     if settings.mcp_public_debug_http:
         logger.warning("MCP_PUBLIC_DEBUG_HTTP enabled: logging all HTTP requests")

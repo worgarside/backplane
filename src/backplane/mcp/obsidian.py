@@ -6,7 +6,7 @@ import datetime as dt  # used at runtime by FastMCP schema introspection
 import json
 import pathlib
 import re
-from typing import Annotated, Literal, cast
+from typing import TYPE_CHECKING, Annotated, Literal, cast
 
 from loguru import logger
 from pydantic import Field, PastDate
@@ -15,7 +15,8 @@ from backplane.services.obsidian import ObsidianService
 from backplane.utils import exc, format_human_date, today
 from backplane.utils.settings import SETTINGS
 
-from .server import mcp
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
 
 _HEADING_LINE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _CODE_FENCE = re.compile(r"^\s*```")
@@ -112,9 +113,28 @@ _ADD_DESCRIPTION = (
     "default), the call returns the actual sections in today's note so you can "
     "either match an existing one or retry with the flag set to true."
 )
+_GET_DAILY_NOTE_DESCRIPTION = (
+    "Read the user's Obsidian daily note. Use this when the user asks what's in "
+    "their daily note, wants to review tasks/ideas/notes they've captured, or "
+    "needs context about their day to answer a follow-up question."
+)
+_RECORD_IDEA_DESCRIPTION = """Record a loose, non-actionable idea in the Obsidian idea inbox.
+
+Use this for speculative captures such as:
+- "maybe..."
+- "I could..."
+- "I wonder if..."
+- "worth investigating..."
+- a possible automation, improvement, or future project that the user has not committed to doing
+
+Do not use this for tasks or action items. If the user says they need to do something,
+should do something, want to remember to act on something, or asks for a task/reminder/list item,
+use create_task instead.
+
+Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
+as possible."""
 
 
-@mcp.tool(description=_ADD_DESCRIPTION)
 async def add_to_daily_note(
     *,
     heading_path: Annotated[
@@ -215,13 +235,6 @@ async def add_to_daily_note(
     return section.render()
 
 
-@mcp.tool(
-    description=(
-        "Read the user's Obsidian daily note. Use this when the user asks what's in "
-        "their daily note, wants to review tasks/ideas/notes they've captured, or "
-        "needs context about their day to answer a follow-up question."
-    ),
-)
 async def get_daily_note(
     date: Annotated[
         PastDate | None,
@@ -241,25 +254,6 @@ async def get_daily_note(
         return daily_note.render()
 
 
-@mcp.tool(
-    description=(
-        """Record a loose, non-actionable idea in the Obsidian idea inbox.
-
-Use this for speculative captures such as:
-- "maybe..."
-- "I could..."
-- "I wonder if..."
-- "worth investigating..."
-- a possible automation, improvement, or future project that the user has not committed to doing
-
-Do not use this for tasks or action items. If the user says they need to do something,
-should do something, want to remember to act on something, or asks for a task/reminder/list item,
-use create_task instead.
-
-Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
-as possible."""
-    ),
-)
 async def record_idea(
     *,
     idea: Annotated[
@@ -295,27 +289,12 @@ async def record_idea(
 # Resources
 
 
-@mcp.resource(
-    uri="obsidian://daily-note/today",
-    name="Today's Daily Note",
-    description="The user's Obsidian daily note for today's date.",
-    mime_type="text/markdown",
-)
 async def daily_note_today_resource() -> str:
     """Return today's daily note as rendered markdown."""
     async with ObsidianService().daily_note(date=today(), read_only=True) as daily_note:
         return daily_note.render()
 
 
-@mcp.resource(
-    uri="obsidian://daily-note/{date}",
-    name="Daily Note by Date",
-    description=(
-        "The user's Obsidian daily note for a given ISO date (YYYY-MM-DD), e.g. "
-        "obsidian://daily-note/2026-05-16."
-    ),
-    mime_type="text/markdown",
-)
 async def daily_note_by_date_resource(date: dt.date) -> str:
     """Return the daily note for the given ISO date as rendered markdown.
 
@@ -327,3 +306,25 @@ async def daily_note_by_date_resource(date: dt.date) -> str:
     """
     async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note.render()
+
+
+def register_obsidian_tools(mcp: FastMCP[None]) -> None:
+    """Register Obsidian tools and resources on a FastMCP server instance."""
+    _ = mcp.tool(description=_ADD_DESCRIPTION)(add_to_daily_note)
+    _ = mcp.tool(description=_GET_DAILY_NOTE_DESCRIPTION)(get_daily_note)
+    _ = mcp.tool(description=_RECORD_IDEA_DESCRIPTION)(record_idea)
+    _ = mcp.resource(
+        uri="obsidian://daily-note/today",
+        name="Today's Daily Note",
+        description="The user's Obsidian daily note for today's date.",
+        mime_type="text/markdown",
+    )(daily_note_today_resource)
+    _ = mcp.resource(
+        uri="obsidian://daily-note/{date}",
+        name="Daily Note by Date",
+        description=(
+            "The user's Obsidian daily note for a given ISO date (YYYY-MM-DD), e.g. "
+            "obsidian://daily-note/2026-05-16."
+        ),
+        mime_type="text/markdown",
+    )(daily_note_by_date_resource)

@@ -10,8 +10,7 @@ import httpx
 import uvloop
 from fastmcp.server.auth import OIDCProxy
 from loguru import logger
-from mcp.server.auth.routes import build_resource_metadata_url
-from pydantic import AnyHttpUrl, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -19,7 +18,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.responses import Response as StarletteResponse
 from starlette.routing import Route
-from starlette.types import ASGIApp  # noqa: TC002
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
@@ -170,33 +168,23 @@ def _normalize_chatgpt_mcp_headers(
     return rewritten_headers
 
 
-def _mcp_resource_metadata_url(public_base_url: str) -> str:
-    """Build the RFC 9728 metadata URL for the public MCP resource.
+def _rewrite_openid_configuration_for_public_host(
+    upstream: dict[str, object],
+    public_base_url: str,
+) -> dict[str, object]:
+    """Point OIDC discovery at the public MCP OAuth proxy, not Authentik directly.
 
     Returns:
-        Protected-resource metadata URL for the MCP endpoint.
+        OIDC discovery document with issuer and endpoints on the public host.
     """
-    resource_url = AnyHttpUrl(f"{public_base_url.rstrip('/')}/mcp")
-    return str(build_resource_metadata_url(resource_url))
-
-
-def _unauthenticated_mcp_probe_response(resource_metadata_url: str) -> StarletteResponse:
-    """Return a 401 that tells OAuth clients to attach a Bearer token."""
-    description = (
-        "Authentication required. Provide a Bearer token from the OAuth token endpoint."
-    )
-    www_authenticate = (
-        f'Bearer error="invalid_token", error_description="{description}", '
-        f'resource_metadata="{resource_metadata_url}"'
-    )
-    return StarletteResponse(
-        status_code=401,
-        content=json.dumps(
-            {"error": "invalid_token", "error_description": description},
-        ).encode(),
-        media_type="application/json",
-        headers={"WWW-Authenticate": www_authenticate},
-    )
+    base = public_base_url.rstrip("/")
+    local = dict(upstream)
+    local["issuer"] = base
+    local["authorization_endpoint"] = f"{base}/authorize"
+    local["token_endpoint"] = f"{base}/token"
+    if "registration_endpoint" in local:
+        local["registration_endpoint"] = f"{base}/register"
+    return local
 
 
 class DebugHttpLoggingMiddleware(BaseHTTPMiddleware):
@@ -246,16 +234,6 @@ class DebugHttpLoggingMiddleware(BaseHTTPMiddleware):
 class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
     """Normalize ChatGPT's MCP request headers before FastMCP parses them."""
 
-    def __init__(
-        self,
-        app: ASGIApp,
-        *,
-        resource_metadata_url: str,
-    ) -> None:
-        """Store OAuth resource metadata used for unauthenticated MCP probes."""
-        super().__init__(app)
-        self._resource_metadata_url: str = resource_metadata_url
-
     @override
     async def dispatch(
         self,
@@ -288,9 +266,9 @@ class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
 
         if not body and not request.headers.get("authorization"):
             logger.warning(
-                "ChatGPT /mcp rejecting empty probe without Bearer token",
+                "ChatGPT /mcp allowing empty unauthenticated discovery probe",
             )
-            return _unauthenticated_mcp_probe_response(self._resource_metadata_url)
+            return StarletteResponse(status_code=200)
 
         headers = cast("list[tuple[bytes, bytes]]", request.scope["headers"])
         if content_type == "application/octet-stream":
@@ -357,11 +335,14 @@ class PublicMcpOAuthSettings(BaseSettings):
     ]
 
 
-def _authentik_openid_configuration_route(issuer: str) -> Route:
-    """Proxy ChatGPT's OIDC discovery probe to Authentik's metadata document.
+def _authentik_openid_configuration_route(
+    public_base_url: str,
+    issuer: str,
+) -> Route:
+    """Serve OIDC discovery with issuer/endpoints on the public MCP host.
 
     Returns:
-        Starlette route that returns Authentik OIDC JSON inline (not a redirect).
+        Starlette route that returns rewritten Authentik OIDC JSON inline.
     """
     target = f"{issuer.rstrip('/')}/.well-known/openid-configuration"
 
@@ -377,10 +358,17 @@ def _authentik_openid_configuration_route(issuer: str) -> Route:
                 content=b"OIDC discovery unavailable",
             )
 
-        return JSONResponse(
-            content=cast("object", upstream.json()),
-            status_code=upstream.status_code,
+        upstream_doc = cast("dict[str, object]", upstream.json())
+        rewritten = _rewrite_openid_configuration_for_public_host(
+            upstream_doc,
+            public_base_url,
         )
+        logger.warning(
+            "Serving rewritten OIDC discovery issuer={} authorization_endpoint={}",
+            rewritten.get("issuer"),
+            rewritten.get("authorization_endpoint"),
+        )
+        return JSONResponse(content=rewritten, status_code=upstream.status_code)
 
     return Route(
         "/.well-known/openid-configuration",
@@ -406,7 +394,7 @@ def create_auth_provider() -> AuthProvider:
         audience=settings.mcp_oauth_audience,
         base_url=settings.mcp_public_base_url,
         required_scopes=_VALID_SCOPES,
-        verify_id_token=True,
+        verify_id_token=False,
     )
 
 
@@ -421,15 +409,12 @@ if __name__ == "__main__":
     auth_provider = create_auth_provider()
     mcp = create_mcp_server(auth=auth_provider)
     mcp._additional_http_routes.append(  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
-        _authentik_openid_configuration_route(settings.mcp_oauth_issuer),
-    )
-    resource_metadata_url = _mcp_resource_metadata_url(settings.mcp_public_base_url)
-    middleware: list[Middleware] = [
-        Middleware(
-            ChatGptMcpCompatibilityMiddleware,
-            resource_metadata_url=resource_metadata_url,
+        _authentik_openid_configuration_route(
+            settings.mcp_public_base_url,
+            settings.mcp_oauth_issuer,
         ),
-    ]
+    )
+    middleware: list[Middleware] = [Middleware(ChatGptMcpCompatibilityMiddleware)]
     if settings.mcp_public_debug_http:
         logger.warning("MCP_PUBLIC_DEBUG_HTTP enabled: logging all HTTP requests")
         middleware.insert(0, Middleware(DebugHttpLoggingMiddleware))

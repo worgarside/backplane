@@ -54,11 +54,12 @@ class PublicMcpOAuthSettings(BaseSettings):
         Field(description="Authentik OAuth client secret for Backplane MCP."),
     ]
     mcp_oauth_audience: Annotated[
-        str,
+        str | None,
         Field(
+            default=None,
             description=(
-                "Expected token audience for Backplane MCP. For Authentik this is "
-                "usually the provider client ID unless configured otherwise."
+                "Optional expected token audience for Backplane MCP. Set this only "
+                "when Authentik includes a stable aud claim in access tokens."
             ),
         ),
     ]

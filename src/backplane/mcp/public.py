@@ -16,8 +16,9 @@ from backplane import __version__
 from backplane.mcp import create_mcp_server
 
 if TYPE_CHECKING:
+    from fastmcp.server.auth import AccessToken as FastMcpAccessToken
     from fastmcp.server.auth import AuthProvider
-    from mcp.server.auth.provider import AccessToken
+    from mcp.server.auth.provider import AccessToken as McpAccessToken
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
@@ -48,7 +49,17 @@ class DebugOIDCProxy(OIDCProxy):
     """Temporary noisy OAuth debug proxy."""
 
     @override
-    async def load_access_token(self, token: str) -> AccessToken | None:
+    async def verify_token(self, token: str) -> FastMcpAccessToken | None:
+        """Log inbound MCP token before FastMCP auth middleware validation.
+
+        Returns:
+            Validated access token, or ``None`` if FastMCP rejects it.
+        """
+        logger.warning("DEBUG verify_token called")
+        return await super().verify_token(token)
+
+    @override
+    async def load_access_token(self, token: str) -> McpAccessToken | None:
         """Log inbound MCP token details before and after validation.
 
         Returns:
@@ -126,6 +137,17 @@ def create_auth_provider() -> AuthProvider:
     settings = PublicMcpOAuthSettings()  # pyright: ignore[reportCallIssue]
     oidc_config_url = (
         f"{settings.mcp_oauth_issuer.rstrip('/')}/.well-known/openid-configuration"
+    )
+    logger.warning(
+        (
+            "DEBUG creating public MCP auth provider class={} base_url={} issuer={} "
+            "oidc_config_url={} scopes={}"
+        ),
+        DebugOIDCProxy.__name__,
+        settings.mcp_public_base_url,
+        settings.mcp_oauth_issuer,
+        oidc_config_url,
+        _VALID_SCOPES,
     )
 
     return DebugOIDCProxy(

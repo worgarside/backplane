@@ -47,7 +47,7 @@ def create_mcp_server(
     """Create a Backplane MCP server instance with all tools registered.
 
     Args:
-        auth: Optional FastMCP auth provider. Used by the public ChatGPT-facing
+        auth: Optional FastMCP auth provider. Used by the public-facing
             streamable HTTP endpoint.
         notify_home_assistant: Whether startup should notify/reload the private
             Home Assistant MCP integration. Only the private SSE server should do this.

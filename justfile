@@ -4,7 +4,7 @@ set dotenv-load
 default:
     @just --list
 
-# Restart the MCP server (systemd when installed, otherwise a local background process)
+# Restart the private MCP server (systemd when installed, otherwise a local background process)
 [private]
 _mcp-restart:
     #!/usr/bin/env bash
@@ -19,11 +19,30 @@ _mcp-restart:
         echo "MCP server started (PID $!), logging to /tmp/backplane-mcp.log"
     fi
 
-# Start or restart the MCP server
+# Restart the public MCP server (systemd when installed, otherwise a local background process)
+[private]
+_mcp-public-restart:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if systemctl cat backplane-public.service &>/dev/null; then
+        systemctl restart backplane-public
+        systemctl is-active --quiet backplane-public
+        echo "Public MCP server restarted via systemd (backplane-public.service)"
+    else
+        pkill -f "backplane.mcp.public" || true
+        nohup uv run python -m backplane.mcp.public >> /tmp/backplane-public-mcp.log 2>&1 &
+        echo "Public MCP server started (PID $!), logging to /tmp/backplane-public-mcp.log"
+    fi
+
+# Start or restart the private MCP server
 mcp-start:
     just _mcp-restart
 
-# Stop the MCP server
+# Start or restart the public MCP server
+mcp-public-start:
+    just _mcp-public-restart
+
+# Stop the private MCP server
 mcp-stop:
     #!/usr/bin/env bash
     if systemctl cat backplane.service &>/dev/null; then
@@ -35,13 +54,34 @@ mcp-stop:
         echo "MCP server was not running"
     fi
 
-# Tail MCP server logs
+# Stop the public MCP server
+mcp-public-stop:
+    #!/usr/bin/env bash
+    if systemctl cat backplane-public.service &>/dev/null; then
+        systemctl stop backplane-public
+        echo "Public MCP server stopped (backplane-public.service)"
+    elif pkill -f "backplane.mcp.public"; then
+        echo "Public MCP server stopped"
+    else
+        echo "Public MCP server was not running"
+    fi
+
+# Tail private MCP server logs
 mcp-logs lines="100":
     #!/usr/bin/env bash
     if systemctl cat backplane.service &>/dev/null; then
         tail -f /var/log/backplane/backplane.log -n "{{ lines }}"
     else
         tail -f /tmp/backplane-mcp.log -n "{{ lines }}"
+    fi
+
+# Tail public MCP server logs
+mcp-public-logs lines="100":
+    #!/usr/bin/env bash
+    if systemctl cat backplane-public.service &>/dev/null; then
+        tail -f /var/log/backplane/backplane-public.log -n "{{ lines }}"
+    else
+        tail -f /tmp/backplane-public-mcp.log -n "{{ lines }}"
     fi
 
 # Install systemd units, logrotate configs, and service dependencies
@@ -60,16 +100,18 @@ deploy tag:
     git reset --hard {{ tag }}
     uv sync --frozen --no-dev
     just _mcp-restart
+    if systemctl is-enabled backplane-public.service &>/dev/null; then just _mcp-public-restart; fi
 
-# Checkout a branch, sync deps, and restart the MCP server
+# Checkout a branch, sync deps, and restart the MCP servers
 checkout branch="main":
     git fetch origin
     git checkout {{ branch }}
     git pull
     uv sync
     just _mcp-restart
+    if systemctl is-enabled backplane-public.service &>/dev/null; then just _mcp-public-restart; fi
 
-# Pull the current branch, sync deps, and restart the MCP server
+# Pull the current branch, sync deps, and restart the MCP servers
 pull:
     #!/usr/bin/env bash
     set -euo pipefail

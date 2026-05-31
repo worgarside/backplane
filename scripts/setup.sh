@@ -3,10 +3,12 @@ set -euo pipefail
 
 INSTALL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SERVICE_NAME="backplane"
+PUBLIC_SERVICE_NAME="backplane-public"
 SERVICE_USER="${SUDO_USER:-$USER}"
 LOG_DIR="${LOG_DIR:-/var/log/backplane}"
 VAULT_DIR="${VAULT_DIR:-/root/obsidian/vaults/my-vault}"
 OB_BIN="$(command -v ob || echo /usr/local/bin/ob)"
+INSTALL_PUBLIC_MCP="${INSTALL_PUBLIC_MCP:-false}"
 
 # Install uv if not present
 if ! command -v uv &>/dev/null; then
@@ -29,6 +31,13 @@ sed \
     "${INSTALL_DIR}/scripts/backplane.service.tmpl" \
     >"/etc/systemd/system/${SERVICE_NAME}.service"
 
+sed \
+    -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
+    -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
+    -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
+    "${INSTALL_DIR}/scripts/backplane-public.service.tmpl" \
+    >"/etc/systemd/system/${PUBLIC_SERVICE_NAME}.service"
+
 # Install obsidian-sync unit (substitute placeholders)
 sed \
     -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
@@ -46,15 +55,26 @@ sed \
     >"/etc/logrotate.d/${SERVICE_NAME}"
 sed \
     -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
+    "${INSTALL_DIR}/scripts/backplane-public.logrotate.tmpl" \
+    >"/etc/logrotate.d/${PUBLIC_SERVICE_NAME}"
+sed \
+    -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
     "${INSTALL_DIR}/scripts/obsidian-sync.logrotate.tmpl" \
     >"/etc/logrotate.d/obsidian-sync"
 
 systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}"
 systemctl restart "${SERVICE_NAME}"
+if [[ "${INSTALL_PUBLIC_MCP}" == "true" ]]; then
+    systemctl enable "${PUBLIC_SERVICE_NAME}"
+    systemctl restart "${PUBLIC_SERVICE_NAME}"
+fi
 systemctl enable obsidian-sync
 systemctl restart obsidian-sync
 
 echo "Services running:"
 echo "  systemctl status ${SERVICE_NAME}"
+if [[ "${INSTALL_PUBLIC_MCP}" == "true" ]]; then
+    echo "  systemctl status ${PUBLIC_SERVICE_NAME}"
+fi
 echo "  systemctl status obsidian-sync"

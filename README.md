@@ -57,6 +57,9 @@ This will:
 - Install Python 3.14 and sync dependencies
 - Install and enable the `backplane` and `obsidian-sync` systemd services
 
+To also enable the public ChatGPT-facing MCP service, run setup with
+`INSTALL_PUBLIC_MCP=true`.
+
 ### Updating
 
 ```bash
@@ -69,8 +72,10 @@ Pulls the latest code, syncs dependencies, and restarts the service.
 
 ```bash
 systemctl status backplane
+systemctl status backplane-public
 systemctl status obsidian-sync
 journalctl -u backplane -f
+journalctl -u backplane-public -f
 journalctl -u obsidian-sync -f
 ```
 
@@ -91,4 +96,24 @@ Run the server locally:
 
 ```bash
 python -m backplane.mcp
+```
+
+This starts the private Home Assistant-compatible SSE server on port `8000`.
+
+### Public MCP (ChatGPT)
+
+Backplane can also run a separate public streamable HTTP MCP server:
+
+```bash
+python -m backplane.mcp.public
+```
+
+This starts an unauthenticated HTTP server on port `8001`. Keep the private SSE
+server on your LAN only. If you expose the public server, terminate TLS at your
+reverse proxy and restrict access (for example VPN, allowlist, or forward-auth).
+
+Add a ChatGPT custom connector pointing at your public MCP URL, for example:
+
+```text
+https://backplane-mcp.example.com/mcp
 ```

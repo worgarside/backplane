@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
+_VALID_SCOPES: Final = ["openid", "profile", "email"]
 
 
 class PublicMcpOAuthSettings(BaseSettings):
@@ -83,6 +84,7 @@ def create_auth_provider() -> AuthProvider:
         upstream_client_secret=settings.mcp_oauth_client_secret,
         token_verifier=token_verifier,
         base_url=settings.mcp_public_base_url,
+        valid_scopes=_VALID_SCOPES,
     )
 
 

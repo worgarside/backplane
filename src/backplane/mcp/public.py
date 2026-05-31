@@ -13,6 +13,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import Response as StarletteResponse
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
@@ -120,6 +121,14 @@ class DebugHttpMiddleware(BaseHTTPMiddleware):
                     "DEBUG HTTP /mcp auth token payload={}",
                     _decode_jwt_part(token, 1),
                 )
+
+            if (
+                request.method == "POST"
+                and authorization is None
+                and request.headers.get("content-length") == "0"
+            ):
+                logger.warning("DEBUG HTTP /mcp allowing unauthenticated empty probe")
+                return StarletteResponse(status_code=200)
 
         response = await call_next(request)
         if request.url.path == "/mcp":

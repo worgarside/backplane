@@ -14,7 +14,9 @@ from pydantic_settings import BaseSettings
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
+from starlette.responses import RedirectResponse
 from starlette.responses import Response as StarletteResponse
+from starlette.routing import Route
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
@@ -313,6 +315,24 @@ class PublicMcpOAuthSettings(BaseSettings):
     ]
 
 
+def _authentik_openid_configuration_route(issuer: str) -> Route:
+    """Redirect ChatGPT's OIDC discovery probe to the real Authentik issuer.
+
+    Returns:
+        Starlette route that 307-redirects to Authentik's OIDC metadata URL.
+    """
+    target = f"{issuer.rstrip('/')}/.well-known/openid-configuration"
+
+    async def redirect(_request: Request) -> RedirectResponse:  # noqa: RUF029
+        return RedirectResponse(url=target, status_code=307)
+
+    return Route(
+        "/.well-known/openid-configuration",
+        endpoint=redirect,
+        methods=["GET"],
+    )
+
+
 def create_auth_provider() -> AuthProvider:
     """Create the Authentik-backed OAuth provider for the public MCP server.
 
@@ -344,6 +364,9 @@ if __name__ == "__main__":
     settings = PublicMcpOAuthSettings()  # pyright: ignore[reportCallIssue]
     auth_provider = create_auth_provider()
     mcp = create_mcp_server(auth=auth_provider)
+    mcp._additional_http_routes.append(  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
+        _authentik_openid_configuration_route(settings.mcp_oauth_issuer),
+    )
     middleware: list[Middleware] = [Middleware(ChatGptMcpCompatibilityMiddleware)]
     if settings.mcp_public_debug_http:
         logger.warning("MCP_PUBLIC_DEBUG_HTTP enabled: logging all HTTP requests")

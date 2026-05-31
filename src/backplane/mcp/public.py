@@ -25,9 +25,10 @@ from backplane.mcp import create_mcp_server
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
     from starlette.responses import Response
-    from starlette.types import Message
+    from starlette.types import Message, Scope
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
+_MCP_PATH: Final = "/mcp"
 _PORT: Final = 8001
 _VALID_SCOPES: Final = ["openid", "profile", "email"]
 _MCP_ACCEPT_HEADER: Final = b"application/json, text/event-stream"
@@ -187,6 +188,34 @@ def _rewrite_openid_configuration_for_public_host(
     return local
 
 
+def _normalize_mcp_path_in_scope(scope: Scope) -> None:
+    """Rewrite ``/mcp/`` to ``/mcp`` so Starlette does not 307 POST requests."""
+    path = scope.get("path")
+    if path == f"{_MCP_PATH}/":
+        scope["path"] = _MCP_PATH
+    raw_path = scope.get("raw_path")
+    if raw_path == b"/mcp/":
+        scope["raw_path"] = b"/mcp"
+
+
+class NormalizeMcpPathMiddleware(BaseHTTPMiddleware):
+    """Treat ``/mcp/`` and ``/mcp`` as the same MCP endpoint."""
+
+    @override
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        """Normalize trailing-slash MCP paths before routing.
+
+        Returns:
+            Downstream HTTP response.
+        """
+        _normalize_mcp_path_in_scope(request.scope)
+        return await call_next(request)
+
+
 class DebugHttpLoggingMiddleware(BaseHTTPMiddleware):
     """Log every HTTP request while MCP_PUBLIC_DEBUG_HTTP is enabled."""
 
@@ -245,7 +274,7 @@ class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
         Returns:
             Downstream HTTP response.
         """
-        if request.url.path != "/mcp" or request.method != "POST":
+        if request.url.path != _MCP_PATH or request.method != "POST":
             return await call_next(request)
 
         body = await request.body()
@@ -414,7 +443,10 @@ if __name__ == "__main__":
             settings.mcp_oauth_issuer,
         ),
     )
-    middleware: list[Middleware] = [Middleware(ChatGptMcpCompatibilityMiddleware)]
+    middleware: list[Middleware] = [
+        Middleware(NormalizeMcpPathMiddleware),
+        Middleware(ChatGptMcpCompatibilityMiddleware),
+    ]
     if settings.mcp_public_debug_http:
         logger.warning("MCP_PUBLIC_DEBUG_HTTP enabled: logging all HTTP requests")
         middleware.insert(0, Middleware(DebugHttpLoggingMiddleware))

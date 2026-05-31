@@ -11,6 +11,8 @@ from fastmcp.server.auth import OIDCProxy
 from loguru import logger
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
@@ -19,6 +21,8 @@ if TYPE_CHECKING:
     from fastmcp.server.auth import AccessToken as FastMcpAccessToken
     from fastmcp.server.auth import AuthProvider
     from mcp.server.auth.provider import AccessToken as McpAccessToken
+    from starlette.requests import Request
+    from starlette.responses import Response
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
@@ -83,6 +87,44 @@ class DebugOIDCProxy(OIDCProxy):
                 result.expires_at,
             )
         return result
+
+
+class DebugHttpMiddleware(BaseHTTPMiddleware):
+    """Temporary noisy HTTP middleware for OAuth/MCP debugging."""
+
+    @override
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        """Log MCP request headers before auth middleware handles them.
+
+        Returns:
+            Downstream HTTP response.
+        """
+        if request.url.path == "/mcp":
+            authorization = request.headers.get("authorization")
+            logger.warning("DEBUG HTTP /mcp method={}", request.method)
+            logger.warning("DEBUG HTTP /mcp authorization header={}", authorization)
+            logger.warning("DEBUG HTTP /mcp headers={}", dict(request.headers))
+            if authorization:
+                scheme, _, token = authorization.partition(" ")
+                logger.warning("DEBUG HTTP /mcp auth scheme={}", scheme)
+                logger.warning("DEBUG HTTP /mcp auth token={}", token)
+                logger.warning(
+                    "DEBUG HTTP /mcp auth token header={}",
+                    _decode_jwt_part(token, 0),
+                )
+                logger.warning(
+                    "DEBUG HTTP /mcp auth token payload={}",
+                    _decode_jwt_part(token, 1),
+                )
+
+        response = await call_next(request)
+        if request.url.path == "/mcp":
+            logger.warning("DEBUG HTTP /mcp response status={}", response.status_code)
+        return response
 
 
 class PublicMcpOAuthSettings(BaseSettings):
@@ -169,4 +211,11 @@ if __name__ == "__main__":
         _PORT,
     )
     mcp = create_mcp_server(auth=create_auth_provider())
-    uvloop.run(mcp.run_async(transport="http", host=_HOST, port=_PORT))
+    uvloop.run(
+        mcp.run_async(
+            transport="http",
+            host=_HOST,
+            port=_PORT,
+            middleware=[Middleware(DebugHttpMiddleware)],
+        ),
+    )

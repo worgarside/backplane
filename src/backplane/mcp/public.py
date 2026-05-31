@@ -295,9 +295,8 @@ class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
 
         if not body and not request.headers.get("authorization"):
             logger.warning(
-                "ChatGPT /mcp allowing empty unauthenticated discovery probe",
+                "ChatGPT /mcp empty unauthenticated POST; returning spec 401 (expect Bearer token retry after /token)",
             )
-            return StarletteResponse(status_code=200)
 
         headers = cast("list[tuple[bytes, bytes]]", request.scope["headers"])
         if content_type == "application/octet-stream":

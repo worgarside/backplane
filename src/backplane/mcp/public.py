@@ -5,9 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Annotated, Final
 
 import uvloop
-from fastmcp.server.auth import OAuthProxy
-from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifier
-from fastmcp.server.auth.providers.jwt import JWTVerifier
+from fastmcp.server.auth import OIDCProxy
 from loguru import logger
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -46,16 +44,6 @@ class PublicMcpOAuthSettings(BaseSettings):
         str,
         Field(description="Authentik JWKS URI for validating Backplane MCP tokens."),
     ]
-    mcp_oauth_introspection_endpoint: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description=(
-                "Optional Authentik token introspection endpoint. When set, Backplane "
-                "uses introspection instead of local JWT verification."
-            ),
-        ),
-    ]
     mcp_oauth_client_id: Annotated[
         str,
         Field(description="Authentik OAuth client ID for Backplane MCP."),
@@ -83,28 +71,18 @@ def create_auth_provider() -> AuthProvider:
         Configured FastMCP auth provider.
     """
     settings = PublicMcpOAuthSettings()  # pyright: ignore[reportCallIssue]
-
-    token_verifier = (
-        IntrospectionTokenVerifier(
-            introspection_url=settings.mcp_oauth_introspection_endpoint,
-            client_id=settings.mcp_oauth_client_id,
-            client_secret=settings.mcp_oauth_client_secret,
-        )
-        if settings.mcp_oauth_introspection_endpoint
-        else JWTVerifier(
-            jwks_uri=settings.mcp_oauth_jwks_uri,
-            issuer=settings.mcp_oauth_issuer,
-            audience=settings.mcp_oauth_audience,
-        )
+    oidc_config_url = (
+        f"{settings.mcp_oauth_issuer.rstrip('/')}/.well-known/openid-configuration"
     )
-    return OAuthProxy(
-        upstream_authorization_endpoint=settings.mcp_oauth_authorization_endpoint,
-        upstream_token_endpoint=settings.mcp_oauth_token_endpoint,
-        upstream_client_id=settings.mcp_oauth_client_id,
-        upstream_client_secret=settings.mcp_oauth_client_secret,
-        token_verifier=token_verifier,
+
+    return OIDCProxy(
+        config_url=oidc_config_url,
+        client_id=settings.mcp_oauth_client_id,
+        client_secret=settings.mcp_oauth_client_secret,
+        audience=settings.mcp_oauth_audience,
         base_url=settings.mcp_public_base_url,
-        valid_scopes=_VALID_SCOPES,
+        required_scopes=_VALID_SCOPES,
+        verify_id_token=True,
     )
 
 

@@ -114,7 +114,7 @@ class VaultPaths:
     task_board_path: Final = anyio.Path("Tasks") / "Board.md"
 
 
-SETTINGS = Settings()  # pyright: ignore[reportCallIssue]
+SETTINGS: Final = Settings()  # pyright: ignore[reportCallIssue]
 VAULT_PATHS: Final = VaultPaths()
 
 

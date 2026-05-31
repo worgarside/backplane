@@ -7,8 +7,10 @@ from typing import Annotated, Final, final
 
 import anyio
 import yarl
-from pydantic import BeforeValidator, Field, AnyHttpUrl, field_validator
+from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
+
+from .exceptions import UserError
 
 
 def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
@@ -47,26 +49,23 @@ class Settings(BaseSettings):
     home_assistant_url: Annotated[
         yarl.URL | None,
         Field(
-            default=None,
             description="Base URL of the Home Assistant instance, e.g. http://homeassistant.local:8123.",
         ),
-    ]
+    ] = None
 
     home_assistant_token: Annotated[
         str | None,
         Field(
-            default=None,
             description="Long-lived access token for the Home Assistant REST API.",
         ),
-    ]
+    ] = None
 
     home_assistant_mcp_entry_id: Annotated[
         str | None,
         Field(
-            default=None,
             description="Config entry ID of the Backplane MCP integration in Home Assistant.",
         ),
-    ]
+    ] = None
 
     @field_validator("home_assistant_url", mode="before")
     @classmethod
@@ -111,41 +110,37 @@ class Settings(BaseSettings):
     mcp_public_base_url: Annotated[
         AnyHttpUrl | None,
         Field(
-            default=None,
             description=(
                 "Public HTTPS base URL of the ChatGPT-facing MCP server, "
                 "e.g. https://backplane-mcp.example.com."
             ),
         ),
-    ]
+    ] = None
 
     mcp_oidc_config_url: Annotated[
         AnyHttpUrl | None,
         Field(
-            default=None,
             description=(
                 "Authentik OIDC discovery URL for the Backplane MCP application, "
                 "e.g. https://auth.example.com/application/o/backplane-mcp/"
                 ".well-known/openid-configuration."
             ),
         ),
-    ]
+    ] = None
 
     mcp_oidc_client_id: Annotated[
         str | None,
         Field(
-            default=None,
             description="OAuth client ID from the Authentik Backplane MCP provider.",
         ),
-    ]
+    ] = None
 
     mcp_oidc_client_secret: Annotated[
         str | None,
         Field(
-            default=None,
             description="OAuth client secret from the Authentik Backplane MCP provider.",
         ),
-    ]
+    ] = None
 
     @property
     def mcp_oauth_configured(self) -> bool:
@@ -164,7 +159,7 @@ class Settings(BaseSettings):
             Public base URL, OIDC discovery URL, client ID, and client secret.
 
         Raises:
-            ValueError: If any required OAuth setting is missing.
+            UserError: If any required OAuth setting is missing.
         """
         public_base_url = self.mcp_public_base_url
         oidc_config_url = self.mcp_oidc_config_url
@@ -176,7 +171,19 @@ class Settings(BaseSettings):
             or client_id is None
             or client_secret is None
         ):
-            raise ValueError(_MCP_OAUTH_REQUIRED_MSG)
+            raise UserError(
+                message=_MCP_OAUTH_REQUIRED_MSG,
+                detail={
+                    "public_base_url": public_base_url,
+                    "oidc_config_url": oidc_config_url,
+                    "client_id": client_id,
+                    "client_secret": (
+                        (client_secret[:8] + "..." + client_secret[-8:])
+                        if client_secret
+                        else None
+                    ),
+                },
+            )
 
         return public_base_url, oidc_config_url, client_id, client_secret
 

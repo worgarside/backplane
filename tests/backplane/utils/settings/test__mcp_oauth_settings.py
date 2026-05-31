@@ -19,17 +19,21 @@ def test__mcp_oauth_configured__returns_false_when_oauth_env_vars_are_missing() 
     assert settings.mcp_oauth_configured is False
 
 
-def test__mcp_oauth_configured__returns_true_when_all_oauth_env_vars_are_present() -> None:
+def test__mcp_oauth_configured__returns_true_when_all_oauth_env_vars_are_present() -> (
+    None
+):
     """OAuth is configured only when every required MCP OAuth env var is set."""
-    settings = Settings(
-        obsidian_vault_path=anyio.Path("/tmp/vault"),
-        mcp_public_base_url="https://backplane-mcp.example.com",
-        mcp_oidc_config_url=(
-            "https://auth.example.com/application/o/backplane-mcp/"
-            ".well-known/openid-configuration"
-        ),
-        mcp_oidc_client_id="client-id",
-        mcp_oidc_client_secret=_TEST_OAUTH_CREDENTIAL,
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            "mcp_public_base_url": "https://backplane-mcp.example.com",
+            "mcp_oidc_config_url": (
+                "https://auth.example.com/application/o/backplane-mcp/"
+                ".well-known/openid-configuration"
+            ),
+            "mcp_oidc_client_id": "client-id",
+            "mcp_oidc_client_secret": _TEST_OAUTH_CREDENTIAL,
+        },
     )
 
     assert settings.mcp_oauth_configured is True
@@ -56,9 +60,11 @@ def test__settings__parse_mcp_url_fields(
     expected: str,
 ) -> None:
     """MCP OAuth URL settings accept string env values."""
-    settings = Settings(
-        obsidian_vault_path=anyio.Path("/tmp/vault"),
-        **{field_name: value},
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            field_name: value,
+        },
     )
 
     parsed = getattr(settings, field_name)

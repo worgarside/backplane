@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, cast
 from loguru import logger
 from pydantic import Field, PastDate
 
-from backplane.mcp.auth import oauth_tool_registration_kwargs
+from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
 from backplane.services.obsidian import ObsidianService
 from backplane.utils import exc, format_human_date, today
 from backplane.utils.settings import SETTINGS
@@ -311,7 +311,7 @@ async def daily_note_by_date_resource(date: dt.date) -> str:
 
 def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
     """Register Obsidian tools and resources on a FastMCP server instance."""
-    auth_kwargs: dict[str, object] = {}
+    auth_kwargs: OAuthToolRegistrationKwargs = {}
     if require_oauth:
         auth_kwargs = oauth_tool_registration_kwargs()
 

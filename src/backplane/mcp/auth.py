@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
 
 from fastmcp.server.auth import require_scopes
 from fastmcp.server.auth.oidc_proxy import OIDCProxy
@@ -12,6 +12,7 @@ from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
+    from fastmcp.utilities.authorization import AuthCheck
 
 _CHATGPT_REDIRECT_URIS: tuple[str, ...] = (
     "https://chatgpt.com/connector/oauth/*",
@@ -19,18 +20,39 @@ _CHATGPT_REDIRECT_URIS: tuple[str, ...] = (
 )
 
 
-def oauth_tool_meta() -> dict[str, object]:
+class OAuthSecurityScheme(TypedDict):
+    """OAuth2 security scheme advertised to ChatGPT MCP clients."""
+
+    type: Literal["oauth2"]
+    scopes: list[str]
+
+
+class OAuthToolMeta(TypedDict):
+    """MCP tool metadata that advertises OAuth requirements."""
+
+    securitySchemes: list[OAuthSecurityScheme]
+
+
+class OAuthToolRegistrationKwargs(TypedDict):
+    """FastMCP tool/resource registration kwargs for OAuth-protected components."""
+
+    auth: NotRequired[AuthCheck]
+    meta: NotRequired[dict[str, list[OAuthSecurityScheme]]]
+
+
+def oauth_tool_meta() -> OAuthToolMeta:
     """Return MCP tool metadata that advertises OAuth to ChatGPT."""
     return {
         "securitySchemes": [{"type": "oauth2", "scopes": ["openid"]}],
     }
 
 
-def oauth_tool_registration_kwargs() -> dict[str, object]:
+def oauth_tool_registration_kwargs() -> OAuthToolRegistrationKwargs:
     """Return FastMCP registration kwargs for OAuth-protected tools and resources."""
+    tool_meta = oauth_tool_meta()
     return {
         "auth": require_scopes("openid"),
-        "meta": oauth_tool_meta(),
+        "meta": {"securitySchemes": tool_meta["securitySchemes"]},
     }
 
 

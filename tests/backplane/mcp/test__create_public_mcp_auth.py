@@ -8,6 +8,7 @@ import anyio
 import pytest
 
 from backplane.mcp.auth import create_public_mcp_auth, oauth_tool_meta
+from backplane.utils.exceptions import UserError
 from backplane.utils.settings import Settings
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ def test__create_public_mcp_auth__raises_when_oauth_is_not_configured(
     settings = Settings(obsidian_vault_path=anyio.Path("/tmp/vault"))
     mocker.patch("backplane.mcp.auth.SETTINGS", settings)
 
-    with pytest.raises(ValueError, match="Public MCP requires OAuth"):
+    with pytest.raises(UserError, match="Public MCP requires OAuth"):
         create_public_mcp_auth()
 
 
@@ -32,15 +33,17 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
 ) -> None:
     """The public MCP auth factory returns an OIDCProxy when OAuth env vars are complete."""
     mock_oidc_proxy = mocker.patch("backplane.mcp.auth.OIDCProxy")
-    settings = Settings(
-        obsidian_vault_path=anyio.Path("/tmp/vault"),
-        mcp_public_base_url="https://backplane-mcp.example.com",
-        mcp_oidc_config_url=(
-            "https://auth.example.com/application/o/backplane-mcp/"
-            ".well-known/openid-configuration"
-        ),
-        mcp_oidc_client_id="client-id",
-        mcp_oidc_client_secret=_TEST_OAUTH_CREDENTIAL,
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            "mcp_public_base_url": "https://backplane-mcp.example.com",
+            "mcp_oidc_config_url": (
+                "https://auth.example.com/application/o/backplane-mcp/"
+                ".well-known/openid-configuration"
+            ),
+            "mcp_oidc_client_id": "client-id",
+            "mcp_oidc_client_secret": _TEST_OAUTH_CREDENTIAL,
+        },
     )
     mocker.patch("backplane.mcp.auth.SETTINGS", settings)
 

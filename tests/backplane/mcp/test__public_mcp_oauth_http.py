@@ -21,7 +21,9 @@ def mock_auth_provider() -> RemoteAuthProvider:
     )
     return RemoteAuthProvider(
         token_verifier=token_verifier,
-        authorization_servers=[AnyHttpUrl("https://auth.example.com/application/o/backplane-mcp/")],
+        authorization_servers=[
+            AnyHttpUrl("https://auth.example.com/application/o/backplane-mcp/"),
+        ],
         base_url="https://backplane-mcp.example.com",
     )
 

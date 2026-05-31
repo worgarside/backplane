@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Annotated
 from loguru import logger
 from pydantic import Field
 
+from backplane.mcp.auth import oauth_tool_registration_kwargs
 from backplane.services.tasks import TaskService
 from backplane.utils import enums  # noqa: TC001
 
@@ -174,7 +175,13 @@ async def link_task_to_capture(
     return response
 
 
-def register_task_tools(mcp: FastMCP[None]) -> None:
+def register_task_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
     """Register task tools on a FastMCP server instance."""
-    _ = mcp.tool(description=_CREATE_TASK_DESCRIPTION)(create_task)
-    _ = mcp.tool(description=_LINK_TASK_TO_CAPTURE_DESCRIPTION)(link_task_to_capture)
+    auth_kwargs: dict[str, object] = {}
+    if require_oauth:
+        auth_kwargs = oauth_tool_registration_kwargs()
+
+    _ = mcp.tool(description=_CREATE_TASK_DESCRIPTION, **auth_kwargs)(create_task)
+    _ = mcp.tool(description=_LINK_TASK_TO_CAPTURE_DESCRIPTION, **auth_kwargs)(
+        link_task_to_capture,
+    )

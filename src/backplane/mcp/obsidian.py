@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, cast
 from loguru import logger
 from pydantic import Field, PastDate
 
+from backplane.mcp.auth import oauth_tool_registration_kwargs
 from backplane.services.obsidian import ObsidianService
 from backplane.utils import exc, format_human_date, today
 from backplane.utils.settings import SETTINGS
@@ -308,16 +309,21 @@ async def daily_note_by_date_resource(date: dt.date) -> str:
         return daily_note.render()
 
 
-def register_obsidian_tools(mcp: FastMCP[None]) -> None:
+def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
     """Register Obsidian tools and resources on a FastMCP server instance."""
-    _ = mcp.tool(description=_ADD_DESCRIPTION)(add_to_daily_note)
-    _ = mcp.tool(description=_GET_DAILY_NOTE_DESCRIPTION)(get_daily_note)
-    _ = mcp.tool(description=_RECORD_IDEA_DESCRIPTION)(record_idea)
+    auth_kwargs: dict[str, object] = {}
+    if require_oauth:
+        auth_kwargs = oauth_tool_registration_kwargs()
+
+    _ = mcp.tool(description=_ADD_DESCRIPTION, **auth_kwargs)(add_to_daily_note)
+    _ = mcp.tool(description=_GET_DAILY_NOTE_DESCRIPTION, **auth_kwargs)(get_daily_note)
+    _ = mcp.tool(description=_RECORD_IDEA_DESCRIPTION, **auth_kwargs)(record_idea)
     _ = mcp.resource(
         uri="obsidian://daily-note/today",
         name="Today's Daily Note",
         description="The user's Obsidian daily note for today's date.",
         mime_type="text/markdown",
+        **auth_kwargs,
     )(daily_note_today_resource)
     _ = mcp.resource(
         uri="obsidian://daily-note/{date}",
@@ -327,4 +333,5 @@ def register_obsidian_tools(mcp: FastMCP[None]) -> None:
             "obsidian://daily-note/2026-05-16."
         ),
         mime_type="text/markdown",
+        **auth_kwargs,
     )(daily_note_by_date_resource)

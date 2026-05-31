@@ -43,6 +43,7 @@ def create_mcp_server(
     *,
     auth: AuthProvider | None = None,
     notify_home_assistant: bool = False,
+    require_oauth: bool = False,
 ) -> FastMCP[None]:
     """Create a Backplane MCP server instance with all tools registered.
 
@@ -51,6 +52,8 @@ def create_mcp_server(
             streamable HTTP endpoint.
         notify_home_assistant: Whether startup should notify/reload the private
             Home Assistant MCP integration. Only the private SSE server should do this.
+        require_oauth: When true, register tools and resources with OAuth metadata
+            and scope checks for ChatGPT-facing authentication.
 
     Returns:
         Configured FastMCP server instance.
@@ -63,7 +66,7 @@ def create_mcp_server(
         lifespan=_home_assistant_lifespan if notify_home_assistant else None,
     )
 
-    register_obsidian_tools(mcp)
-    register_task_tools(mcp)
+    register_obsidian_tools(mcp, require_oauth=require_oauth)
+    register_task_tools(mcp, require_oauth=require_oauth)
 
     return mcp

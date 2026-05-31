@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Final
+import base64
+import json
+from typing import TYPE_CHECKING, Annotated, Final, cast, override
 
 import uvloop
 from fastmcp.server.auth import OIDCProxy
@@ -15,10 +17,61 @@ from backplane.mcp import create_mcp_server
 
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
+    from mcp.server.auth.provider import AccessToken
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
 _VALID_SCOPES: Final = ["openid", "profile", "email"]
+
+
+def _decode_jwt_part(token: str, part: int) -> dict[str, object] | str | None:
+    """Decode a JWT header/payload without validating it.
+
+    Returns:
+        Decoded JSON object, decoded string, or ``None`` if the token is not JWT-shaped.
+    """
+    chunks = token.split(".")
+    if len(chunks) <= part:
+        return None
+
+    padded = chunks[part] + ("=" * (-len(chunks[part]) % 4))
+    try:
+        decoded = base64.urlsafe_b64decode(padded.encode("ascii")).decode()
+        parsed = cast("object", json.loads(decoded))
+    except (ValueError, UnicodeDecodeError) as err:
+        return f"<decode failed: {err}>"
+
+    return cast("dict[str, object]", parsed) if isinstance(parsed, dict) else decoded
+
+
+class DebugOIDCProxy(OIDCProxy):
+    """Temporary noisy OAuth debug proxy."""
+
+    @override
+    async def load_access_token(self, token: str) -> AccessToken | None:
+        """Log inbound MCP token details before and after validation.
+
+        Returns:
+            Validated access token, or ``None`` if FastMCP rejects it.
+        """
+        logger.warning("DEBUG MCP bearer token: {}", token)
+        logger.warning("DEBUG MCP token header: {}", _decode_jwt_part(token, 0))
+        logger.warning("DEBUG MCP token payload: {}", _decode_jwt_part(token, 1))
+
+        result = await super().load_access_token(token)
+        if result is None:
+            logger.warning("DEBUG MCP token validation result: rejected")
+        else:
+            logger.warning(
+                (
+                    "DEBUG MCP token validation result: accepted client_id={} "
+                    "scopes={} expires_at={}"
+                ),
+                result.client_id,
+                result.scopes,
+                result.expires_at,
+            )
+        return result
 
 
 class PublicMcpOAuthSettings(BaseSettings):
@@ -75,7 +128,7 @@ def create_auth_provider() -> AuthProvider:
         f"{settings.mcp_oauth_issuer.rstrip('/')}/.well-known/openid-configuration"
     )
 
-    return OIDCProxy(
+    return DebugOIDCProxy(
         config_url=oidc_config_url,
         client_id=settings.mcp_oauth_client_id,
         client_secret=settings.mcp_oauth_client_secret,

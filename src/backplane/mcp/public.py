@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Final
 
 import uvloop
 from fastmcp.server.auth import OAuthProxy
+from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifier
 from fastmcp.server.auth.providers.jwt import JWTVerifier
 from loguru import logger
 from pydantic import Field
@@ -45,6 +46,16 @@ class PublicMcpOAuthSettings(BaseSettings):
         str,
         Field(description="Authentik JWKS URI for validating Backplane MCP tokens."),
     ]
+    mcp_oauth_introspection_endpoint: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Optional Authentik token introspection endpoint. When set, Backplane "
+                "uses introspection instead of local JWT verification."
+            ),
+        ),
+    ]
     mcp_oauth_client_id: Annotated[
         str,
         Field(description="Authentik OAuth client ID for Backplane MCP."),
@@ -73,10 +84,18 @@ def create_auth_provider() -> AuthProvider:
     """
     settings = PublicMcpOAuthSettings()  # pyright: ignore[reportCallIssue]
 
-    token_verifier = JWTVerifier(
-        jwks_uri=settings.mcp_oauth_jwks_uri,
-        issuer=settings.mcp_oauth_issuer,
-        audience=settings.mcp_oauth_audience,
+    token_verifier = (
+        IntrospectionTokenVerifier(
+            introspection_url=settings.mcp_oauth_introspection_endpoint,
+            client_id=settings.mcp_oauth_client_id,
+            client_secret=settings.mcp_oauth_client_secret,
+        )
+        if settings.mcp_oauth_introspection_endpoint
+        else JWTVerifier(
+            jwks_uri=settings.mcp_oauth_jwks_uri,
+            issuer=settings.mcp_oauth_issuer,
+            audience=settings.mcp_oauth_audience,
+        )
     )
     return OAuthProxy(
         upstream_authorization_endpoint=settings.mcp_oauth_authorization_endpoint,

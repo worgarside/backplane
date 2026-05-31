@@ -120,6 +120,8 @@ https://backplane-mcp.example.com/auth/callback
 
 Set the public MCP environment variables from `.env.example`, confirming the exact
 issuer, authorization, token, and JWKS URLs from Authentik's OpenID configuration.
+If Authentik issues opaque access tokens, set the introspection endpoint as well
+so Backplane can validate tokens with Authentik directly.
 Then add the custom MCP connector in ChatGPT using the public MCP URL, typically:
 
 ```text

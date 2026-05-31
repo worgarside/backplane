@@ -2,23 +2,61 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Final
+from typing import TYPE_CHECKING, Annotated, Final, cast, override
 
 import uvloop
 from fastmcp.server.auth import OIDCProxy
 from loguru import logger
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
 
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
+    from starlette.requests import Request
+    from starlette.responses import Response
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
 _VALID_SCOPES: Final = ["openid", "profile", "email"]
+
+
+class ChatGptMcpCompatibilityMiddleware(BaseHTTPMiddleware):
+    """Normalize ChatGPT's MCP request headers before FastMCP parses them."""
+
+    @override
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        """Rewrite ChatGPT's octet-stream MCP posts as JSON requests.
+
+        Returns:
+            Downstream HTTP response.
+        """
+        if (
+            request.url.path == "/mcp"
+            and request.method == "POST"
+            and request.headers.get("content-type") == "application/octet-stream"
+        ):
+            logger.warning(
+                "Rewriting ChatGPT /mcp content-type from octet-stream to JSON",
+            )
+            headers = cast("list[tuple[bytes, bytes]]", request.scope["headers"])
+            request.scope["headers"] = [
+                (
+                    name,
+                    b"application/json" if name == b"content-type" else value,
+                )
+                for name, value in headers
+            ]
+
+        return await call_next(request)
 
 
 class PublicMcpOAuthSettings(BaseSettings):
@@ -97,4 +135,11 @@ if __name__ == "__main__":
     mcp._additional_http_routes.extend(  # pyright: ignore[reportPrivateUsage]  # noqa: SLF001
         auth_provider.get_routes(mcp_path="/mcp"),
     )
-    uvloop.run(mcp.run_async(transport="http", host=_HOST, port=_PORT))
+    uvloop.run(
+        mcp.run_async(
+            transport="http",
+            host=_HOST,
+            port=_PORT,
+            middleware=[Middleware(ChatGptMcpCompatibilityMiddleware)],
+        ),
+    )

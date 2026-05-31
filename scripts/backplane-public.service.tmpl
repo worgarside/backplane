@@ -1,0 +1,17 @@
+[Unit]
+Description=Backplane Public MCP Server
+After=network.target
+
+[Service]
+Type=simple
+User=%%SERVICE_USER%%
+WorkingDirectory=%%INSTALL_DIR%%
+ExecStart=%%INSTALL_DIR%%/.venv/bin/python -m backplane.mcp.public
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=%%INSTALL_DIR%%/.env
+StandardOutput=append:%%LOG_DIR%%/backplane-public.log
+StandardError=append:%%LOG_DIR%%/backplane-public.log
+
+[Install]
+WantedBy=multi-user.target

@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING
 import anyio
 import pytest
 
-from backplane.mcp.auth import create_public_mcp_auth, oauth_tool_meta
+from backplane.mcp.auth import (
+    MCP_BASELINE_SCOPE,
+    create_public_mcp_auth,
+    oauth_tool_meta,
+    oauth_tool_registration_kwargs,
+)
 from backplane.utils.exceptions import UserError
 from backplane.utils.settings import Settings
 
@@ -60,12 +65,30 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
             "https://chatgpt.com/connector/oauth/*",
             "https://chatgpt.com/connector_platform_oauth_redirect",
         ],
-        required_scopes=["openid"],
+        required_scopes=[MCP_BASELINE_SCOPE],
     )
 
 
 def test__oauth_tool_meta__advertises_openid_oauth2_scheme() -> None:
-    """OAuth tool metadata advertises the openid scope to ChatGPT."""
+    """OAuth tool metadata advertises the baseline openid scope to ChatGPT."""
     assert oauth_tool_meta() == {
-        "securitySchemes": [{"type": "oauth2", "scopes": ["openid"]}],
+        "securitySchemes": [{"type": "oauth2", "scopes": [MCP_BASELINE_SCOPE]}],
     }
+
+
+def test__oauth_tool_registration_kwargs__defaults_to_baseline_scope() -> None:
+    """OAuth registration kwargs advertise and require the baseline scope by default."""
+    kwargs = oauth_tool_registration_kwargs()
+    expected_meta = oauth_tool_meta()
+
+    assert kwargs.get("meta") == {"securitySchemes": expected_meta["securitySchemes"]}
+    assert kwargs.get("auth") is not None
+
+
+def test__oauth_tool_registration_kwargs__forwards_explicit_scopes_to_meta() -> None:
+    """Explicit scopes are advertised in tool metadata for future per-tool enforcement."""
+    kwargs = oauth_tool_registration_kwargs("mcp.read")
+    expected_meta = oauth_tool_meta("mcp.read")
+
+    assert kwargs.get("meta") == {"securitySchemes": expected_meta["securitySchemes"]}
+    assert kwargs.get("auth") is not None

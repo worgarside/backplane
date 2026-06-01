@@ -117,6 +117,30 @@ Terminate TLS at your reverse proxy (for example NGINX Proxy Manager) and forwar
 
 Keep the private SSE server on your LAN only.
 
+#### OAuth scope model (current)
+
+The public MCP server requires authentication for all tools and resources. The
+baseline OAuth scope is **`openid`** — there is no `mcp.read` / `mcp.write` split
+yet. See the design note in `src/backplane/mcp/auth.py` for the deferred
+read/write scope plan.
+
+#### Public route policy (`:8001`)
+
+| Route | Policy |
+| --- | --- |
+| `POST /mcp` | Bearer token required |
+| `/.well-known/oauth-protected-resource/*` | Public |
+| FastMCP OAuth routes (`/authorize`, `/token`, `/register`, `/auth/callback`, …) | Public (state/PKCE validated by FastMCP) |
+
+The private SSE server on port `8000` is unauthenticated and must stay on your LAN.
+
+#### Future: `mcp.read` / `mcp.write`
+
+Per-tool read/write scopes may be added later. Before enabling them, verify the
+live ChatGPT → FastMCP → Authentik flow and confirm which scopes are requested,
+issued, preserved, and visible during tool execution. Do not configure
+`mcp.read` or `mcp.write` in Authentik until that mapping is understood.
+
 Add a ChatGPT custom connector pointing at your public MCP URL, for example:
 
 ```text

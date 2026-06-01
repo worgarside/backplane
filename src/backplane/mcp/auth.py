@@ -1,8 +1,20 @@
-"""OAuth authentication for the public Backplane MCP server."""
+"""OAuth authentication for the public Backplane MCP server.
+
+Scope model (current):
+    The public MCP server requires authentication globally. All tools and
+    resources registered with ``require_oauth=True`` use a single baseline
+    scope: ``openid``.
+
+Future (deferred):
+    A fuller MCP design may split read vs write tools using ``mcp.read`` and
+    ``mcp.write``. Do not add that split until the live ChatGPT → FastMCP →
+    Authentik flow is verified and we know which scopes are requested, issued,
+    preserved, and visible to ``require_scopes`` during tool execution.
+"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict
 
 from fastmcp.server.auth import require_scopes
 from fastmcp.server.auth.oidc_proxy import OIDCProxy
@@ -13,6 +25,8 @@ from backplane.utils.settings import SETTINGS
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
     from fastmcp.utilities.authorization import AuthCheck
+
+MCP_BASELINE_SCOPE: Final = "openid"
 
 _CHATGPT_REDIRECT_URIS: tuple[str, ...] = (
     "https://chatgpt.com/connector/oauth/*",
@@ -40,18 +54,31 @@ class OAuthToolRegistrationKwargs(TypedDict):
     meta: NotRequired[dict[str, list[OAuthSecurityScheme]]]
 
 
-def oauth_tool_meta() -> OAuthToolMeta:
-    """Return MCP tool metadata that advertises OAuth to ChatGPT."""
+def oauth_tool_meta(*scopes: str) -> OAuthToolMeta:
+    """Return MCP tool metadata that advertises OAuth to ChatGPT.
+
+    Args:
+        scopes: OAuth scopes to advertise. Defaults to ``MCP_BASELINE_SCOPE``.
+    """
+    effective_scopes = list(scopes) if scopes else [MCP_BASELINE_SCOPE]
     return {
-        "securitySchemes": [{"type": "oauth2", "scopes": ["openid"]}],
+        "securitySchemes": [{"type": "oauth2", "scopes": effective_scopes}],
     }
 
 
-def oauth_tool_registration_kwargs() -> OAuthToolRegistrationKwargs:
-    """Return FastMCP registration kwargs for OAuth-protected tools and resources."""
-    tool_meta = oauth_tool_meta()
+def oauth_tool_registration_kwargs(
+    *scopes: str,
+) -> OAuthToolRegistrationKwargs:
+    """Return FastMCP registration kwargs for OAuth-protected tools and resources.
+
+    Args:
+        scopes: Required OAuth scopes for the component. Defaults to
+            ``MCP_BASELINE_SCOPE`` when omitted.
+    """
+    effective_scopes = scopes or (MCP_BASELINE_SCOPE,)
+    tool_meta = oauth_tool_meta(*effective_scopes)
     return {
-        "auth": require_scopes("openid"),
+        "auth": require_scopes(*effective_scopes),
         "meta": {"securitySchemes": tool_meta["securitySchemes"]},
     }
 
@@ -81,5 +108,5 @@ def create_public_mcp_auth() -> AuthProvider:
         base_url=public_base_url,
         require_authorization_consent="external",
         allowed_client_redirect_uris=list(_CHATGPT_REDIRECT_URIS),
-        required_scopes=["openid"],
+        required_scopes=[MCP_BASELINE_SCOPE],
     )

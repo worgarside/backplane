@@ -109,4 +109,8 @@ def create_public_mcp_auth() -> AuthProvider:
         require_authorization_consent="external",
         allowed_client_redirect_uris=list(_CHATGPT_REDIRECT_URIS),
         required_scopes=[MCP_BASELINE_SCOPE],
+        # Authentik (and many OIDC IdPs) do not put ``openid`` in access-token
+        # JWT claims. Verify the id_token via JWKS instead; scope enforcement
+        # still uses the token response ``scope`` field at the FastMCP layer.
+        verify_id_token=True,
     )

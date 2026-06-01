@@ -66,6 +66,7 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
             "https://chatgpt.com/connector_platform_oauth_redirect",
         ],
         required_scopes=[MCP_BASELINE_SCOPE],
+        verify_id_token=True,
     )
 
 

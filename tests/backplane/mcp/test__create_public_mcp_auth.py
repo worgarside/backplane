@@ -37,7 +37,7 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
     mocker: MockerFixture,
 ) -> None:
     """The public MCP auth factory returns an OIDCProxy when OAuth env vars are complete."""
-    mock_oidc_proxy = mocker.patch("backplane.mcp.auth.OIDCProxy")
+    mock_oidc_proxy = mocker.patch("backplane.mcp.auth.BackplaneOIDCProxy")
     mock_introspection = mocker.patch("backplane.mcp.auth.IntrospectionTokenVerifier")
     mock_oidc_config = mocker.patch(
         "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
@@ -59,15 +59,16 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
     )
     mocker.patch("backplane.mcp.auth.SETTINGS", settings)
 
+    mock_auth = mock_oidc_proxy.return_value
     auth = create_public_mcp_auth()
 
-    assert auth is mock_oidc_proxy.return_value
+    assert auth is mock_auth
     mock_introspection.assert_called_once_with(
         introspection_url="https://auth.example.com/application/o/introspect/",
         client_id="client-id",
         client_secret=_TEST_OAUTH_CREDENTIAL,
         client_auth_method="client_secret_post",
-        required_scopes=[MCP_BASELINE_SCOPE],
+        required_scopes=None,
         cache_ttl_seconds=60,
     )
     mock_oidc_proxy.assert_called_once_with(
@@ -82,13 +83,15 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
         ],
         token_verifier=mock_introspection.return_value,
     )
+    assert mock_auth.required_scopes == [MCP_BASELINE_SCOPE]
+    mock_auth.update_default_scopes.assert_called_once_with([MCP_BASELINE_SCOPE])
 
 
 def test__create_public_mcp_auth__raises_when_introspection_endpoint_is_missing(
     mocker: MockerFixture,
 ) -> None:
     """The public MCP auth factory refuses to start without an introspection endpoint."""
-    mocker.patch("backplane.mcp.auth.OIDCProxy")
+    mocker.patch("backplane.mcp.auth.BackplaneOIDCProxy")
     mock_oidc_config = mocker.patch(
         "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
     )

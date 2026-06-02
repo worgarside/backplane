@@ -83,7 +83,7 @@ fix = true
 preview = true
 line-length = 90
 lint.select = ["ALL"]
-lint.ignore = ["CPY", "TD002", "EM101"]
+lint.ignore = ["CPY", "TD002", "EM101", "PLW0717"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 115

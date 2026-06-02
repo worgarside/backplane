@@ -38,6 +38,13 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
 ) -> None:
     """The public MCP auth factory returns an OIDCProxy when OAuth env vars are complete."""
     mock_oidc_proxy = mocker.patch("backplane.mcp.auth.OIDCProxy")
+    mock_introspection = mocker.patch("backplane.mcp.auth.IntrospectionTokenVerifier")
+    mock_oidc_config = mocker.patch(
+        "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
+    )
+    mock_oidc_config.return_value.introspection_endpoint = (
+        "https://auth.example.com/application/o/introspect/"
+    )
     settings = Settings.model_validate(
         {
             "obsidian_vault_path": "/tmp/vault",
@@ -55,6 +62,14 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
     auth = create_public_mcp_auth()
 
     assert auth is mock_oidc_proxy.return_value
+    mock_introspection.assert_called_once_with(
+        introspection_url="https://auth.example.com/application/o/introspect/",
+        client_id="client-id",
+        client_secret=_TEST_OAUTH_CREDENTIAL,
+        client_auth_method="client_secret_post",
+        required_scopes=[MCP_BASELINE_SCOPE],
+        cache_ttl_seconds=60,
+    )
     mock_oidc_proxy.assert_called_once_with(
         config_url=settings.mcp_oidc_config_url,
         client_id="client-id",
@@ -65,9 +80,35 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
             "https://chatgpt.com/connector/oauth/*",
             "https://chatgpt.com/connector_platform_oauth_redirect",
         ],
-        required_scopes=[MCP_BASELINE_SCOPE],
-        verify_id_token=True,
+        token_verifier=mock_introspection.return_value,
     )
+
+
+def test__create_public_mcp_auth__raises_when_introspection_endpoint_is_missing(
+    mocker: MockerFixture,
+) -> None:
+    """The public MCP auth factory refuses to start without an introspection endpoint."""
+    mocker.patch("backplane.mcp.auth.OIDCProxy")
+    mock_oidc_config = mocker.patch(
+        "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
+    )
+    mock_oidc_config.return_value.introspection_endpoint = None
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            "mcp_public_base_url": "https://backplane-mcp.example.com",
+            "mcp_oidc_config_url": (
+                "https://auth.example.com/application/o/backplane-mcp/"
+                ".well-known/openid-configuration"
+            ),
+            "mcp_oidc_client_id": "client-id",
+            "mcp_oidc_client_secret": _TEST_OAUTH_CREDENTIAL,
+        },
+    )
+    mocker.patch("backplane.mcp.auth.SETTINGS", settings)
+
+    with pytest.raises(UserError, match="introspection endpoint"):
+        create_public_mcp_auth()
 
 
 def test__oauth_tool_meta__advertises_openid_oauth2_scheme() -> None:

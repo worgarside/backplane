@@ -17,10 +17,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict
 
 from fastmcp.server.auth import require_scopes
-from fastmcp.server.auth.oidc_proxy import OIDCProxy
+from fastmcp.server.auth.oidc_proxy import OIDCConfiguration, OIDCProxy
+from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifier
 from loguru import logger
 
+from backplane.utils.exceptions import UserError
 from backplane.utils.settings import SETTINGS
+
+# Cache introspection briefly so every MCP tool call does not hit Authentik.
+_INTROSPECTION_CACHE_TTL_SECONDS: Final = 60
 
 if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
@@ -88,6 +93,10 @@ def create_public_mcp_auth() -> AuthProvider:
 
     Returns:
         Configured auth provider for the public MCP server.
+
+    Raises:
+        UserError: When OAuth settings are incomplete or Authentik discovery
+            omits a token introspection endpoint.
     """
     (
         public_base_url,
@@ -96,9 +105,33 @@ def create_public_mcp_auth() -> AuthProvider:
         client_secret,
     ) = SETTINGS.require_mcp_oauth()
 
+    oidc_config = OIDCConfiguration.get_oidc_configuration(
+        oidc_config_url,
+        strict=None,
+        timeout_seconds=None,
+    )
+    if not oidc_config.introspection_endpoint:
+        msg = (
+            "Authentik OIDC provider must expose an introspection endpoint. "
+            f"None found in {oidc_config_url}"
+        )
+        raise UserError(msg)
+
     logger.info(
-        "Configuring public MCP OAuth via Authentik OIDC proxy at {}",
+        (
+            "Configuring public MCP OAuth via Authentik OIDC proxy at {} "
+            "(upstream token introspection)"
+        ),
         public_base_url,
+    )
+
+    token_verifier = IntrospectionTokenVerifier(
+        introspection_url=str(oidc_config.introspection_endpoint),
+        client_id=client_id,
+        client_secret=client_secret,
+        client_auth_method="client_secret_post",
+        required_scopes=[MCP_BASELINE_SCOPE],
+        cache_ttl_seconds=_INTROSPECTION_CACHE_TTL_SECONDS,
     )
 
     return OIDCProxy(
@@ -108,9 +141,5 @@ def create_public_mcp_auth() -> AuthProvider:
         base_url=public_base_url,
         require_authorization_consent="external",
         allowed_client_redirect_uris=list(_CHATGPT_REDIRECT_URIS),
-        required_scopes=[MCP_BASELINE_SCOPE],
-        # Authentik (and many OIDC IdPs) do not put ``openid`` in access-token
-        # JWT claims. Verify the id_token via JWKS instead; scope enforcement
-        # still uses the token response ``scope`` field at the FastMCP layer.
-        verify_id_token=True,
+        token_verifier=token_verifier,
     )

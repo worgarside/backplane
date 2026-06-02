@@ -14,7 +14,7 @@ Future (deferred):
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict, override
+from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, override
 
 from authlib.jose.errors import JoseError
 from fastmcp.server.auth import require_scopes
@@ -23,8 +23,13 @@ from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifi
 from loguru import logger
 from mcp.server.auth.middleware.auth_context import AuthContextMiddleware
 from mcp.server.auth.middleware.bearer_auth import BearerAuthBackend
+from mcp.server.auth.routes import build_metadata, cors_middleware
+from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+from starlette.routing import Route
 
 from backplane.utils.exceptions import UserError
 from backplane.utils.settings import SETTINGS
@@ -77,7 +82,7 @@ class _LoggingBearerAuthBackend(BearerAuthBackend):
         conn: HTTPConnection,
     ) -> tuple[AuthCredentials, AuthenticatedUser] | None:
         auth_header = conn.headers.get("authorization")
-        if conn.url.path.rstrip("/").endswith("/mcp") and (
+        if conn.url.path == "/mcp" and (
             not auth_header or not auth_header.lower().startswith("bearer ")
         ):
             logger.warning("MCP OAuth: /mcp request missing Bearer Authorization header")
@@ -103,6 +108,67 @@ class BackplaneOIDCProxy(OIDCProxy):
             ),
             Middleware(AuthContextMiddleware),
         ]
+
+    @override
+    def get_routes(self, mcp_path: str | None = None) -> list[Route]:
+        """Add OIDC discovery routes that ChatGPT expects after a 401 on ``/mcp``."""
+        routes = super().get_routes(mcp_path)
+        oidc_document = self._openid_configuration_document()
+
+        async def openid_configuration(_: Request) -> Response:
+            return JSONResponse(
+                content=oidc_document,
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+        async def jwks(_: Request) -> Response:
+            return JSONResponse(
+                content={"keys": []},
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+        routes.extend(
+            [
+                Route(
+                    "/.well-known/openid-configuration",
+                    endpoint=cors_middleware(
+                        openid_configuration,
+                        ["GET", "OPTIONS"],
+                    ),
+                    methods=["GET", "OPTIONS"],
+                ),
+                Route(
+                    "/.well-known/jwks.json",
+                    endpoint=cors_middleware(jwks, ["GET", "OPTIONS"]),
+                    methods=["GET", "OPTIONS"],
+                ),
+            ],
+        )
+        return routes
+
+    def _openid_configuration_document(self) -> dict[str, Any]:
+        """Build OIDC Provider Metadata for the FastMCP OAuth proxy."""
+        if self.base_url is None:
+            msg = "OAuth base_url must be configured before building OIDC metadata"
+            raise UserError(msg)
+
+        registration_options = (
+            self.client_registration_options or ClientRegistrationOptions()
+        )
+        revocation_options = self.revocation_options or RevocationOptions()
+        metadata = build_metadata(
+            issuer_url=self.base_url,
+            service_documentation_url=self.service_documentation_url,
+            client_registration_options=registration_options,
+            revocation_options=revocation_options,
+        )
+        document: dict[str, Any] = metadata.model_dump(mode="json", exclude_none=True)
+        prefix = str(self.base_url).rstrip("/")
+        document["jwks_uri"] = f"{prefix}/.well-known/jwks.json"
+        document["subject_types_supported"] = ["public"]
+        document["id_token_signing_alg_values_supported"] = ["HS256"]
+        document["client_id_metadata_document_supported"] = True
+        return document
 
     @override
     async def load_access_token(self, token: str) -> AccessToken | None:

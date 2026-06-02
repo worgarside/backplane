@@ -31,7 +31,6 @@ from mcp.server.auth.middleware.client_auth import ClientAuthenticator
 from mcp.server.auth.routes import build_metadata, cors_middleware
 from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
 from mcp.shared.auth import OAuthToken
-
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
@@ -124,7 +123,14 @@ class _ResourceEchoTokenHandler(TokenHandler):
             refresh_token=token.refresh_token,
             resource=resource,
         )
-        return TokenHandler.response(self, TokenSuccessResponse(root=extended))
+        return PydanticJSONResponse(
+            content=extended,
+            status_code=200,
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
+        )
 
 
 class _LoggingBearerAuthBackend(BearerAuthBackend):

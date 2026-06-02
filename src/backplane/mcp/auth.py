@@ -14,17 +14,24 @@ Future (deferred):
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, override
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict, override
 
 from authlib.jose.errors import JoseError
 from fastmcp.server.auth import require_scopes
+from fastmcp.server.auth.auth import PrivateKeyJWTClientAuthenticator, TokenHandler
 from fastmcp.server.auth.oidc_proxy import OIDCConfiguration, OIDCProxy
 from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifier
 from loguru import logger
+from mcp.server.auth.handlers.token import TokenErrorResponse, TokenSuccessResponse
+from mcp.server.auth.json_response import PydanticJSONResponse
 from mcp.server.auth.middleware.auth_context import AuthContextMiddleware
 from mcp.server.auth.middleware.bearer_auth import BearerAuthBackend
+from mcp.server.auth.middleware.client_auth import ClientAuthenticator
 from mcp.server.auth.routes import build_metadata, cors_middleware
 from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
+from mcp.shared.auth import OAuthToken
+
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
@@ -73,6 +80,53 @@ class OAuthToolRegistrationKwargs(TypedDict):
     meta: NotRequired[dict[str, list[OAuthSecurityScheme]]]
 
 
+class _OAuthTokenWithResource(OAuthToken):
+    """Token response that may include an RFC 8707 resource indicator."""
+
+    resource: str | None = None
+
+
+@dataclass
+class _ResourceEchoTokenHandler(TokenHandler):
+    """Token handler that echoes RFC 8707 ``resource`` in successful responses."""
+
+    default_resource_url: str | None = None
+    _requested_resource: str | None = field(default=None, init=False, repr=False)
+
+    @override
+    async def handle(self, request: Request) -> PydanticJSONResponse:
+        self._requested_resource = None
+        if request.method == "POST":
+            form = await request.form()
+            raw_resource = form.get("resource")
+            if isinstance(raw_resource, str) and raw_resource.strip():
+                self._requested_resource = raw_resource.strip()
+        return await TokenHandler.handle(self, request)
+
+    @override
+    def response(
+        self,
+        obj: TokenSuccessResponse | TokenErrorResponse,
+    ) -> PydanticJSONResponse:
+        if isinstance(obj, TokenErrorResponse):
+            return TokenHandler.response(self, obj)
+
+        resource = self._requested_resource or self.default_resource_url
+        token = obj.root
+        if resource is None:
+            return TokenHandler.response(self, obj)
+
+        extended = _OAuthTokenWithResource(
+            access_token=token.access_token,
+            token_type=token.token_type,
+            expires_in=token.expires_in,
+            scope=token.scope,
+            refresh_token=token.refresh_token,
+            resource=resource,
+        )
+        return TokenHandler.response(self, TokenSuccessResponse(root=extended))
+
+
 class _LoggingBearerAuthBackend(BearerAuthBackend):
     """Bearer backend that logs missing Authorization headers on ``/mcp``."""
 
@@ -111,8 +165,8 @@ class BackplaneOIDCProxy(OIDCProxy):
 
     @override
     def get_routes(self, mcp_path: str | None = None) -> list[Route]:
-        """Add OIDC discovery routes that ChatGPT expects after a 401 on ``/mcp``."""
-        routes = super().get_routes(mcp_path)
+        """Add ChatGPT-facing discovery routes and RFC 8707 token responses."""
+        routes = self._replace_token_route(super().get_routes(mcp_path))
         oidc_document = self._openid_configuration_document()
 
         async def openid_configuration(_: Request) -> Response:
@@ -146,7 +200,7 @@ class BackplaneOIDCProxy(OIDCProxy):
         )
         return routes
 
-    def _openid_configuration_document(self) -> dict[str, Any]:
+    def _openid_configuration_document(self) -> dict[str, object]:
         """Build OIDC Provider Metadata for the FastMCP OAuth proxy."""
         if self.base_url is None:
             msg = "OAuth base_url must be configured before building OIDC metadata"
@@ -162,13 +216,58 @@ class BackplaneOIDCProxy(OIDCProxy):
             client_registration_options=registration_options,
             revocation_options=revocation_options,
         )
-        document: dict[str, Any] = metadata.model_dump(mode="json", exclude_none=True)
+        document: dict[str, object] = metadata.model_dump(mode="json", exclude_none=True)
         prefix = str(self.base_url).rstrip("/")
         document["jwks_uri"] = f"{prefix}/.well-known/jwks.json"
         document["subject_types_supported"] = ["public"]
         document["id_token_signing_alg_values_supported"] = ["HS256"]
         document["client_id_metadata_document_supported"] = True
         return document
+
+    def _replace_token_route(self, routes: list[Route]) -> list[Route]:
+        """Wrap ``/token`` so successful responses echo the RFC 8707 resource."""
+        updated: list[Route] = []
+        for route in routes:
+            if not (
+                route.path == "/token"
+                and route.methods is not None
+                and "POST" in route.methods
+            ):
+                updated.append(route)
+                continue
+
+            token_handler = self._build_resource_echo_token_handler()
+            updated.append(
+                Route(
+                    path="/token",
+                    endpoint=cors_middleware(
+                        token_handler.handle,
+                        ["POST", "OPTIONS"],
+                    ),
+                    methods=["POST", "OPTIONS"],
+                    name=route.name,
+                    include_in_schema=route.include_in_schema,
+                ),
+            )
+        return updated
+
+    def _build_resource_echo_token_handler(self) -> _ResourceEchoTokenHandler:
+        client_authenticator = ClientAuthenticator(self)
+        if self._cimd_manager is not None:
+            token_endpoint_url = f"{self.base_url}/token"
+            client_authenticator = PrivateKeyJWTClientAuthenticator(
+                provider=self,
+                cimd_manager=self._cimd_manager,
+                token_endpoint_url=token_endpoint_url,
+            )
+
+        return _ResourceEchoTokenHandler(
+            provider=self,
+            client_authenticator=client_authenticator,
+            default_resource_url=(
+                str(self._resource_url) if self._resource_url is not None else None
+            ),
+        )
 
     @override
     async def load_access_token(self, token: str) -> AccessToken | None:

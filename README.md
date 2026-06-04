@@ -141,8 +141,48 @@ live ChatGPT → FastMCP → Authentik flow and confirm which scopes are request
 issued, preserved, and visible during tool execution. Do not configure
 `mcp.read` or `mcp.write` in Authentik until that mapping is understood.
 
-Add a ChatGPT custom connector pointing at your public MCP URL, for example:
+#### ChatGPT custom connector
+
+Your server already exposes the discovery documents ChatGPT expects:
+
+- `GET /.well-known/oauth-protected-resource/mcp`
+- `GET /.well-known/oauth-authorization-server`
+- `POST /register` (dynamic client registration)
+
+**In ChatGPT (chat.openai.com):**
+
+1. Enable **Developer mode** (Settings → Apps → Advanced, or equivalent for your plan).
+2. **Create** a custom connector / app.
+3. **MCP server URL:** `https://backplane-mcp.example.com/mcp` (no trailing spaces).
+4. **Authentication:** OAuth with **server discovery** (let ChatGPT discover from the MCP URL).
+   Do **not** paste the Authentik `MCP_OIDC_CLIENT_ID` / `MCP_OIDC_CLIENT_SECRET` here — those
+   are only for Backplane’s upstream link to Authentik. ChatGPT registers its own client via
+   `/register` and signs users in through Backplane → Authentik.
+5. Complete the browser login when ChatGPT redirects you (Authentik must allow your user on the
+   `backplane-mcp` application).
+
+**Authentik (unchanged from MCP Inspector):** upstream redirect URI stays a single fixed callback:
 
 ```text
-https://backplane-mcp.example.com/mcp
+https://backplane-mcp.example.com/auth/callback
 ```
+
+ChatGPT redirect patterns (`https://chatgpt.com/connector/oauth/*` and
+`https://chatgpt.com/connector_platform_oauth_redirect`) are already allowed by Backplane;
+you do not add them in Authentik.
+
+**Plan limits:** Plus / Pro custom connectors are often **read-only**. Tool calls that write to
+Obsidian may require Business, Enterprise, or Edu.
+
+**Verify after connecting:** ask ChatGPT to list available tools, or run
+`journalctl -u backplane-public -f` while connecting — a healthy flow shows
+`/authorize` → `/auth/callback` → `POST /token` **200**, then `POST /mcp` **200** with a Bearer
+token (not 401 “missing Authorization header”).
+
+**If ChatGPT says “There was a problem connecting to Backplane”:** check server logs.
+A common failure (fixed in current `public.py`) was ChatGPT probing `GET /mcp` while the
+server ran in stateless mode (`405 Method Not Allowed`). The public server now uses
+session-based Streamable HTTP with `json_response=True` so `GET /mcp` returns a proper
+`401` + `WWW-Authenticate` challenge instead. If OAuth completes but the next `POST /mcp`
+has no `Authorization` header, delete the connector in ChatGPT and create it again — that
+pattern is on OpenAI’s side after a successful `/token` response.

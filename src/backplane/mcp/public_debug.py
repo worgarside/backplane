@@ -35,7 +35,8 @@ if __name__ == "__main__":
     mcp = create_mcp_server(auth=auth, require_oauth=True)
     inner_app = mcp.http_app(
         transport="http",
-        stateless_http=True,
+        stateless_http=False,
+        json_response=True,
     )
     app = FullRequestLoggingASGIApp(browser_mcp_app_cors(inner_app))
 

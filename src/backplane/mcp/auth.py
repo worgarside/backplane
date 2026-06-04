@@ -131,6 +131,48 @@ def _oauth_browser_cors_app(app: ASGIApp, allow_methods: list[str]) -> ASGIApp:
     )
 
 
+def _add_mcp_path_oauth_authorization_server_metadata_route(
+    routes: list[Route],
+    mcp_path: str | None,
+) -> list[Route]:
+    """Expose authorization-server metadata at the resource-specific well-known path.
+
+    Some clients (including ChatGPT) request
+    ``/.well-known/oauth-authorization-server/mcp`` when the MCP resource is
+    ``/mcp``. FastMCP only registers the host-level path by default.
+    """
+    if not mcp_path:
+        return routes
+
+    path_suffix = mcp_path.rstrip("/")
+    if not path_suffix or path_suffix == "/":
+        return routes
+
+    resource_metadata_path = (
+        f"/.well-known/oauth-authorization-server{path_suffix}"
+    )
+    if any(route.path == resource_metadata_path for route in routes):
+        return routes
+
+    for route in routes:
+        if route.path != "/.well-known/oauth-authorization-server":
+            continue
+        if route.endpoint is None or route.methods is None:
+            break
+        routes.append(
+            Route(
+                path=resource_metadata_path,
+                endpoint=route.endpoint,
+                methods=list(route.methods),
+                name=route.name,
+                include_in_schema=route.include_in_schema,
+            ),
+        )
+        break
+
+    return routes
+
+
 def _enhance_browser_oauth_cors_routes(routes: list[Route]) -> list[Route]:
     """Add browser-friendly CORS around POST OAuth endpoints from the MCP SDK."""
     enhanced: list[Route] = []
@@ -384,6 +426,10 @@ class BackplaneOIDCProxy(OIDCProxy):
                     methods=["GET", "OPTIONS"],
                 ),
             ],
+        )
+        routes = _add_mcp_path_oauth_authorization_server_metadata_route(
+            routes,
+            mcp_path,
         )
         return routes
 

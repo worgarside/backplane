@@ -26,9 +26,12 @@ if __name__ == "__main__":
         _PORT,
     )
     mcp = create_mcp_server(auth=auth, require_oauth=True)
+    # Session-based Streamable HTTP (not stateless): ChatGPT probes GET /mcp and
+    # expects JSON responses; stateless mode returns 405 on GET.
     inner_app = mcp.http_app(
         transport="http",
-        stateless_http=True,
+        stateless_http=False,
+        json_response=True,
     )
     app: Any = browser_mcp_app_cors(inner_app)
     if SETTINGS.mcp_public_debug_http:

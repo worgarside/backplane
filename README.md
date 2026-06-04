@@ -183,6 +183,15 @@ token (not 401 “missing Authorization header”).
 A common failure (fixed in current `public.py`) was ChatGPT probing `GET /mcp` while the
 server ran in stateless mode (`405 Method Not Allowed`). The public server now uses
 session-based Streamable HTTP with `json_response=True` so `GET /mcp` returns a proper
-`401` + `WWW-Authenticate` challenge instead. If OAuth completes but the next `POST /mcp`
-has no `Authorization` header, delete the connector in ChatGPT and create it again — that
-pattern is on OpenAI’s side after a successful `/token` response.
+`401` + `WWW-Authenticate` challenge instead.
+
+If logs show `POST /token` **200** immediately followed by `POST /mcp` **401** with
+**“missing Bearer Authorization header”**, OAuth succeeded but ChatGPT’s backend did not
+attach the access token it just received. That is not an Inspector-style client bug on your
+side. Try:
+
+1. Ensure Authentik grants **`offline_access`** (Backplane requests `openid` + `offline_access`
+   on authorize so `/token` can include a `refresh_token`).
+2. Delete the ChatGPT connector and create it again.
+3. Confirm the MCP URL has no trailing space: `https://backplane-mcp.example.com/mcp`.
+4. If it still fails, use the [OpenAI Responses API `mcp` tool](https://platform.openai.com/docs/guides/tools-connectors-mcp) with the same URL (you supply the bearer token explicitly).

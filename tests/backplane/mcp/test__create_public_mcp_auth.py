@@ -8,6 +8,7 @@ import anyio
 import pytest
 
 from backplane.mcp.auth import (
+    MCP_AUTHORIZE_SCOPES,
     MCP_BASELINE_SCOPE,
     create_public_mcp_auth,
     oauth_tool_meta,
@@ -81,7 +82,9 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
         token_verifier=mock_introspection.return_value,
     )
     assert mock_auth.required_scopes == [MCP_BASELINE_SCOPE]
-    mock_auth.update_default_scopes.assert_called_once_with([MCP_BASELINE_SCOPE])
+    mock_auth.update_default_scopes.assert_called_once_with(
+        list(MCP_AUTHORIZE_SCOPES),
+    )
 
 
 def test__create_public_mcp_auth__raises_when_introspection_endpoint_is_missing(

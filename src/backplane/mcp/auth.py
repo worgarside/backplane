@@ -66,6 +66,11 @@ if TYPE_CHECKING:
 
 MCP_BASELINE_SCOPE: Final = "openid"
 
+# Requested on /authorize so Authentik returns a refresh token upstream; FastMCP
+# then includes refresh_token in /token responses. ChatGPT's connector may not
+# attach Bearer on /mcp when the token response is access_token-only.
+MCP_AUTHORIZE_SCOPES: Final[tuple[str, ...]] = (MCP_BASELINE_SCOPE, "offline_access")
+
 # ``/token`` gets browser CORS in ``_replace_token_route``; avoid double-wrapping here.
 _BROWSER_OAUTH_POST_PATHS: Final[frozenset[str]] = frozenset({"/register", "/revoke"})
 
@@ -333,6 +338,13 @@ class _ResourceEchoTokenHandler(TokenHandler):
         if resource is None:
             return TokenHandler.response(self, obj)
 
+        if token.refresh_token is None:
+            logger.warning(
+                "MCP OAuth: /token response has no refresh_token (authorize scopes: {}); "
+                "ChatGPT may fail to connect — enable offline_access on the Authentik provider",
+                ", ".join(MCP_AUTHORIZE_SCOPES),
+            )
+
         extended = _OAuthTokenWithResource(
             access_token=token.access_token,
             token_type=token.token_type,
@@ -455,6 +467,7 @@ class BackplaneOIDCProxy(OIDCProxy):
         document["subject_types_supported"] = ["public"]
         document["id_token_signing_alg_values_supported"] = ["HS256"]
         document["client_id_metadata_document_supported"] = True
+        document["scopes_supported"] = list(MCP_AUTHORIZE_SCOPES)
         return document
 
     def _replace_token_route(self, routes: list[Route]) -> list[Route]:
@@ -720,5 +733,5 @@ def create_public_mcp_auth() -> AuthProvider:
         token_verifier=token_verifier,
     )
     auth_provider.required_scopes = [MCP_BASELINE_SCOPE]
-    auth_provider.update_default_scopes([MCP_BASELINE_SCOPE])
+    auth_provider.update_default_scopes(list(MCP_AUTHORIZE_SCOPES))
     return auth_provider

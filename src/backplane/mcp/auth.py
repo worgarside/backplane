@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict, override
+from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, override
+from urllib.parse import parse_qs
 
 from authlib.jose.errors import JoseError
 from fastmcp.server.auth import require_scopes
@@ -148,6 +149,23 @@ class _OAuthTokenWithResource(OAuthToken):
     resource: str | None = None
 
 
+def _first_urlencoded_value(parsed: dict[str, list[str]], key: str) -> str | None:
+    values = parsed.get(key)
+    if not values:
+        return None
+    value = values[0].strip()
+    return value or None
+
+
+def _request_with_replayed_body(request: Request, body: bytes) -> Request:
+    """Return a request whose body can be read again (e.g. by ``request.form()``)."""
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    return Request(request.scope, receive)
+
+
 @dataclass
 class _ResourceEchoTokenHandler(TokenHandler):
     """Token handler that echoes RFC 8707 ``resource`` in successful responses."""
@@ -159,10 +177,12 @@ class _ResourceEchoTokenHandler(TokenHandler):
     async def handle(self, request: Request) -> PydanticJSONResponse:
         self._requested_resource = None
         if request.method == "POST":
-            form = await request.form()
-            raw_resource = form.get("resource")
-            if isinstance(raw_resource, str) and raw_resource.strip():
-                self._requested_resource = raw_resource.strip()
+            # Read the body once here; a second ``request.form()`` on the same
+            # request would be empty and break client_id validation downstream.
+            body = await request.body()
+            parsed = parse_qs(body.decode(), keep_blank_values=True)
+            self._requested_resource = _first_urlencoded_value(parsed, "resource")
+            request = _request_with_replayed_body(request, body)
         return await TokenHandler.handle(self, request)
 
     @override

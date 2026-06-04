@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import anyio
 import pytest
+from pytest import MonkeyPatch
 
 from backplane.utils.settings import Settings
 
@@ -89,6 +90,24 @@ def test__settings__parse_mcp_extra_allowed_client_redirect_uris() -> None:
     )
 
     assert settings.mcp_extra_allowed_client_redirect_uris == expected
+
+
+def test__settings__loads_comma_separated_redirect_uris_from_env(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Comma-separated redirect URI env values are not JSON-decoded by pydantic-settings."""
+    monkeypatch.setenv("OBSIDIAN_VAULT_PATH", "/tmp/vault")
+    monkeypatch.setenv(
+        "MCP_EXTRA_ALLOWED_CLIENT_REDIRECT_URIS",
+        "http://127.0.0.1:*/oauth/callback/*,http://localhost:*/cb",
+    )
+
+    settings = Settings()
+
+    assert settings.mcp_extra_allowed_client_redirect_uris == [
+        "http://127.0.0.1:*/oauth/callback/*",
+        "http://localhost:*/cb",
+    ]
 
 
 def test__settings__allowed_client_redirect_uri_patterns_merges_defaults_and_extras() -> (

@@ -8,7 +8,7 @@ from typing import Annotated, Final, final
 import anyio
 import yarl
 from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, NoDecode
 
 from .exceptions import UserError
 from .helpers.pydantic_validators import ParseCommaSeparatedList
@@ -150,6 +150,7 @@ class Settings(BaseSettings):
 
     mcp_extra_allowed_client_redirect_uris: Annotated[
         list[str],
+        NoDecode,
         ParseCommaSeparatedList,
         Field(
             default_factory=list,

@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, override
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 
 from authlib.jose.errors import JoseError
 from fastmcp.server.auth import require_scopes
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from fastmcp.server.auth import AuthProvider
     from fastmcp.utilities.authorization import AuthCheck
     from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
-    from mcp.server.auth.provider import AccessToken
+    from mcp.server.auth.provider import AccessToken, OAuthAuthorizationServerProvider
     from starlette.authentication import AuthCredentials
     from starlette.requests import HTTPConnection
 
@@ -166,6 +166,34 @@ def _request_with_replayed_body(request: Request, body: bytes) -> Request:
     return Request(request.scope, receive)
 
 
+async def _inject_client_id_from_authorization_code(
+    provider: OAuthAuthorizationServerProvider[Any, Any, Any],
+    parsed: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """Add ``client_id`` when MCP clients omit it but send a valid authorization code.
+
+    MCP Inspector's token step often sends only PKCE fields (``code``, ``code_verifier``,
+    ``redirect_uri``) without ``client_id``. The proxy already bound the code to a client
+    at ``/authorize`` time, so we can recover ``client_id`` from the code store.
+    """
+    if _first_urlencoded_value(parsed, "client_id"):
+        return parsed
+
+    code = _first_urlencoded_value(parsed, "code")
+    if code is None:
+        return parsed
+
+    code_store = getattr(provider, "_code_store", None)
+    if code_store is None:
+        return parsed
+
+    code_model = await code_store.get(key=code)
+    if code_model is None:
+        return parsed
+
+    return {**parsed, "client_id": [code_model.client_id]}
+
+
 @dataclass
 class _ResourceEchoTokenHandler(TokenHandler):
     """Token handler that echoes RFC 8707 ``resource`` in successful responses."""
@@ -181,7 +209,12 @@ class _ResourceEchoTokenHandler(TokenHandler):
             # request would be empty and break client_id validation downstream.
             body = await request.body()
             parsed = parse_qs(body.decode(), keep_blank_values=True)
+            parsed = await _inject_client_id_from_authorization_code(
+                self.provider,
+                parsed,
+            )
             self._requested_resource = _first_urlencoded_value(parsed, "resource")
+            body = urlencode(parsed, doseq=True).encode()
             request = _request_with_replayed_body(request, body)
         return await TokenHandler.handle(self, request)
 

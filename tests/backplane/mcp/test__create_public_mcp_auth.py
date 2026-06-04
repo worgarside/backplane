@@ -114,52 +114,6 @@ def test__create_public_mcp_auth__raises_when_introspection_endpoint_is_missing(
         create_public_mcp_auth()
 
 
-def test__create_public_mcp_auth__merges_extra_allowed_client_redirect_uris(
-    mocker: MockerFixture,
-) -> None:
-    """Extra redirect URI patterns from settings are passed to the OIDC proxy."""
-    mock_oidc_proxy = mocker.patch("backplane.mcp.auth.BackplaneOIDCProxy")
-    mock_introspection = mocker.patch("backplane.mcp.auth.IntrospectionTokenVerifier")
-    mock_oidc_config = mocker.patch(
-        "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
-    )
-    mock_oidc_config.return_value.introspection_endpoint = (
-        "https://auth.example.com/application/o/introspect/"
-    )
-    settings = Settings.model_validate(
-        {
-            "obsidian_vault_path": "/tmp/vault",
-            "mcp_public_base_url": "https://backplane-mcp.example.com",
-            "mcp_oidc_config_url": (
-                "https://auth.example.com/application/o/backplane-mcp/"
-                ".well-known/openid-configuration"
-            ),
-            "mcp_oidc_client_id": "client-id",
-            "mcp_oidc_client_secret": _TEST_OAUTH_CREDENTIAL,
-            "mcp_extra_allowed_client_redirect_uris": (
-                "http://127.0.0.1:*/oauth/callback/*"
-            ),
-        },
-    )
-    mocker.patch("backplane.mcp.auth.SETTINGS", settings)
-
-    create_public_mcp_auth()
-
-    mock_oidc_proxy.assert_called_once_with(
-        config_url=settings.mcp_oidc_config_url,
-        client_id="client-id",
-        client_secret=_TEST_OAUTH_CREDENTIAL,
-        base_url=settings.mcp_public_base_url,
-        require_authorization_consent="external",
-        allowed_client_redirect_uris=[
-            "https://chatgpt.com/connector/oauth/*",
-            "https://chatgpt.com/connector_platform_oauth_redirect",
-            "http://127.0.0.1:*/oauth/callback/*",
-        ],
-        token_verifier=mock_introspection.return_value,
-    )
-
-
 def test__oauth_tool_meta__advertises_openid_oauth2_scheme() -> None:
     """OAuth tool metadata advertises the baseline openid scope to ChatGPT."""
     assert oauth_tool_meta() == {

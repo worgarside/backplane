@@ -161,11 +161,17 @@ Your server already exposes the discovery documents ChatGPT expects:
 5. Complete the browser login when ChatGPT redirects you (Authentik must allow your user on the
    `backplane-mcp` application).
 
-**Authentik (unchanged from MCP Inspector):** upstream redirect URI stays a single fixed callback:
+**Authentik:** upstream redirect URI stays a single fixed callback:
 
 ```text
 https://backplane-mcp.example.com/auth/callback
 ```
+
+On the **Backplane MCP** OAuth2/OpenID provider (`Applications` → `Providers` → edit),
+include scopes **`openid`** and **`offline_access`**. ChatGPT custom connectors need a
+`refresh_token` from the upstream IdP; without `offline_access` in Authentik, OAuth can
+succeed in the browser but ChatGPT reports *"There was a problem connecting …"*. See
+`scripts/authentik-backplane-mcp.env.example` for the full provider checklist.
 
 ChatGPT redirect patterns (`https://chatgpt.com/connector/oauth/*` and
 `https://chatgpt.com/connector_platform_oauth_redirect`) are already allowed by Backplane;
@@ -185,13 +191,6 @@ server ran in stateless mode (`405 Method Not Allowed`). The public server now u
 session-based Streamable HTTP with `json_response=True` so `GET /mcp` returns a proper
 `401` + `WWW-Authenticate` challenge instead.
 
-If logs show `POST /token` **200** immediately followed by `POST /mcp` **401** with
-**“missing Bearer Authorization header”**, OAuth succeeded but ChatGPT’s backend did not
-attach the access token it just received. That is not an Inspector-style client bug on your
-side. Try:
-
-1. Ensure Authentik grants **`offline_access`** (Backplane requests `openid` + `offline_access`
-   on authorize so `/token` can include a `refresh_token`).
-2. Delete the ChatGPT connector and create it again.
-3. Confirm the MCP URL has no trailing space: `https://backplane-mcp.example.com/mcp`.
-4. If it still fails, use the [OpenAI Responses API `mcp` tool](https://platform.openai.com/docs/guides/tools-connectors-mcp) with the same URL (you supply the bearer token explicitly).
+If OAuth succeeds in the browser but ChatGPT still fails, confirm `/token` includes a
+`refresh_token` (Authentik **`offline_access`** scope), delete the connector, and try again.
+Confirm the MCP URL has no trailing space: `https://backplane-mcp.example.com/mcp`.

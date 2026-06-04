@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import uvicorn
 import uvloop
@@ -10,9 +10,7 @@ from loguru import logger
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
-from backplane.mcp.auth import browser_mcp_app_cors, create_public_mcp_auth
-from backplane.mcp.debug_http import FullRequestLoggingASGIApp
-from backplane.utils.settings import SETTINGS
+from backplane.mcp.auth import create_public_mcp_auth
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
 _PORT: Final = 8001
@@ -28,17 +26,11 @@ if __name__ == "__main__":
     mcp = create_mcp_server(auth=auth, require_oauth=True)
     # Session-based Streamable HTTP (not stateless): ChatGPT probes GET /mcp and
     # expects JSON responses; stateless mode returns 405 on GET.
-    inner_app = mcp.http_app(
+    app = mcp.http_app(
         transport="http",
         stateless_http=False,
         json_response=True,
     )
-    app: Any = browser_mcp_app_cors(inner_app)
-    if SETTINGS.mcp_public_debug_http:
-        logger.warning(
-            "MCP_PUBLIC_DEBUG_HTTP enabled — logging full HTTP headers and bodies"
-        )
-        app = FullRequestLoggingASGIApp(app)
 
     uvloop.run(
         uvicorn.Server(

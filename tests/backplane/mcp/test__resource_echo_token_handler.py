@@ -2,23 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from types import SimpleNamespace
-from urllib.parse import parse_qs
-
-import pytest
-from pytest_mock import MockerFixture
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-from backplane.mcp.auth import (
-    BackplaneOIDCProxy,
-    _inject_client_id_from_authorization_code,
-    _request_with_replayed_body,
-)
+from backplane.mcp.auth import _request_with_replayed_body
 
 
 async def _read_client_id_twice(request: Request) -> Response:
@@ -28,84 +18,6 @@ async def _read_client_id_twice(request: Request) -> Response:
     first = (await replayed.form()).get("client_id")
     second = (await replayed.form()).get("client_id")
     return JSONResponse({"first": first, "second": second})
-
-
-@dataclass
-class _SampleClientCode:
-    client_id: str
-
-
-class _SampleCodeStore:
-    def __init__(self, codes: dict[str, _SampleClientCode]) -> None:
-        self._codes = codes
-
-    async def get(self, key: str) -> _SampleClientCode | None:
-        return self._codes.get(key)
-
-
-class _SampleOAuthProvider:
-    def __init__(self, codes: dict[str, _SampleClientCode]) -> None:
-        self._code_store = _SampleCodeStore(codes)
-
-
-@pytest.mark.parametrize(
-    "body",
-    [
-        (
-            "grant_type=authorization_code&code=Agbrz50Ym5PKlrOmu78ASQFEJBNhVjp_oEbU4oKNZhw"
-            "&code_verifier=verifier&redirect_uri=http%3A%2F%2F127.0.0.1%3A6274%2Foauth"
-            "%2Fcallback%2Fdebug&resource=https%3A%2F%2Fbackplane-mcp.example.com%2Fmcp"
-        ),
-    ],
-)
-async def test__inject_client_id_from_authorization_code__fills_missing_client_id(
-    body: str,
-) -> None:
-    """MCP Inspector-style token requests without client_id are completed from the code store."""
-    parsed = parse_qs(body, keep_blank_values=True)
-    provider = _SampleOAuthProvider(
-        {
-            "Agbrz50Ym5PKlrOmu78ASQFEJBNhVjp_oEbU4oKNZhw": _SampleClientCode(
-                client_id="inspector-dcr-client",
-            ),
-        },
-    )
-
-    enriched = await _inject_client_id_from_authorization_code(provider, parsed)
-
-    assert enriched.get("client_id") == ["inspector-dcr-client"]
-
-
-async def test__lookup_client_id_for_authorization_code__includes_expired_codes(
-    mocker: MockerFixture,
-) -> None:
-    """Expired authorization codes still yield client_id for clearer token errors."""
-    managed_entry = SimpleNamespace(value={"encrypted": "payload"})
-    storage = mocker.AsyncMock()
-    storage._get_managed_entry = mocker.AsyncMock(return_value=managed_entry)
-
-    code_store = mocker.Mock()
-    code_store.get = mocker.AsyncMock(return_value=None)
-    code_store._default_collection = "mcp-authorization-codes"
-    code_store._validate_model = mocker.Mock(
-        return_value=SimpleNamespace(client_id="inspector-dcr-client"),
-    )
-
-    proxy = SimpleNamespace(
-        _code_store=code_store,
-        _client_storage=storage,
-    )
-    mocker.patch(
-        "backplane.mcp.auth._unwrap_key_value_store",
-        return_value=storage,
-    )
-
-    client_id = await BackplaneOIDCProxy.lookup_client_id_for_authorization_code(
-        proxy,
-        "Agbrz50Ym5PKlrOmu78ASQFEJBNhVjp_oEbU4oKNZhw",
-    )
-
-    assert client_id == "inspector-dcr-client"
 
 
 def test__request_with_replayed_body__preserves_form_fields_for_token_handler() -> None:
@@ -125,7 +37,7 @@ def test__request_with_replayed_body__preserves_form_fields_for_token_handler() 
         "/token",
         data={
             "grant_type": "authorization_code",
-            "client_id": "inspector-client",
+            "client_id": "chatgpt-dcr-client",
             "code": "abc",
             "code_verifier": "verifier",
             "resource": "https://backplane-mcp.example.com/mcp",
@@ -135,6 +47,6 @@ def test__request_with_replayed_body__preserves_form_fields_for_token_handler() 
     assert response.status_code == 200
     payload = response.json()
     assert payload == {
-        "first": "inspector-client",
-        "second": "inspector-client",
+        "first": "chatgpt-dcr-client",
+        "second": "chatgpt-dcr-client",
     }

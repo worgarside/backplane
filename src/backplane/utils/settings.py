@@ -8,10 +8,9 @@ from typing import Annotated, Final, final
 import anyio
 import yarl
 from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
-from pydantic_settings import BaseSettings, NoDecode
+from pydantic_settings import BaseSettings
 
 from .exceptions import UserError
-from .helpers.pydantic_validators import ParseCommaSeparatedList
 
 
 def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
@@ -148,59 +147,10 @@ class Settings(BaseSettings):
         ),
     ] = None
 
-    mcp_oauth_auth_code_ttl_seconds: Annotated[
-        int,
-        Field(
-            default=900,
-            ge=60,
-            le=3600,
-            description=(
-                "Lifetime of proxy-issued authorization codes before token exchange. "
-                "Increase for MCP Inspector debugging (default 15 minutes)."
-            ),
-        ),
-    ] = 900
-
-    mcp_public_debug_http: Annotated[
-        bool,
-        Field(
-            default=False,
-            description=(
-                "Log full HTTP request/response bodies for the public MCP server. "
-                "Temporary; use only while debugging OAuth."
-            ),
-        ),
-    ] = False
-
-    mcp_extra_allowed_client_redirect_uris: Annotated[
-        list[str],
-        NoDecode,
-        ParseCommaSeparatedList,
-        Field(
-            default_factory=list,
-            description=(
-                "Extra allowed MCP client redirect URI patterns for FastMCP "
-                "OAuthProxy, merged with built-in ChatGPT patterns. Wildcards "
-                "are supported (e.g. http://127.0.0.1:*/oauth/callback/*). "
-                "Comma-separated in environment variables."
-            ),
-        ),
-    ]
-
     @property
     def allowed_client_redirect_uri_patterns(self) -> list[str]:
-        """Return built-in and extra MCP client redirect URI patterns."""
-        merged: list[str] = []
-        seen: set[str] = set()
-        for pattern in (
-            *_DEFAULT_MCP_CLIENT_REDIRECT_URIS,
-            *self.mcp_extra_allowed_client_redirect_uris,
-        ):
-            if pattern in seen:
-                continue
-            seen.add(pattern)
-            merged.append(pattern)
-        return merged
+        """Return allowed MCP client redirect URI patterns (ChatGPT DCR)."""
+        return list(_DEFAULT_MCP_CLIENT_REDIRECT_URIS)
 
     @property
     def mcp_oauth_configured(self) -> bool:

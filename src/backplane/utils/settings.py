@@ -11,6 +11,7 @@ from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
 
 from .exceptions import UserError
+from .helpers.pydantic_validators import ParseCommaSeparatedList
 
 
 def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
@@ -26,6 +27,11 @@ def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
 _MCP_OAUTH_REQUIRED_MSG = (
     "Public MCP requires OAuth. Set MCP_PUBLIC_BASE_URL, "
     "MCP_OIDC_CONFIG_URL, MCP_OIDC_CLIENT_ID, and MCP_OIDC_CLIENT_SECRET."
+)
+
+_DEFAULT_MCP_CLIENT_REDIRECT_URIS: Final[tuple[str, ...]] = (
+    "https://chatgpt.com/connector/oauth/*",
+    "https://chatgpt.com/connector_platform_oauth_redirect",
 )
 
 
@@ -141,6 +147,35 @@ class Settings(BaseSettings):
             description="OAuth client secret from the Authentik Backplane MCP provider.",
         ),
     ] = None
+
+    mcp_extra_allowed_client_redirect_uris: Annotated[
+        list[str],
+        ParseCommaSeparatedList,
+        Field(
+            default_factory=list,
+            description=(
+                "Extra allowed MCP client redirect URI patterns for FastMCP "
+                "OAuthProxy, merged with built-in ChatGPT patterns. Wildcards "
+                "are supported (e.g. http://127.0.0.1:*/oauth/callback/*). "
+                "Comma-separated in environment variables."
+            ),
+        ),
+    ]
+
+    @property
+    def allowed_client_redirect_uri_patterns(self) -> list[str]:
+        """Return built-in and extra MCP client redirect URI patterns."""
+        merged: list[str] = []
+        seen: set[str] = set()
+        for pattern in (
+            *_DEFAULT_MCP_CLIENT_REDIRECT_URIS,
+            *self.mcp_extra_allowed_client_redirect_uris,
+        ):
+            if pattern in seen:
+                continue
+            seen.add(pattern)
+            merged.append(pattern)
+        return merged
 
     @property
     def mcp_oauth_configured(self) -> bool:

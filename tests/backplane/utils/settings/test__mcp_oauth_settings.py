@@ -70,3 +70,42 @@ def test__settings__parse_mcp_url_fields(
     parsed = getattr(settings, field_name)
     assert parsed is not None
     assert str(parsed) == expected
+
+
+def test__settings__parse_mcp_extra_allowed_client_redirect_uris() -> None:
+    """Extra MCP redirect URI patterns accept comma-separated env values."""
+    raw_value = (
+        "http://127.0.0.1:6274/oauth/callback/debug,http://localhost:*/cb"
+    )
+    expected = [
+        "http://127.0.0.1:6274/oauth/callback/debug",
+        "http://localhost:*/cb",
+    ]
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            "mcp_extra_allowed_client_redirect_uris": raw_value,
+        },
+    )
+
+    assert settings.mcp_extra_allowed_client_redirect_uris == expected
+
+
+def test__settings__allowed_client_redirect_uri_patterns_merges_defaults_and_extras() -> (
+    None
+):
+    """Allowed redirect patterns include ChatGPT defaults plus configured extras."""
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": "/tmp/vault",
+            "mcp_extra_allowed_client_redirect_uris": (
+                "http://127.0.0.1:*/oauth/callback/*"
+            ),
+        },
+    )
+
+    assert settings.allowed_client_redirect_uri_patterns == [
+        "https://chatgpt.com/connector/oauth/*",
+        "https://chatgpt.com/connector_platform_oauth_redirect",
+        "http://127.0.0.1:*/oauth/callback/*",
+    ]

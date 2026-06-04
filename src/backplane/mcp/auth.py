@@ -53,11 +53,6 @@ if TYPE_CHECKING:
 
 MCP_BASELINE_SCOPE: Final = "openid"
 
-_CHATGPT_REDIRECT_URIS: tuple[str, ...] = (
-    "https://chatgpt.com/connector/oauth/*",
-    "https://chatgpt.com/connector_platform_oauth_redirect",
-)
-
 
 class OAuthSecurityScheme(TypedDict):
     """OAuth2 security scheme advertised to ChatGPT MCP clients."""
@@ -455,7 +450,7 @@ def create_public_mcp_auth() -> AuthProvider:
         client_secret=client_secret,
         base_url=public_base_url,
         require_authorization_consent="external",
-        allowed_client_redirect_uris=list(_CHATGPT_REDIRECT_URIS),
+        allowed_client_redirect_uris=SETTINGS.allowed_client_redirect_uri_patterns,
         token_verifier=token_verifier,
     )
     auth_provider.required_scopes = [MCP_BASELINE_SCOPE]

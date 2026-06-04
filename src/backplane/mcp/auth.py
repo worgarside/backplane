@@ -14,6 +14,7 @@ Future (deferred):
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Literal, NotRequired, TypedDict, override
 
@@ -28,14 +29,17 @@ from mcp.server.auth.json_response import PydanticJSONResponse
 from mcp.server.auth.middleware.auth_context import AuthContextMiddleware
 from mcp.server.auth.middleware.bearer_auth import BearerAuthBackend
 from mcp.server.auth.middleware.client_auth import ClientAuthenticator
-from mcp.server.auth.routes import build_metadata, cors_middleware
+from mcp.server.auth.routes import build_metadata
 from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
+from mcp.server.streamable_http import MCP_PROTOCOL_VERSION_HEADER
 from mcp.shared.auth import OAuthToken
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from starlette.routing import Route
+from starlette.routing import Route, request_response
+from starlette.types import ASGIApp
 
 from backplane.utils.exceptions import UserError
 from backplane.utils.settings import SETTINGS
@@ -52,6 +56,70 @@ if TYPE_CHECKING:
     from starlette.requests import HTTPConnection
 
 MCP_BASELINE_SCOPE: Final = "openid"
+
+_BROWSER_OAUTH_POST_PATHS: Final[frozenset[str]] = frozenset(
+    {"/token", "/register", "/revoke"},
+)
+
+_BROWSER_OAUTH_CORS_HEADERS: Final[tuple[str, ...]] = (
+    MCP_PROTOCOL_VERSION_HEADER,
+    "Content-Type",
+    "Authorization",
+    "Accept",
+)
+
+
+def oauth_browser_cors_middleware(
+    handler: Callable[[Request], Response | Awaitable[Response]],
+    allow_methods: list[str],
+) -> ASGIApp:
+    """CORS for browser OAuth clients such as MCP Inspector (localhost:6274).
+
+    The MCP SDK ``cors_middleware`` only allows the MCP protocol header. Token
+    and registration POSTs from the browser also need ``Content-Type`` for
+    ``application/x-www-form-urlencoded`` bodies.
+    """
+    return CORSMiddleware(
+        app=request_response(handler),
+        allow_origins=["*"],
+        allow_methods=allow_methods,
+        allow_headers=list(_BROWSER_OAUTH_CORS_HEADERS),
+    )
+
+
+def _oauth_browser_cors_app(app: ASGIApp, allow_methods: list[str]) -> ASGIApp:
+    return CORSMiddleware(
+        app=app,
+        allow_origins=["*"],
+        allow_methods=allow_methods,
+        allow_headers=list(_BROWSER_OAUTH_CORS_HEADERS),
+    )
+
+
+def _enhance_browser_oauth_cors_routes(routes: list[Route]) -> list[Route]:
+    """Add browser-friendly CORS around POST OAuth endpoints from the MCP SDK."""
+    enhanced: list[Route] = []
+    for route in routes:
+        if (
+            route.path not in _BROWSER_OAUTH_POST_PATHS
+            or route.methods is None
+            or "POST" not in route.methods
+            or route.endpoint is None
+        ):
+            enhanced.append(route)
+            continue
+
+        methods = list(route.methods)
+        enhanced.append(
+            Route(
+                path=route.path,
+                endpoint=_oauth_browser_cors_app(route.endpoint, methods),
+                methods=methods,
+                name=route.name,
+                include_in_schema=route.include_in_schema,
+            ),
+        )
+    return enhanced
 
 
 class OAuthSecurityScheme(TypedDict):
@@ -167,7 +235,9 @@ class BackplaneOIDCProxy(OIDCProxy):
     @override
     def get_routes(self, mcp_path: str | None = None) -> list[Route]:
         """Add ChatGPT-facing discovery routes and RFC 8707 token responses."""
-        routes = self._replace_token_route(super().get_routes(mcp_path))
+        routes = _enhance_browser_oauth_cors_routes(
+            self._replace_token_route(super().get_routes(mcp_path)),
+        )
         oidc_document = self._openid_configuration_document()
 
         async def openid_configuration(_: Request) -> Response:
@@ -186,7 +256,7 @@ class BackplaneOIDCProxy(OIDCProxy):
             [
                 Route(
                     "/.well-known/openid-configuration",
-                    endpoint=cors_middleware(
+                    endpoint=oauth_browser_cors_middleware(
                         openid_configuration,
                         ["GET", "OPTIONS"],
                     ),
@@ -194,7 +264,10 @@ class BackplaneOIDCProxy(OIDCProxy):
                 ),
                 Route(
                     "/.well-known/jwks.json",
-                    endpoint=cors_middleware(jwks, ["GET", "OPTIONS"]),
+                    endpoint=oauth_browser_cors_middleware(
+                        jwks,
+                        ["GET", "OPTIONS"],
+                    ),
                     methods=["GET", "OPTIONS"],
                 ),
             ],
@@ -241,7 +314,7 @@ class BackplaneOIDCProxy(OIDCProxy):
             updated.append(
                 Route(
                     path="/token",
-                    endpoint=cors_middleware(
+                    endpoint=oauth_browser_cors_middleware(
                         token_handler.handle,
                         ["POST", "OPTIONS"],
                     ),

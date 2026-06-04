@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlencode
 from authlib.jose.errors import JoseError
 from fastmcp.server.auth import require_scopes
 from fastmcp.server.auth.auth import PrivateKeyJWTClientAuthenticator, TokenHandler
+from fastmcp.server.auth.oauth_proxy import models as oauth_proxy_models
 from fastmcp.server.auth.oidc_proxy import OIDCConfiguration, OIDCProxy
 from fastmcp.server.auth.providers.introspection import IntrospectionTokenVerifier
 from loguru import logger
@@ -32,7 +33,11 @@ from mcp.server.auth.middleware.bearer_auth import BearerAuthBackend
 from mcp.server.auth.middleware.client_auth import ClientAuthenticator
 from mcp.server.auth.routes import build_metadata
 from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
-from mcp.server.streamable_http import MCP_PROTOCOL_VERSION_HEADER
+from mcp.server.streamable_http import (
+    LAST_EVENT_ID_HEADER,
+    MCP_PROTOCOL_VERSION_HEADER,
+    MCP_SESSION_ID_HEADER,
+)
 from mcp.shared.auth import OAuthToken
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -41,6 +46,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route, request_response
 from starlette.types import ASGIApp
+
+from key_value.aio.protocols import AsyncKeyValue
+from key_value.aio.wrappers.base import BaseWrapper
 
 from backplane.utils.exceptions import UserError
 from backplane.utils.settings import SETTINGS
@@ -58,16 +66,42 @@ if TYPE_CHECKING:
 
 MCP_BASELINE_SCOPE: Final = "openid"
 
-_BROWSER_OAUTH_POST_PATHS: Final[frozenset[str]] = frozenset(
-    {"/token", "/register", "/revoke"},
-)
+# ``/token`` gets browser CORS in ``_replace_token_route``; avoid double-wrapping here.
+_BROWSER_OAUTH_POST_PATHS: Final[frozenset[str]] = frozenset({"/register", "/revoke"})
 
 _BROWSER_OAUTH_CORS_HEADERS: Final[tuple[str, ...]] = (
     MCP_PROTOCOL_VERSION_HEADER,
+    MCP_SESSION_ID_HEADER,
     "Content-Type",
     "Authorization",
     "Accept",
 )
+
+_BROWSER_MCP_CORS_ALLOW_HEADERS: Final[tuple[str, ...]] = (
+    *_BROWSER_OAUTH_CORS_HEADERS,
+    LAST_EVENT_ID_HEADER,
+)
+
+_BROWSER_MCP_CORS_EXPOSE_HEADERS: Final[tuple[str, ...]] = (
+    MCP_PROTOCOL_VERSION_HEADER,
+    MCP_SESSION_ID_HEADER,
+)
+
+
+def browser_mcp_app_cors(app: ASGIApp) -> ASGIApp:
+    """App-level CORS for browser Streamable HTTP clients such as MCP Inspector.
+
+    OAuth routes use per-route CORS; ``/mcp`` is registered separately by FastMCP
+    without CORS, so browser direct connections need this wrapper on the ASGI app.
+    Exposes ``mcp-session-id`` so Inspector can send it on follow-up requests.
+    """
+    return CORSMiddleware(
+        app=app,
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_headers=list(_BROWSER_MCP_CORS_ALLOW_HEADERS),
+        expose_headers=list(_BROWSER_MCP_CORS_EXPOSE_HEADERS),
+    )
 
 
 def oauth_browser_cors_middleware(
@@ -166,6 +200,12 @@ def _request_with_replayed_body(request: Request, body: bytes) -> Request:
     return Request(request.scope, receive)
 
 
+def _unwrap_key_value_store(store: AsyncKeyValue) -> AsyncKeyValue:
+    while isinstance(store, BaseWrapper):
+        store = store.key_value
+    return store
+
+
 async def _inject_client_id_from_authorization_code(
     provider: OAuthAuthorizationServerProvider[Any, Any, Any],
     parsed: dict[str, list[str]],
@@ -183,15 +223,28 @@ async def _inject_client_id_from_authorization_code(
     if code is None:
         return parsed
 
-    code_store = getattr(provider, "_code_store", None)
-    if code_store is None:
+    client_id: str | None = None
+    if isinstance(provider, BackplaneOIDCProxy):
+        client_id = await provider.lookup_client_id_for_authorization_code(code)
+    else:
+        code_store = getattr(provider, "_code_store", None)
+        if code_store is not None:
+            code_model = await code_store.get(key=code)
+            if code_model is not None:
+                client_id = code_model.client_id
+
+    if client_id is None:
+        logger.warning(
+            "MCP OAuth: token request missing client_id and code {}... is unknown or expired",
+            code[:16],
+        )
         return parsed
 
-    code_model = await code_store.get(key=code)
-    if code_model is None:
-        return parsed
-
-    return {**parsed, "client_id": [code_model.client_id]}
+    logger.debug(
+        "MCP OAuth: injected client_id from authorization code {}... for token request",
+        code[:16],
+    )
+    return {**parsed, "client_id": [client_id]}
 
 
 @dataclass
@@ -216,7 +269,14 @@ class _ResourceEchoTokenHandler(TokenHandler):
             self._requested_resource = _first_urlencoded_value(parsed, "resource")
             body = urlencode(parsed, doseq=True).encode()
             request = _request_with_replayed_body(request, body)
-        return await TokenHandler.handle(self, request)
+        response = await TokenHandler.handle(self, request)
+        if response.status_code >= 400:
+            logger.warning(
+                "MCP OAuth: POST /token failed with status {} body={}",
+                response.status_code,
+                response.body.decode(errors="replace"),
+            )
+        return response
 
     @override
     def response(
@@ -396,6 +456,35 @@ class BackplaneOIDCProxy(OIDCProxy):
             ),
         )
 
+    async def lookup_client_id_for_authorization_code(self, code: str) -> str | None:
+        """Return the DCR client id bound to a proxy authorization code.
+
+        Includes expired codes so the token endpoint can return ``invalid_grant``
+        instead of ``Missing client_id`` when MCP Inspector retries late.
+        """
+        code_model = await self._code_store.get(key=code)
+        if code_model is not None:
+            return code_model.client_id
+
+        collection = self._code_store._default_collection
+        if collection is None:
+            return None
+
+        store = _unwrap_key_value_store(self._client_storage)
+        get_managed_entry = getattr(store, "_get_managed_entry", None)
+        if get_managed_entry is None:
+            return None
+
+        managed_entry = await get_managed_entry(key=code, collection=collection)
+        if managed_entry is None:
+            return None
+
+        code_model = self._code_store._validate_model(value=dict(managed_entry.value))
+        if code_model is None:
+            return None
+
+        return code_model.client_id
+
     @override
     async def load_access_token(self, token: str) -> AccessToken | None:
         """Validate a FastMCP token and restore upstream scopes when needed.
@@ -553,9 +642,14 @@ def create_public_mcp_auth() -> AuthProvider:
     logger.info(
         (
             "Configuring public MCP OAuth via Authentik OIDC proxy at {} "
-            "(upstream token introspection)"
+            "(upstream token introspection, auth code TTL {}s)"
         ),
         public_base_url,
+        SETTINGS.mcp_oauth_auth_code_ttl_seconds,
+    )
+
+    oauth_proxy_models.DEFAULT_AUTH_CODE_EXPIRY_SECONDS = (
+        SETTINGS.mcp_oauth_auth_code_ttl_seconds
     )
 
     # Do not require scopes during introspection: Authentik often omits ``openid``

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 from urllib.parse import parse_qs
 
 import pytest
+from pytest_mock import MockerFixture
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -13,6 +15,7 @@ from starlette.routing import Route
 from starlette.testclient import TestClient
 
 from backplane.mcp.auth import (
+    BackplaneOIDCProxy,
     _inject_client_id_from_authorization_code,
     _request_with_replayed_body,
 )
@@ -71,6 +74,38 @@ async def test__inject_client_id_from_authorization_code__fills_missing_client_i
     enriched = await _inject_client_id_from_authorization_code(provider, parsed)
 
     assert enriched.get("client_id") == ["inspector-dcr-client"]
+
+
+async def test__lookup_client_id_for_authorization_code__includes_expired_codes(
+    mocker: MockerFixture,
+) -> None:
+    """Expired authorization codes still yield client_id for clearer token errors."""
+    managed_entry = SimpleNamespace(value={"encrypted": "payload"})
+    storage = mocker.AsyncMock()
+    storage._get_managed_entry = mocker.AsyncMock(return_value=managed_entry)
+
+    code_store = mocker.Mock()
+    code_store.get = mocker.AsyncMock(return_value=None)
+    code_store._default_collection = "mcp-authorization-codes"
+    code_store._validate_model = mocker.Mock(
+        return_value=SimpleNamespace(client_id="inspector-dcr-client"),
+    )
+
+    proxy = SimpleNamespace(
+        _code_store=code_store,
+        _client_storage=storage,
+    )
+    mocker.patch(
+        "backplane.mcp.auth._unwrap_key_value_store",
+        return_value=storage,
+    )
+
+    client_id = await BackplaneOIDCProxy.lookup_client_id_for_authorization_code(
+        proxy,
+        "Agbrz50Ym5PKlrOmu78ASQFEJBNhVjp_oEbU4oKNZhw",
+    )
+
+    assert client_id == "inspector-dcr-client"
 
 
 def test__request_with_replayed_body__preserves_form_fields_for_token_handler() -> None:

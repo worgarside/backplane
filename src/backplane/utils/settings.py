@@ -148,6 +148,30 @@ class Settings(BaseSettings):
         ),
     ] = None
 
+    mcp_oauth_auth_code_ttl_seconds: Annotated[
+        int,
+        Field(
+            default=900,
+            ge=60,
+            le=3600,
+            description=(
+                "Lifetime of proxy-issued authorization codes before token exchange. "
+                "Increase for MCP Inspector debugging (default 15 minutes)."
+            ),
+        ),
+    ] = 900
+
+    mcp_public_debug_http: Annotated[
+        bool,
+        Field(
+            default=False,
+            description=(
+                "Log full HTTP request/response bodies for the public MCP server. "
+                "Temporary; use only while debugging OAuth."
+            ),
+        ),
+    ] = False
+
     mcp_extra_allowed_client_redirect_uris: Annotated[
         list[str],
         NoDecode,

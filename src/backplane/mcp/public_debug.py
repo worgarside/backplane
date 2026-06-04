@@ -18,7 +18,7 @@ from loguru import logger
 
 from backplane import __version__
 from backplane.mcp import create_mcp_server
-from backplane.mcp.auth import create_public_mcp_auth
+from backplane.mcp.auth import browser_mcp_app_cors, create_public_mcp_auth
 from backplane.mcp.debug_http import FullRequestLoggingASGIApp
 
 _HOST: Final = "0.0.0.0"  # noqa: S104
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         transport="http",
         stateless_http=True,
     )
-    app = FullRequestLoggingASGIApp(inner_app)
+    app = FullRequestLoggingASGIApp(browser_mcp_app_cors(inner_app))
 
     uvloop.run(
         uvicorn.Server(

@@ -62,6 +62,9 @@ filterwarnings = [
 [tool.coverage.run]
 source = ["src"]
 
+[tool.diff_cover]
+fail_under = 90
+
 [tool.basedpyright]
 typeCheckingMode = "all"
 

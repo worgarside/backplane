@@ -59,6 +59,17 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
 ]
 
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/backplane/mcp/public.py",
+]
+
+[tool.diff_cover]
+exclude = [
+    "src/backplane/mcp/public.py",
+]
+
 
 # Tool Configs
 

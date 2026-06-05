@@ -9,8 +9,7 @@ import httpx
 import pytest
 from fastmcp.server.auth.oidc_proxy import OIDCConfiguration
 
-from backplane.mcp import create_mcp_server
-from backplane.mcp.auth import create_public_mcp_auth
+from backplane.mcp.public import create_public_mcp_app
 from backplane.utils.settings import Settings
 
 if TYPE_CHECKING:
@@ -69,9 +68,7 @@ def public_mcp_http_app(
         return_value=sample_oidc_configuration,
     )
 
-    auth = create_public_mcp_auth()
-    mcp = create_mcp_server(auth=auth, require_oauth=True)
-    return mcp.http_app(transport="http")
+    return create_public_mcp_app()
 
 
 @pytest.fixture

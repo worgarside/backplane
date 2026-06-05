@@ -61,17 +61,6 @@ filterwarnings = [
 
 [tool.coverage.run]
 source = ["src"]
-omit = [
-    "src/backplane/mcp/public.py",
-]
-
-[tool.diff_cover]
-exclude = [
-    "src/backplane/mcp/public.py",
-]
-
-
-# Tool Configs
 
 [tool.basedpyright]
 typeCheckingMode = "all"
@@ -94,7 +83,7 @@ fix = true
 preview = true
 line-length = 90
 lint.select = ["ALL"]
-lint.ignore = ["CPY", "TD002", "EM101", "PLW0717"]
+lint.ignore = ["CPY", "TD002", "EM101"]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 115
@@ -108,7 +97,7 @@ max-branches = 15
 max-public-methods = 150
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108"]
+"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108", "S104", "TC002"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

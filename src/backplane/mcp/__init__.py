@@ -1,17 +1,12 @@
 """MCP adapter layer for Backplane.
 
-Importing this package registers all domain-specific tools and resources on the
-shared ``mcp`` server instance via decorator side-effects. New domains should be
-added as sibling modules (e.g. ``frigate.py``, ``home_assistant.py``) and imported
-below.
+Server entrypoints create a FastMCP instance with ``create_mcp_server`` and register
+all domain-specific tools/resources onto that instance. New domains should expose a
+``register_*`` function and be called from ``server.create_mcp_server``.
 """
 
 from __future__ import annotations
 
-from . import (
-    obsidian,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-    tasks,  # noqa: F401  # pyright: ignore[reportUnusedImport]
-)
-from .server import mcp
+from .server import create_mcp_server
 
-__all__ = ["mcp"]
+__all__ = ["create_mcp_server"]

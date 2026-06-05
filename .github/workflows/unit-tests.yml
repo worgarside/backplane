@@ -61,6 +61,7 @@ jobs:
         run: |
           uv run diff-cover \
             coverage.xml \
+            --config-file pyproject.toml \
             --fail-under=90 \
             --compare-branch=origin/${{ github.base_ref || 'main' }} \
             --markdown-report .coverage-report.md

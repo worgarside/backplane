@@ -34,6 +34,11 @@ $EDITOR .env
 
 Set `OBSIDIAN_VAULT_PATH` to the local path where the vault will be synced.
 
+If you plan to run the public ChatGPT-facing MCP service, also configure the
+OAuth variables documented in `.env.example` before running setup with
+`INSTALL_PUBLIC_MCP=true`. See `scripts/authentik-backplane-mcp.env.example`
+for Authentik provider setup.
+
 ### 3. Set up Obsidian Sync
 
 Authenticate and do an initial sync before starting the service:
@@ -47,6 +52,8 @@ By default `setup.sh` expects the vault at `/root/obsidian/vaults/my-vault`. Ove
 
 ### 4. Run setup
 
+Install the private `backplane` and `obsidian-sync` systemd services:
+
 ```bash
 sudo VAULT_DIR=/path/to/vault bash scripts/setup.sh
 ```
@@ -56,6 +63,28 @@ This will:
 - Install [uv](https://docs.astral.sh/uv/) if not present
 - Install Python 3.14 and sync dependencies
 - Install and enable the `backplane` and `obsidian-sync` systemd services
+
+#### Optional: public ChatGPT MCP service
+
+The public MCP server refuses to start without OAuth configuration. Configure
+these in `.env` **before** enabling the service:
+
+- `MCP_PUBLIC_BASE_URL`
+- `MCP_OIDC_CONFIG_URL`
+- `MCP_OIDC_CLIENT_ID`
+- `MCP_OIDC_CLIENT_SECRET`
+
+See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+
+Then install and start the public service:
+
+```bash
+sudo INSTALL_PUBLIC_MCP=true VAULT_DIR=/path/to/vault bash scripts/setup.sh
+```
+
+`setup.sh` validates the OAuth variables before installing or starting
+`backplane-public`. The public service unit and logrotate config are only
+installed when `INSTALL_PUBLIC_MCP=true`.
 
 ### Updating
 
@@ -69,8 +98,10 @@ Pulls the latest code, syncs dependencies, and restarts the service.
 
 ```bash
 systemctl status backplane
+systemctl status backplane-public
 systemctl status obsidian-sync
 journalctl -u backplane -f
+journalctl -u backplane-public -f
 journalctl -u obsidian-sync -f
 ```
 
@@ -92,3 +123,95 @@ Run the server locally:
 ```bash
 python -m backplane.mcp
 ```
+
+This starts the private Home Assistant-compatible SSE server on port `8000`.
+
+### Public MCP (ChatGPT)
+
+Backplane can also run a separate public streamable HTTP MCP server:
+
+```bash
+python -m backplane.mcp.public
+```
+
+This starts the authenticated public streamable HTTP MCP server on port `8001`.
+The MCP OAuth environment variables in `.env.example` are required; the server
+refuses to start without them. It uses FastMCP's `OIDCProxy` against Authentik.
+See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+Terminate TLS at your reverse proxy (for example NGINX Proxy Manager) and forward
+`backplane-mcp.example.com` to port `8001`.
+
+Keep the private SSE server on your LAN only.
+
+#### OAuth scope model (current)
+
+The public MCP server requires authentication for all tools and resources. The
+baseline OAuth scope is **`openid`** — there is no `mcp.read` / `mcp.write` split
+yet. See the design note in `src/backplane/mcp/auth.py` for the deferred
+read/write scope plan.
+
+#### Public route policy (`:8001`)
+
+| Route | Policy |
+| --- | --- |
+| `POST /mcp` | Bearer token required |
+| `/.well-known/oauth-protected-resource/*` | Public |
+| FastMCP OAuth routes (`/authorize`, `/token`, `/register`, `/auth/callback`, …) | Public (state/PKCE validated by FastMCP) |
+
+The private SSE server on port `8000` is unauthenticated and must stay on your LAN.
+
+#### Future: `mcp.read` / `mcp.write`
+
+Per-tool read/write scopes may be added later. Before enabling them, verify the
+live ChatGPT → FastMCP → Authentik flow and confirm which scopes are requested,
+issued, preserved, and visible during tool execution. Do not configure
+`mcp.read` or `mcp.write` in Authentik until that mapping is understood.
+
+#### ChatGPT custom connector
+
+Your server already exposes the discovery documents ChatGPT expects:
+
+- `GET /.well-known/oauth-protected-resource/mcp`
+- `GET /.well-known/oauth-authorization-server`
+- `POST /register` (dynamic client registration)
+
+**In ChatGPT (chat.openai.com):**
+
+1. Enable **Developer mode** (Settings → Apps → Advanced, or equivalent for your plan).
+2. **Create** a custom connector / app.
+3. **MCP server URL:** `https://backplane-mcp.example.com/mcp` (no trailing spaces).
+4. **Authentication:** OAuth with **server discovery** (let ChatGPT discover from the MCP URL).
+   Do **not** paste the Authentik `MCP_OIDC_CLIENT_ID` / `MCP_OIDC_CLIENT_SECRET` here — those
+   are only for Backplane’s upstream link to Authentik. ChatGPT registers its own client via
+   `/register` and signs users in through Backplane → Authentik.
+5. Complete the browser login when ChatGPT redirects you (Authentik must allow your user on the
+   `backplane-mcp` application).
+
+**Authentik:** upstream redirect URI stays a single fixed callback:
+
+```text
+https://backplane-mcp.example.com/auth/callback
+```
+
+On the **Backplane MCP** OAuth2/OpenID provider (`Applications` → `Providers` → edit),
+include scopes **`openid`** and **`offline_access`**. ChatGPT custom connectors need a
+`refresh_token` from the upstream IdP; without `offline_access` in Authentik, OAuth can
+succeed in the browser but ChatGPT reports *"There was a problem connecting …"*. See
+`scripts/authentik-backplane-mcp.env.example` for the full provider checklist.
+
+ChatGPT redirect patterns (`https://chatgpt.com/connector/oauth/*` and
+`https://chatgpt.com/connector_platform_oauth_redirect`) are already allowed by Backplane;
+you do not add them in Authentik.
+
+**Plan limits:** Plus / Pro custom connectors are often **read-only**. Tool calls that write to
+Obsidian may require Business, Enterprise, or Edu.
+
+**Verify after connecting:** ask ChatGPT to list available tools, or run
+`journalctl -u backplane-public -f` while connecting — a healthy flow shows
+`/authorize` → `/auth/callback` → `POST /token` **200** (with `refresh_token`), then
+`POST /mcp` **200** with a Bearer token.
+
+**If ChatGPT says “There was a problem connecting to Backplane”:** OAuth may succeed in
+the browser but `/token` lacks a `refresh_token`. Add **`offline_access`** on the Authentik
+provider (see above), delete the connector, and reconnect. Confirm the MCP URL has no
+trailing space: `https://backplane-mcp.example.com/mcp`.

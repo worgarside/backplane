@@ -7,8 +7,10 @@ from typing import Annotated, Final, final
 
 import anyio
 import yarl
-from pydantic import BeforeValidator, Field, field_validator
+from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
+
+from .exceptions import UserError
 
 
 def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
@@ -19,6 +21,17 @@ def _parse_timezone(v: object) -> zoneinfo.ZoneInfo:
     except zoneinfo.ZoneInfoNotFoundError as exc:
         msg = f"invalid timezone {v!r}: provide a valid IANA timezone name, e.g. 'Europe/London'"
         raise ValueError(msg) from exc
+
+
+_MCP_OAUTH_REQUIRED_MSG = (
+    "Public MCP requires OAuth. Set MCP_PUBLIC_BASE_URL, "
+    "MCP_OIDC_CONFIG_URL, MCP_OIDC_CLIENT_ID, and MCP_OIDC_CLIENT_SECRET."
+)
+
+_DEFAULT_MCP_CLIENT_REDIRECT_URIS: Final[tuple[str, ...]] = (
+    "https://chatgpt.com/connector/oauth/*",
+    "https://chatgpt.com/connector_platform_oauth_redirect",
+)
 
 
 class Settings(BaseSettings):
@@ -41,26 +54,23 @@ class Settings(BaseSettings):
     home_assistant_url: Annotated[
         yarl.URL | None,
         Field(
-            default=None,
             description="Base URL of the Home Assistant instance, e.g. http://homeassistant.local:8123.",
         ),
-    ]
+    ] = None
 
     home_assistant_token: Annotated[
         str | None,
         Field(
-            default=None,
             description="Long-lived access token for the Home Assistant REST API.",
         ),
-    ]
+    ] = None
 
     home_assistant_mcp_entry_id: Annotated[
         str | None,
         Field(
-            default=None,
             description="Config entry ID of the Backplane MCP integration in Home Assistant.",
         ),
-    ]
+    ] = None
 
     @field_validator("home_assistant_url", mode="before")
     @classmethod
@@ -99,6 +109,94 @@ class Settings(BaseSettings):
             return v
         return anyio.Path(v)
 
+    # ========================================================================
+    # Public MCP OAuth (Authentik via FastMCP OIDCProxy)
+
+    mcp_public_base_url: Annotated[
+        AnyHttpUrl | None,
+        Field(
+            description=(
+                "Public HTTPS base URL of the ChatGPT-facing MCP server, "
+                "e.g. https://backplane-mcp.example.com."
+            ),
+        ),
+    ] = None
+
+    mcp_oidc_config_url: Annotated[
+        AnyHttpUrl | None,
+        Field(
+            description=(
+                "Authentik OIDC discovery URL for the Backplane MCP application, "
+                "e.g. https://auth.example.com/application/o/backplane-mcp/"
+                ".well-known/openid-configuration."
+            ),
+        ),
+    ] = None
+
+    mcp_oidc_client_id: Annotated[
+        str | None,
+        Field(
+            description="OAuth client ID from the Authentik Backplane MCP provider.",
+        ),
+    ] = None
+
+    mcp_oidc_client_secret: Annotated[
+        str | None,
+        Field(
+            description="OAuth client secret from the Authentik Backplane MCP provider.",
+        ),
+    ] = None
+
+    @property
+    def allowed_client_redirect_uri_patterns(self) -> list[str]:
+        """Return allowed MCP client redirect URI patterns (ChatGPT DCR)."""
+        return list(_DEFAULT_MCP_CLIENT_REDIRECT_URIS)
+
+    @property
+    def mcp_oauth_configured(self) -> bool:
+        """Return whether the public MCP OAuth settings are complete."""
+        return (
+            self.mcp_public_base_url is not None
+            and self.mcp_oidc_config_url is not None
+            and self.mcp_oidc_client_id is not None
+            and self.mcp_oidc_client_secret is not None
+        )
+
+    def require_mcp_oauth(self) -> tuple[AnyHttpUrl, AnyHttpUrl, str, str]:
+        """Return validated public MCP OAuth settings.
+
+        Returns:
+            Public base URL, OIDC discovery URL, client ID, and client secret.
+
+        Raises:
+            UserError: If any required OAuth setting is missing.
+        """
+        public_base_url = self.mcp_public_base_url
+        oidc_config_url = self.mcp_oidc_config_url
+        client_id = self.mcp_oidc_client_id
+        client_secret = self.mcp_oidc_client_secret
+        if (
+            public_base_url is None
+            or oidc_config_url is None
+            or client_id is None
+            or client_secret is None
+        ):
+            raise UserError(
+                message=_MCP_OAUTH_REQUIRED_MSG,
+                detail={
+                    "public_base_url": public_base_url,
+                    "oidc_config_url": oidc_config_url,
+                    "client_id": client_id,
+                    "client_secret": (
+                        (client_secret[:8] + "..." + client_secret[-8:])
+                        if client_secret
+                        else None
+                    ),
+                },
+            )
+
+        return public_base_url, oidc_config_url, client_id, client_secret
+
 
 @final
 class VaultPaths:
@@ -114,7 +212,7 @@ class VaultPaths:
     task_board_path: Final = anyio.Path("Tasks") / "Board.md"
 
 
-SETTINGS = Settings()  # pyright: ignore[reportCallIssue]
+SETTINGS: Final = Settings()  # pyright: ignore[reportCallIssue]
 VAULT_PATHS: Final = VaultPaths()
 
 

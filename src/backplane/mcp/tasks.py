@@ -2,38 +2,44 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from loguru import logger
 from pydantic import Field
 
+from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
 from backplane.services.tasks import TaskService
 from backplane.utils import enums  # noqa: TC001
 
-from .server import mcp
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
 
 _CANDIDATE_SNIPPET_MAX_LEN = 80
-
-
-@mcp.tool(
-    description=(
-        "Create a structured task note for something actionable.\n\n"
-        "Use this when the user mentions something they need to do, want to remember "
-        "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
-        "'I should...', 'I need to...', etc.\n\n"
-        "This tool always creates the task. Matching against prior inbox captures is "
-        "best-effort only: high-confidence matches are linked automatically, uncertain "
-        "matches are returned as candidates to offer back to the user, and unmatched "
-        "tasks are created normally.\n\n"
-        "When the user confirms a specific prior capture, pass its ID as "
-        "link_capture_id. For an already-created task, use link_task_to_capture.\n\n"
-        "Do not use this for loose, non-committal ideas unless the user asks to turn "
-        "one into a task. Use record_idea for speculative captures like 'maybe', "
-        "'I could', 'I wonder if', or 'worth investigating'.\n\n"
-        "Ask for a due date before calling if the request sounds time-sensitive "
-        "(e.g. 'before the weekend', 'by Friday', 'i need to...')."
-    ),
+_CREATE_TASK_DESCRIPTION = (
+    "Create a structured task note for something actionable.\n\n"
+    "Use this when the user mentions something they need to do, want to remember "
+    "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
+    "'I should...', 'I need to...', etc.\n\n"
+    "This tool always creates the task. Matching against prior inbox captures is "
+    "best-effort only: high-confidence matches are linked automatically, uncertain "
+    "matches are returned as candidates to offer back to the user, and unmatched "
+    "tasks are created normally.\n\n"
+    "When the user confirms a specific prior capture, pass its ID as "
+    "link_capture_id. For an already-created task, use link_task_to_capture.\n\n"
+    "Do not use this for loose, non-committal ideas unless the user asks to turn "
+    "one into a task. Use record_idea for speculative captures like 'maybe', "
+    "'I could', 'I wonder if', or 'worth investigating'.\n\n"
+    "Ask for a due date before calling if the request sounds time-sensitive "
+    "(e.g. 'before the weekend', 'by Friday', 'i need to...')."
 )
+_LINK_TASK_TO_CAPTURE_DESCRIPTION = (
+    "Link an existing task note to a confirmed prior inbox capture.\n\n"
+    "Use this after create_task offered candidate captures and the user confirms "
+    "which capture should be connected. Provide the task slug from the creation "
+    "confirmation and the capture ID from the candidate list."
+)
+
+
 async def create_task(
     *,
     description: Annotated[
@@ -143,14 +149,6 @@ async def create_task(
     return response
 
 
-@mcp.tool(
-    description=(
-        "Link an existing task note to a confirmed prior inbox capture.\n\n"
-        "Use this after create_task offered candidate captures and the user confirms "
-        "which capture should be connected. Provide the task slug from the creation "
-        "confirmation and the capture ID from the candidate list."
-    ),
-)
 async def link_task_to_capture(
     *,
     task_slug: Annotated[
@@ -175,3 +173,15 @@ async def link_task_to_capture(
     response = await TaskService().link_capture(task_slug, capture_id)
     logger.info("link_task_to_capture response={!r}", response)
     return response
+
+
+def register_task_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
+    """Register task tools on a FastMCP server instance."""
+    auth_kwargs: OAuthToolRegistrationKwargs = {}
+    if require_oauth:
+        auth_kwargs = oauth_tool_registration_kwargs()
+
+    _ = mcp.tool(description=_CREATE_TASK_DESCRIPTION, **auth_kwargs)(create_task)
+    _ = mcp.tool(description=_LINK_TASK_TO_CAPTURE_DESCRIPTION, **auth_kwargs)(
+        link_task_to_capture,
+    )

@@ -2,71 +2,107 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import httpx
-import pytest
-from fastmcp.server.auth import RemoteAuthProvider
-from fastmcp.server.auth.providers.jwt import JWTVerifier
-from pydantic import AnyHttpUrl
 
-from backplane.mcp import create_mcp_server
+_PUBLIC_MCP_BASE_URL = "https://backplane-mcp.example.com"
 
-
-@pytest.fixture
-def mock_auth_provider() -> RemoteAuthProvider:
-    """Provide a minimal auth provider that exposes OAuth discovery routes."""
-    token_verifier = JWTVerifier(
-        jwks_uri="https://auth.example.com/application/o/backplane-mcp/jwks/",
-        issuer="https://auth.example.com/application/o/backplane-mcp/",
-        audience="https://backplane-mcp.example.com/mcp",
-    )
-    return RemoteAuthProvider(
-        token_verifier=token_verifier,
-        authorization_servers=[
-            AnyHttpUrl("https://auth.example.com/application/o/backplane-mcp/"),
-        ],
-        base_url="https://backplane-mcp.example.com",
-    )
+if TYPE_CHECKING:
+    from httpx import AsyncClient
 
 
 async def test__public_mcp_oauth__protected_resource_metadata_is_exposed(
-    mock_auth_provider: RemoteAuthProvider,
+    public_mcp_client: AsyncClient,
 ) -> None:
-    """The public MCP HTTP app exposes OAuth protected resource metadata."""
-    mcp = create_mcp_server(auth=mock_auth_provider, require_oauth=True)
-    app = mcp.http_app(stateless_http=True)
+    """The public MCP HTTP app exposes OAuth protected resource metadata for /mcp."""
+    response = await public_mcp_client.get("/.well-known/oauth-protected-resource/mcp")
 
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(
-        transport=transport,
-        base_url="https://backplane-mcp.example.com",
-    ) as client:
-        response = await client.get("/.well-known/oauth-protected-resource/mcp")
+    assert response.status_code == httpx.codes.OK
+    assert response.json() == {
+        "resource": f"{_PUBLIC_MCP_BASE_URL}/mcp",
+        "authorization_servers": [f"{_PUBLIC_MCP_BASE_URL}/"],
+        "scopes_supported": ["openid", "offline_access"],
+        "bearer_methods_supported": ["header"],
+    }
+
+
+async def test__public_mcp_oauth__authorization_server_metadata_supports_chatgpt_dcr(
+    public_mcp_client: AsyncClient,
+) -> None:
+    """FastMCP exposes the authorization-server metadata ChatGPT uses for DCR and refresh."""
+    response = await public_mcp_client.get("/.well-known/oauth-authorization-server")
 
     assert response.status_code == httpx.codes.OK
     payload = response.json()
-    assert "resource" in payload
-    assert payload["authorization_servers"] == [
-        "https://auth.example.com/application/o/backplane-mcp/",
-    ]
+    assert payload["issuer"] == f"{_PUBLIC_MCP_BASE_URL}/"
+    assert payload["registration_endpoint"] == f"{_PUBLIC_MCP_BASE_URL}/register"
+    assert payload["scopes_supported"] == ["openid", "offline_access"]
+    assert "refresh_token" in payload["grant_types_supported"]
+    assert payload["code_challenge_methods_supported"] == ["S256"]
 
 
-async def test__public_mcp_oauth__unauthenticated_mcp_request_returns_401(
-    mock_auth_provider: RemoteAuthProvider,
+async def test__public_mcp_oauth__discovery_uses_host_level_authorization_server_metadata(
+    public_mcp_client: AsyncClient,
 ) -> None:
-    """Unauthenticated MCP requests receive a WWW-Authenticate challenge."""
-    mcp = create_mcp_server(auth=mock_auth_provider, require_oauth=True)
-    app = mcp.http_app(stateless_http=True)
+    """Protected-resource metadata links to host-level auth-server metadata (not /mcp suffix)."""
+    protected = await public_mcp_client.get("/.well-known/oauth-protected-resource/mcp")
+    auth_server_url = protected.json()["authorization_servers"][0]
 
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(
-        transport=transport,
-        base_url="https://backplane-mcp.example.com",
-    ) as client:
-        response = await client.post(
-            "/mcp",
-            json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
-        )
+    response = await public_mcp_client.get("/.well-known/oauth-authorization-server")
+    suffix_response = await public_mcp_client.get(
+        "/.well-known/oauth-authorization-server/mcp",
+    )
+
+    assert response.status_code == httpx.codes.OK
+    assert response.json()["issuer"] == auth_server_url
+    assert suffix_response.status_code == httpx.codes.NOT_FOUND
+
+
+async def test__public_mcp_oauth__dynamic_client_registration_succeeds(
+    public_mcp_client: AsyncClient,
+) -> None:
+    """ChatGPT can dynamically register against Backplane's /register endpoint."""
+    response = await public_mcp_client.post(
+        "/register",
+        json={
+            "redirect_uris": ["https://chatgpt.com/connector/oauth/example"],
+        },
+    )
+
+    assert response.status_code == httpx.codes.CREATED
+    payload = response.json()
+    assert payload["redirect_uris"] == [
+        "https://chatgpt.com/connector/oauth/example",
+    ]
+    assert payload["scope"] == "openid offline_access"
+    assert payload["client_id"]
+    assert payload["client_secret"]
+
+
+async def test__public_mcp_oauth__unauthenticated_post_mcp_returns_401(
+    public_mcp_client: AsyncClient,
+) -> None:
+    """Unauthenticated MCP POST requests receive a WWW-Authenticate challenge."""
+    response = await public_mcp_client.post(
+        "/mcp",
+        json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+    )
 
     assert response.status_code == httpx.codes.UNAUTHORIZED
     assert "WWW-Authenticate" in response.headers
-    assert "oauth-protected-resource" in response.headers["WWW-Authenticate"]
+    assert response.headers["WWW-Authenticate"].startswith("Bearer ")
+
+
+async def test__public_mcp_oauth__unauthenticated_get_mcp_returns_401_not_405(
+    public_mcp_client: AsyncClient,
+) -> None:
+    """Session-based transport allows GET /mcp; unauthenticated probes get a 401 challenge."""
+    response = await public_mcp_client.get(
+        "/mcp",
+        headers={"Accept": "text/event-stream"},
+    )
+
+    assert response.status_code == httpx.codes.UNAUTHORIZED
+    assert "WWW-Authenticate" in response.headers
+    assert response.headers["WWW-Authenticate"].startswith("Bearer ")

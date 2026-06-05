@@ -34,6 +34,11 @@ $EDITOR .env
 
 Set `OBSIDIAN_VAULT_PATH` to the local path where the vault will be synced.
 
+If you plan to run the public ChatGPT-facing MCP service, also configure the
+OAuth variables documented in `.env.example` before running setup with
+`INSTALL_PUBLIC_MCP=true`. See `scripts/authentik-backplane-mcp.env.example`
+for Authentik provider setup.
+
 ### 3. Set up Obsidian Sync
 
 Authenticate and do an initial sync before starting the service:
@@ -47,6 +52,8 @@ By default `setup.sh` expects the vault at `/root/obsidian/vaults/my-vault`. Ove
 
 ### 4. Run setup
 
+Install the private `backplane` and `obsidian-sync` systemd services:
+
 ```bash
 sudo VAULT_DIR=/path/to/vault bash scripts/setup.sh
 ```
@@ -57,8 +64,27 @@ This will:
 - Install Python 3.14 and sync dependencies
 - Install and enable the `backplane` and `obsidian-sync` systemd services
 
-To also enable the public ChatGPT-facing MCP service, run setup with
-`INSTALL_PUBLIC_MCP=true`.
+#### Optional: public ChatGPT MCP service
+
+The public MCP server refuses to start without OAuth configuration. Configure
+these in `.env` **before** enabling the service:
+
+- `MCP_PUBLIC_BASE_URL`
+- `MCP_OIDC_CONFIG_URL`
+- `MCP_OIDC_CLIENT_ID`
+- `MCP_OIDC_CLIENT_SECRET`
+
+See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+
+Then install and start the public service:
+
+```bash
+sudo INSTALL_PUBLIC_MCP=true VAULT_DIR=/path/to/vault bash scripts/setup.sh
+```
+
+`setup.sh` validates the OAuth variables before installing or starting
+`backplane-public`. The public service unit and logrotate config are only
+installed when `INSTALL_PUBLIC_MCP=true`.
 
 ### Updating
 

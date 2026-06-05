@@ -71,23 +71,3 @@ async def test__public_mcp_oauth__unauthenticated_mcp_request_returns_401(
     assert "WWW-Authenticate" in response.headers
     assert "oauth-protected-resource" in response.headers["WWW-Authenticate"]
 
-
-async def test__public_mcp_oauth__get_mcp_without_auth_returns_401_not_405(
-    mock_auth_provider: RemoteAuthProvider,
-) -> None:
-    """Session-based transport allows GET /mcp; unauthenticated probes get a 401 challenge."""
-    mcp = create_mcp_server(auth=mock_auth_provider, require_oauth=True)
-    app = mcp.http_app(stateless_http=False, json_response=True)
-
-    transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(
-        transport=transport,
-        base_url="https://backplane-mcp.example.com",
-    ) as client:
-        response = await client.get(
-            "/mcp",
-            headers={"Accept": "text/event-stream"},
-        )
-
-    assert response.status_code == httpx.codes.UNAUTHORIZED
-    assert "WWW-Authenticate" in response.headers

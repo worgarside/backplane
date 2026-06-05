@@ -38,7 +38,7 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
     mocker: MockerFixture,
 ) -> None:
     """The public MCP auth factory returns an OIDCProxy when OAuth env vars are complete."""
-    mock_oidc_proxy = mocker.patch("backplane.mcp.auth.BackplaneOIDCProxy")
+    mock_oidc_proxy = mocker.patch("backplane.mcp.auth.OIDCProxy")
     mock_introspection = mocker.patch("backplane.mcp.auth.IntrospectionTokenVerifier")
     mock_oidc_config = mocker.patch(
         "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
@@ -69,7 +69,7 @@ def test__create_public_mcp_auth__builds_oidc_proxy_when_oauth_is_configured(
         client_id="client-id",
         client_secret=_TEST_OAUTH_CREDENTIAL,
         client_auth_method="client_secret_post",
-        required_scopes=None,
+        required_scopes=[MCP_BASELINE_SCOPE],
         cache_ttl_seconds=60,
     )
     mock_oidc_proxy.assert_called_once_with(
@@ -91,7 +91,7 @@ def test__create_public_mcp_auth__raises_when_introspection_endpoint_is_missing(
     mocker: MockerFixture,
 ) -> None:
     """The public MCP auth factory refuses to start without an introspection endpoint."""
-    mocker.patch("backplane.mcp.auth.BackplaneOIDCProxy")
+    mocker.patch("backplane.mcp.auth.OIDCProxy")
     mock_oidc_config = mocker.patch(
         "backplane.mcp.auth.OIDCConfiguration.get_oidc_configuration",
     )

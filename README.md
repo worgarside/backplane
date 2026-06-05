@@ -182,15 +182,14 @@ Obsidian may require Business, Enterprise, or Edu.
 
 **Verify after connecting:** ask ChatGPT to list available tools, or run
 `journalctl -u backplane-public -f` while connecting — a healthy flow shows
-`/authorize` → `/auth/callback` → `POST /token` **200**, then `POST /mcp` **200** with a Bearer
-token (not 401 “missing Authorization header”).
+`/authorize` → `/auth/callback` → `POST /token` **200** (with `refresh_token`), then
+`POST /mcp` **200** with a Bearer token.
 
-**If ChatGPT says “There was a problem connecting to Backplane”:** check server logs.
-A common failure (fixed in current `public.py`) was ChatGPT probing `GET /mcp` while the
-server ran in stateless mode (`405 Method Not Allowed`). The public server now uses
-session-based Streamable HTTP with `json_response=True` so `GET /mcp` returns a proper
-`401` + `WWW-Authenticate` challenge instead.
+**If ChatGPT says “There was a problem connecting to Backplane”:** OAuth may succeed in
+the browser but `/token` lacks a `refresh_token`. Add **`offline_access`** on the Authentik
+provider (see above), delete the connector, and reconnect. Confirm the MCP URL has no
+trailing space: `https://backplane-mcp.example.com/mcp`.
 
-If OAuth succeeds in the browser but ChatGPT still fails, confirm `/token` includes a
-`refresh_token` (Authentik **`offline_access`** scope), delete the connector, and try again.
-Confirm the MCP URL has no trailing space: `https://backplane-mcp.example.com/mcp`.
+If tool calls fail after connecting, Authentik introspection may omit `openid` from the
+RFC 7662 `scope` field — set `required_scopes=None` on the introspection verifier in
+`create_public_mcp_auth()` (see comment in that function).

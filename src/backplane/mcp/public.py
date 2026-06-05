@@ -24,13 +24,7 @@ if __name__ == "__main__":
         _PORT,
     )
     mcp = create_mcp_server(auth=auth, require_oauth=True)
-    # Session-based Streamable HTTP (not stateless): ChatGPT probes GET /mcp and
-    # expects JSON responses; stateless mode returns 405 on GET.
-    app = mcp.http_app(
-        transport="http",
-        stateless_http=False,
-        json_response=True,
-    )
+    app = mcp.http_app(transport="http")
 
     uvloop.run(
         uvicorn.Server(

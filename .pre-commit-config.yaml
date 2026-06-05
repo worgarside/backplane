@@ -23,7 +23,7 @@ repos:
           - --package-manager=uv
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.16
+    rev: 0.11.17
     hooks:
       - id: uv-lock
 
@@ -68,7 +68,7 @@ repos:
           - --strict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+    rev: v0.15.15
     hooks:
       - id: ruff-check
         args:
@@ -83,7 +83,7 @@ repos:
         files: ^(src/|pyproject\.toml$)
         pass_filenames: false
         additional_dependencies: &basedpyright_additional_dependencies
-          - aiohttp==3.13.5
+          - aiohttp==3.14.0
           - fastmcp==3.3.1
           - loguru==0.7.3
           - markdown-it-py==4.2.0

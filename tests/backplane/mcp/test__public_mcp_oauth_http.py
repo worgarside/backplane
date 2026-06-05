@@ -70,4 +70,3 @@ async def test__public_mcp_oauth__unauthenticated_mcp_request_returns_401(
     assert response.status_code == httpx.codes.UNAUTHORIZED
     assert "WWW-Authenticate" in response.headers
     assert "oauth-protected-resource" in response.headers["WWW-Authenticate"]
-

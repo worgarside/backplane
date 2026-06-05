@@ -121,9 +121,6 @@ def create_public_mcp_auth() -> AuthProvider:
         public_base_url,
     )
 
-    # Authentik introspection often omits ``openid`` from the RFC 7662 scope field.
-    # Use required_scopes=[MCP_BASELINE_SCOPE] when introspection is accurate; set
-    # required_scopes=None if connected ChatGPT tool calls fail with scope errors.
     token_verifier = IntrospectionTokenVerifier(
         introspection_url=str(oidc_config.introspection_endpoint),
         client_id=client_id,

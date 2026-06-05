@@ -189,7 +189,3 @@ Obsidian may require Business, Enterprise, or Edu.
 the browser but `/token` lacks a `refresh_token`. Add **`offline_access`** on the Authentik
 provider (see above), delete the connector, and reconnect. Confirm the MCP URL has no
 trailing space: `https://backplane-mcp.example.com/mcp`.
-
-If tool calls fail after connecting, Authentik introspection may omit `openid` from the
-RFC 7662 `scope` field — set `required_scopes=None` on the introspection verifier in
-`create_public_mcp_auth()` (see comment in that function).

@@ -36,24 +36,29 @@ def _read_template_text() -> str | None:
     try:
         raw = config_path.read_text(encoding="utf-8")
     except FileNotFoundError:
+        raise
         return None
 
     try:
         parsed = json.loads(raw)  # pyright: ignore[reportAny]
     except json.JSONDecodeError:
+        raise
         return None
 
     if not isinstance(parsed, dict):
+        raise
         return None
 
     rel = cast("dict[str, object]", parsed).get("template")
     if not isinstance(rel, str) or not rel:
+        raise
         return None
 
     template_path = vault / (rel if rel.endswith(".md") else f"{rel}.md")
     try:
         return template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
+        raise
         return None
 
 

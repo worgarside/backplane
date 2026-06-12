@@ -1,0 +1,92 @@
+"""Tests for vault entity reads and updates."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
+from backplane.services.vault_entities import VaultEntityService
+from backplane.utils import exc
+from backplane.utils.enums import VaultEntityKind
+
+if TYPE_CHECKING:
+    import anyio
+
+
+async def test__get_entity_returns_rendered_markdown() -> None:
+    """Reading an entity returns the note rendered as markdown."""
+    path = await VaultEntityService.create_entity(
+        VaultEntityKind.RESOURCE,
+        "Geocoding API",
+    )
+    _ = path
+
+    rendered = await VaultEntityService.get_entity(
+        VaultEntityKind.RESOURCE,
+        "Geocoding API",
+    )
+
+    assert "# Geocoding API" in rendered
+    assert "## Overview" in rendered
+
+
+async def test__get_entity_raises_not_found(obsidian_vault: anyio.Path) -> None:
+    """Reading a missing entity raises NotFoundError."""
+    _ = obsidian_vault
+    with pytest.raises(exc.NotFoundError, match="not found"):
+        _ = await VaultEntityService.get_entity(VaultEntityKind.PERSON, "Missing")
+
+
+async def test__update_entity_appends_to_section(obsidian_vault: anyio.Path) -> None:
+    """Updates append content to the requested section."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.DOMAIN, "Home Assistant")
+
+    rendered = await VaultEntityService.update_entity(
+        VaultEntityKind.DOMAIN,
+        "Home Assistant",
+        section="Overview",
+        content="Primary automation platform.",
+        mode="append",
+    )
+
+    assert "Primary automation platform." in rendered
+    note = await (obsidian_vault / "Domains/home-assistant.md").read_text(
+        encoding="utf-8",
+    )
+    assert "Primary automation platform." in note
+
+
+async def test__update_entity_bumps_updated_frontmatter(
+    obsidian_vault: anyio.Path,
+) -> None:
+    """Successful updates set the updated frontmatter timestamp."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.PERSON, "Vic")
+
+    _ = await VaultEntityService.update_entity(
+        VaultEntityKind.PERSON,
+        "Vic",
+        section="Notes",
+        content="Prefers concise updates.",
+    )
+
+    note = await (obsidian_vault / "People/vic.md").read_text(encoding="utf-8")
+    assert "updated:" in note
+    assert "Prefers concise updates." in note
+
+
+async def test__update_entity_wraps_missing_section() -> None:
+    """Missing sections surface retry guidance instead of a raw not-found error."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.RESOURCE, "MQTT")
+
+    with pytest.raises(exc.InformationRequiredError) as exc_info:
+        _ = await VaultEntityService.update_entity(
+            VaultEntityKind.RESOURCE,
+            "MQTT",
+            section="Missing Section",
+            content="content",
+            create_section_if_not_exists=False,
+        )
+
+    assert "create_section_if_not_exists=true" in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, exc.SectionNotFoundError)

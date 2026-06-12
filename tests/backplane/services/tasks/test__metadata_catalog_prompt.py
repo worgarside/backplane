@@ -15,7 +15,7 @@ async def test__metadata_catalog_prompt_returns_empty_string_without_entities(
 ) -> None:
     """No catalog entities produce no extra prompt text."""
     mocker.patch(
-        "backplane.services.tasks._list_vault_entity_names",
+        "backplane.services.tasks.VaultEntityService.list_entities",
         new=mocker.AsyncMock(side_effect=[[], [], []]),
     )
 
@@ -27,7 +27,7 @@ async def test__metadata_catalog_prompt_includes_available_entity_groups(
 ) -> None:
     """Available domains, resources, and people are included in the prompt."""
     mocker.patch(
-        "backplane.services.tasks._list_vault_entity_names",
+        "backplane.services.tasks.VaultEntityService.list_entities",
         new=mocker.AsyncMock(
             side_effect=[
                 ["Home Assistant"],

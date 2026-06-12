@@ -8,6 +8,7 @@ from .dttm import (
     ordinal_day_of_month,
     ordinal_suffix_for_day,
     substitute_obsidian_core_date_variables,
+    substitute_vault_entity_template,
     today,
 )
 from .files import atomic_write_text, resolve_under_root
@@ -22,5 +23,6 @@ __all__ = [
     "resolve_under_root",
     "safe_slug",
     "substitute_obsidian_core_date_variables",
+    "substitute_vault_entity_template",
     "today",
 ]

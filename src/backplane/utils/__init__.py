@@ -9,6 +9,7 @@ from .helpers import (
     resolve_under_root,
     safe_slug,
     substitute_obsidian_core_date_variables,
+    substitute_vault_entity_template,
     today,
 )
 from .kanban import append_board_card
@@ -28,5 +29,6 @@ __all__ = [
     "resolve_under_root",
     "safe_slug",
     "substitute_obsidian_core_date_variables",
+    "substitute_vault_entity_template",
     "today",
 ]

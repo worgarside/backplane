@@ -17,6 +17,7 @@ from pydantic_ai import Agent, AgentRunResult
 from rapidfuzz import fuzz
 
 from backplane.services import ObsidianService
+from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
@@ -40,6 +41,7 @@ _SCORE_CANDIDATE: Final = 60.0
 _MIN_AUTO_GAP: Final = 10.0
 _LOG_TEXT_MAX_LEN: Final = 80
 _MATCH_TOP_CANDIDATES: Final = 3
+_STUB_NOTE_TYPES: Final = frozenset({"domain", "person", "resource"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -390,28 +392,6 @@ def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
     return MatchOutcome(matched=None, candidates=[])
 
 
-def _note_title_from_markdown(text: str) -> str | None:
-    """Return the first level-1 heading text, skipping YAML frontmatter."""
-    in_frontmatter = False
-    frontmatter_closed = False
-    for line in text.splitlines():
-        stripped = line.strip()
-
-        if not frontmatter_closed and stripped == "---":
-            in_frontmatter = not in_frontmatter
-            if not in_frontmatter:
-                frontmatter_closed = True
-            continue
-
-        if in_frontmatter:
-            continue
-
-        if line.startswith("# ") and not line.startswith("## "):
-            return line.removeprefix("# ").strip()
-
-    return None
-
-
 async def _load_recent_captures() -> list[Capture]:
     """Load recent inbox captures.
 
@@ -460,29 +440,6 @@ def _capture_payload(capture: Capture) -> CaptureCandidate:
     return CaptureCandidate(id=capture.id, text=capture.text)
 
 
-async def _list_vault_entity_names(directory: anyio.Path) -> list[str]:
-    """List display names of notes in a vault subdirectory (from their H1 heading).
-
-    Returns:
-        Sorted unique note titles, or an empty list if the directory is missing.
-    """
-    dir_path = await resolve_under_root(directory)
-    if not await dir_path.is_dir():
-        return []
-
-    names: list[str] = []
-    async for entry in dir_path.iterdir():
-        if entry.suffix != ".md" or not await entry.is_file():
-            continue
-
-        text = await entry.read_text(encoding="utf-8")
-
-        if title := _note_title_from_markdown(text):
-            names.append(title)
-
-    return sorted({name.casefold(): name for name in names}.values(), key=str.casefold)
-
-
 async def _metadata_catalog_prompt() -> str:
     """Build a user-prompt section listing existing vault entity names.
 
@@ -490,9 +447,9 @@ async def _metadata_catalog_prompt() -> str:
         Catalog lines for the metadata agent user prompt, or an empty string.
     """
     domains, resources, people = await asyncio.gather(
-        _list_vault_entity_names(VAULT_PATHS.domains_dir),
-        _list_vault_entity_names(VAULT_PATHS.resources_dir),
-        _list_vault_entity_names(VAULT_PATHS.people_dir),
+        VaultEntityService.list_entities(enums.VaultEntityKind.DOMAIN),
+        VaultEntityService.list_entities(enums.VaultEntityKind.RESOURCE),
+        VaultEntityService.list_entities(enums.VaultEntityKind.PERSON),
     )
 
     lines: list[str] = []
@@ -710,16 +667,14 @@ def _build_task_note(
 
 
 async def _ensure_stub(
-    directory: anyio.Path,
     name: str,
-    note_type: str,
+    note_type: Literal["domain", "person", "resource"],
     source_task_slug: str,
     source_task_title: str,
 ) -> bool:
-    """Create a minimal stub note if it does not already exist.
+    """Create a vault entity note from template if it does not already exist.
 
     Args:
-        directory: Relative vault path for the note directory.
         name: Human-readable name (used as heading and for slug generation).
         note_type: Value for the ``type`` frontmatter field.
         source_task_slug: Slug of the task that caused this stub to be created.
@@ -727,30 +682,35 @@ async def _ensure_stub(
 
     Returns:
         True if the note was created, False if it already existed.
-    """
-    slug = safe_slug(name)
-    path = await resolve_under_root(directory / f"{slug}.md")
 
-    if await path.exists():
-        logger.debug("Stub note already exists: {}/{}.md", directory, slug)
+    Raises:
+        ValueError: If ``note_type`` is not a supported stub type.
+    """
+    if note_type not in _STUB_NOTE_TYPES:
+        msg = f"Unsupported stub note type: {note_type!r}"
+        raise ValueError(msg)
+
+    kind = enums.VaultEntityKind(note_type)
+    if await VaultEntityService.resolve_entity_path(kind, name) is not None:
+        logger.debug("Stub note already exists: {} {}", note_type, name)
         return False
 
-    content = (
-        f"---\ntype: {note_type}\nstatus: active\n---\n\n"
-        f"# {name}\n\n## Notes\n\n"
+    provenance_note = (
         "Created automatically from task intake for "
-        f"[[{source_task_slug}|{source_task_title}]].\n"
+        f"[[{source_task_slug}|{source_task_title}]]."
     )
-    await atomic_write_text(path, content)
-
-    logger.info("Created stub note: {}/{}.md", directory, slug)
+    _ = await VaultEntityService.create_entity(
+        kind,
+        name,
+        provenance_note=provenance_note,
+    )
+    logger.info("Created stub note for {}: {}", note_type, name)
     return True
 
 
 async def _create_stubs(
     names: list[str],
-    directory: anyio.Path,
-    note_type: str,
+    note_type: Literal["domain", "person", "resource"],
     source_task_slug: str,
     source_task_title: str,
 ) -> list[str]:
@@ -758,7 +718,6 @@ async def _create_stubs(
 
     Args:
         names: Human-readable names to stub out.
-        directory: Relative vault path for the note directory.
         note_type: Value for the ``type`` frontmatter field.
         source_task_slug: Slug of the task that caused these stubs to be created.
         source_task_title: Human-readable title of the source task.
@@ -772,7 +731,6 @@ async def _create_stubs(
     stubs_created = await asyncio.gather(
         *(
             _ensure_stub(
-                directory,
                 name,
                 note_type,
                 source_task_slug,
@@ -917,21 +875,18 @@ async def _create_linked_stubs(
     return await asyncio.gather(
         _create_stubs(
             metadata.domains,
-            VAULT_PATHS.domains_dir,
             "domain",
             slug,
             metadata.title,
         ),
         _create_stubs(
             metadata.resources,
-            VAULT_PATHS.resources_dir,
             "resource",
             slug,
             metadata.title,
         ),
         _create_stubs(
             metadata.people,
-            VAULT_PATHS.people_dir,
             "person",
             slug,
             metadata.title,

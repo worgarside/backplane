@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from backplane.services.tasks import _create_stubs, _ensure_stub
-from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
     import anyio
 
+pytestmark = pytest.mark.usefixtures("entity_templates")
+
 
 async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:
-    """A missing entity note is created as a minimal stub."""
+    """A missing entity note is created from the vault template with provenance."""
     created = await _ensure_stub(
-        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
@@ -23,18 +25,15 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> 
     )
 
     assert created is True
-    assert await (obsidian_vault / "Domains/home-assistant.md").read_text(
+    text = await (obsidian_vault / "Domains/home-assistant.md").read_text(
         encoding="utf-8",
-    ) == (
-        "---\n"
-        "type: domain\n"
-        "status: active\n"
-        "---\n\n"
-        "# Home Assistant\n\n"
-        "## Notes\n\n"
-        "Created automatically from task intake for "
-        "[[review-home-assistant|Review Home Assistant]].\n"
     )
+    assert "# Home Assistant" in text
+    assert "## Overview" in text
+    assert "## Notes" in text
+    assert "Created automatically from task intake for" in text
+    assert "review-home-assistant" in text
+    assert "Review Home Assistant" in text
 
 
 async def test__ensure_stub_returns_false_for_existing_note(
@@ -47,7 +46,6 @@ async def test__ensure_stub_returns_false_for_existing_note(
     await atomic_write_text(existing, "# Existing\n")
 
     created = await _ensure_stub(
-        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
@@ -68,7 +66,6 @@ async def test__create_stubs_returns_only_newly_created_names(
 
     created = await _create_stubs(
         ["Existing", "New Domain"],
-        VAULT_PATHS.domains_dir,
         "domain",
         "review-home-assistant",
         "Review Home Assistant",

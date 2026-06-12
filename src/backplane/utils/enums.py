@@ -19,3 +19,11 @@ class Priority(enum.StrEnum):
     LOW = enum.auto()
     MEDIUM = enum.auto()
     HIGH = enum.auto()
+
+
+class VaultEntityKind(enum.StrEnum):
+    """Vault entity note kinds under Domains, People, or Resources."""
+
+    DOMAIN = enum.auto()
+    PERSON = enum.auto()
+    RESOURCE = enum.auto()

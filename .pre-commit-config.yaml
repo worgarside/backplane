@@ -120,3 +120,13 @@ repos:
       - id: codespell
         additional_dependencies:
           - tomli
+
+  - repo: local
+    hooks:
+      - id: update-readme-mcp-catalog
+        name: update README MCP catalog
+        entry: uv run python -m backplane.docs.update_readme_mcp_catalog
+        language: system
+        pass_filenames: false
+        # yamllint disable-line rule:line-length
+        files: ^(src/backplane/mcp/|src/backplane/docs/(mcp_catalog|update_readme_mcp_catalog)\.py|scripts/fixtures/readme-vault/)

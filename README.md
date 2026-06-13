@@ -146,7 +146,13 @@ The user is typically speaking through a voice assistant, so keep tool outputs c
 Add content to a section of the user's Obsidian daily note. Use this when the user wants to capture something into their daily note.
 
 The user's daily-note template defines this section structure (prefer these names verbatim):
-(template structure unavailable)
+- Summary
+- Tasks
+  - Work
+  - Personal
+- Journal
+- Links
+- Tomorrow
 
 If the user explicitly asks for a section not listed above, set `create_section_if_not_exists=true` — this creates the section and is the correct and supported action in that case. Do not decline or ask for clarification; just call the tool with that flag set.
 
@@ -182,19 +188,6 @@ Ask for a due date before calling if the request sounds time-sensitive (e.g. 'be
 | `priority` | `low` \| `medium` \| `high`? | no | `null` | Optional priority override: 'low', 'medium', or 'high'. Omit unless the user explicitly indicates urgency or importance. |
 | `title` | `string`? | no | `null` | Optional task title override. Omit unless the user supplied a clear title; otherwise inferred from the matched capture or description. |
 
-#### `create_vault_entity`
-
-Create a new vault entity note from the vault template.
-
-Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services — never duplicate the same name as a domain. People are individuals referenced in related work.
-
-Fails if a note with the same name already exists.
-
-| Parameter | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
-| `name` | `string` | yes | — | Human-readable entity name used as the note title. |
-
 #### `get_daily_note`
 
 Read the user's Obsidian daily note. Use this when the user asks what's in their daily note, wants to review tasks/ideas/notes they've captured, or needs context about their day to answer a follow-up question.
@@ -202,15 +195,6 @@ Read the user's Obsidian daily note. Use this when the user asks what's in their
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
-
-#### `get_vault_entity`
-
-Read a vault entity note as rendered markdown. Use when the user asks about a domain, person, or resource note's contents.
-
-| Parameter | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
-| `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
 
 #### `link_task_to_capture`
 
@@ -222,16 +206,6 @@ Use this after create_task offered candidate captures and the user confirms whic
 | --- | --- | --- | --- | --- |
 | `capture_id` | `string` | yes | — | Inbox capture ID, e.g. '2026-05-25T21:15'. |
 | `task_slug` | `string` | yes | — | Task note slug, e.g. 'review-backup-logs'. |
-
-#### `list_vault_entities`
-
-List display names of vault entity notes for a given kind.
-
-Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services. People are collaborators or contacts referenced in related work.
-
-| Parameter | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind to list: domain, person, or resource. |
 
 #### `record_idea`
 
@@ -254,34 +228,6 @@ as possible.
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `idea` | `string` | yes | — | The loose, non-actionable idea to record. Preserve the user's wording as closely as possible. |
-
-#### `update_vault_entity`
-
-Update a section of a vault entity note (Domain, Person, or Resource).
-
-Use append for most captures; replace only when the user asks to overwrite.
-
-Section structures by kind (prefer these names verbatim):
-
-Domain sections:
-(template structure unavailable)
-
-Person sections:
-(template structure unavailable)
-
-Resource sections:
-(template structure unavailable)
-
-If the section is missing, set `create_section_if_not_exists=true` to create it.
-
-| Parameter | Type | Required | Default | Description |
-| --- | --- | --- | --- | --- |
-| `content` | `string` | yes | — | Markdown content to add or replace in the section. |
-| `create_section_if_not_exists` | `boolean` | no | `false` | Create the section when missing. Use true when the user explicitly asks for a new section or after a missing-section error. |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
-| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine content with existing section text. append is usually best. |
-| `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
-| `section` | `string` | yes | — | Top-level section heading to update, e.g. 'Overview' or 'Notes'. |
 
 ### Resources
 

@@ -270,13 +270,23 @@ Use append for most captures; replace only when the user asks to overwrite.
 Section structures by kind (prefer these names verbatim):
 
 Domain sections:
-(template structure unavailable)
+- Overview
+- Key Resources
+- Active Projects
+- Related Tasks
+- Notes
 
 Person sections:
-(template structure unavailable)
+- Overview
+- Context
+- Related Tasks
+- Notes
 
 Resource sections:
-(template structure unavailable)
+- Overview
+- Links
+- Related Tasks
+- Notes
 
 If the section is missing, set `create_section_if_not_exists=true` to create it.
 

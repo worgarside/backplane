@@ -146,7 +146,13 @@ The user is typically speaking through a voice assistant, so keep tool outputs c
 Add content to a section of the user's Obsidian daily note. Use this when the user wants to capture something into their daily note.
 
 The user's daily-note template defines this section structure (prefer these names verbatim):
-(template structure unavailable)
+- Summary
+- Tasks
+  - Work
+  - Personal
+- Journal
+- Links
+- Tomorrow
 
 If the user explicitly asks for a section not listed above, set `create_section_if_not_exists=true` — this creates the section and is the correct and supported action in that case. Do not decline or ask for clarification; just call the tool with that flag set.
 

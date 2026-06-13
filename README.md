@@ -218,6 +218,16 @@ Read a vault entity note as rendered markdown. Use when the user asks about a do
 | `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
 
+#### `get_vault_entity_section`
+
+Read a single section of a vault entity note as rendered markdown. Use when the user needs specific context from a domain, person, or resource note without loading the whole note.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
+| `section` | `string` | yes | — | Top-level section heading to read, e.g. 'Overview'. |
+
 #### `link_task_to_capture`
 
 Link an existing task note to a confirmed prior inbox capture.

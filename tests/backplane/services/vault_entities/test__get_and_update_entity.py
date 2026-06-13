@@ -38,6 +38,41 @@ async def test__get_entity_raises_not_found() -> None:
         _ = await VaultEntityService.get_entity(VaultEntityKind.PERSON, "Missing")
 
 
+async def test__get_entity_section_returns_rendered_section() -> None:
+    """Reading an entity section returns only that section as markdown."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.DOMAIN, "Networking")
+    _ = await VaultEntityService.update_entity(
+        VaultEntityKind.DOMAIN,
+        "Networking",
+        section="Overview",
+        content="Network architecture and operations.",
+        mode="append",
+    )
+
+    rendered = await VaultEntityService.get_entity_section(
+        VaultEntityKind.DOMAIN,
+        "Networking",
+        section="Overview",
+    )
+
+    assert rendered == "## Overview\n\nNetwork architecture and operations."
+
+
+async def test__get_entity_section_wraps_missing_section() -> None:
+    """Reading a missing entity section returns available-section guidance."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.RESOURCE, "OpenWrt")
+
+    with pytest.raises(exc.InformationRequiredError) as exc_info:
+        _ = await VaultEntityService.get_entity_section(
+            VaultEntityKind.RESOURCE,
+            "OpenWrt",
+            section="Missing Section",
+        )
+
+    assert "Retry with an existing section" in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, exc.SectionNotFoundError)
+
+
 async def test__update_entity_appends_to_section(obsidian_vault: anyio.Path) -> None:
     """Updates append content to the requested section."""
     _ = await VaultEntityService.create_entity(VaultEntityKind.DOMAIN, "Home Assistant")

@@ -42,6 +42,25 @@ async def test__get_vault_entity__delegates_to_service(mocker: MockerFixture) ->
     mock_get.assert_awaited_once()
 
 
+async def test__get_vault_entity_section__delegates_to_service(
+    mocker: MockerFixture,
+) -> None:
+    """The section get tool delegates to VaultEntityService.get_entity_section."""
+    mock_get_section = mocker.patch(
+        "backplane.mcp.vault_entities.VaultEntityService.get_entity_section",
+        new=mocker.AsyncMock(return_value="## Overview\n\nAutomation platform.\n"),
+    )
+
+    result = await vault_entities.get_vault_entity_section(
+        kind="domain",
+        name="Home Assistant",
+        section="Overview",
+    )
+
+    assert result == "## Overview\n\nAutomation platform.\n"
+    mock_get_section.assert_awaited_once()
+
+
 async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture) -> None:
     """The create tool returns a concise confirmation with the vault path."""
     mock_create = mocker.patch(

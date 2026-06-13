@@ -89,6 +89,11 @@ _GET_DESCRIPTION = (
     "Read a vault entity note as rendered markdown. Use when the user asks about "
     "a domain, person, or resource note's contents."
 )
+_GET_SECTION_DESCRIPTION = (
+    "Read a single section of a vault entity note as rendered markdown. Use when "
+    "the user needs specific context from a domain, person, or resource note "
+    "without loading the whole note."
+)
 _CREATE_DESCRIPTION = (
     "Create a new vault entity note from the vault template.\n\n"
     "Domains are platforms or broad areas. Resources are specific integrations, "
@@ -138,6 +143,44 @@ async def get_vault_entity(
     """
     logger.info("get_vault_entity: kind={} name={!r}", kind, name)
     return await VaultEntityService.get_entity(VaultEntityKind(kind), name)
+
+
+async def get_vault_entity_section(
+    *,
+    kind: Annotated[
+        VaultEntityKindParam,
+        Field(description="Entity kind: domain, person, or resource."),
+    ],
+    name: Annotated[
+        str,
+        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+    ],
+    section: Annotated[
+        str,
+        Field(description="Top-level section heading to read, e.g. 'Overview'."),
+    ],
+) -> str:
+    """Read one section of a vault entity note.
+
+    Args:
+        kind: Entity kind.
+        name: Human-readable entity name.
+        section: Top-level section heading to read.
+
+    Returns:
+        The requested section rendered as markdown.
+    """
+    logger.info(
+        "get_vault_entity_section: kind={} name={!r} section={!r}",
+        kind,
+        name,
+        section,
+    )
+    return await VaultEntityService.get_entity_section(
+        VaultEntityKind(kind),
+        name,
+        section=section,
+    )
 
 
 async def create_vault_entity(
@@ -261,5 +304,8 @@ def register_vault_entity_tools(
 
     _ = mcp.tool(description=_LIST_DESCRIPTION, **auth_kwargs)(list_vault_entities)
     _ = mcp.tool(description=_GET_DESCRIPTION, **auth_kwargs)(get_vault_entity)
+    _ = mcp.tool(description=_GET_SECTION_DESCRIPTION, **auth_kwargs)(
+        get_vault_entity_section,
+    )
     _ = mcp.tool(description=_CREATE_DESCRIPTION, **auth_kwargs)(create_vault_entity)
     _ = mcp.tool(description=update_description, **auth_kwargs)(update_vault_entity)

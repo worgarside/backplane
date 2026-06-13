@@ -180,6 +180,39 @@ class VaultEntityService:
             return document.render()
 
     @staticmethod
+    async def get_entity_section(kind: VaultEntityKind, name: str, *, section: str) -> str:
+        """Read a section of an entity note as rendered markdown.
+
+        Args:
+            kind: Entity kind determining the search directory.
+            name: Human-readable entity name.
+            section: Top-level section heading to read (e.g. ``Overview``).
+
+        Returns:
+            The requested section rendered as markdown.
+
+        Raises:
+            NotFoundError: If the entity note does not exist.
+            InformationRequiredError: If the section is missing.
+        """
+        path = await VaultEntityService.resolve_entity_path(kind, name)
+        if path is None:
+            msg = f"{kind.value.title()} {name!r} not found."
+            raise exc.NotFoundError(message=msg)
+
+        rel_path = vault_relative_path(path)
+        async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
+            try:
+                target_section = document.get_section((name, section))
+            except exc.SectionNotFoundError as err:
+                raise exc.InformationRequiredError(
+                    message=f"{err} Retry with an existing section.",
+                    detail=err.detail,
+                ) from err
+
+            return target_section.render()
+
+    @staticmethod
     async def create_entity(
         kind: VaultEntityKind,
         name: str,

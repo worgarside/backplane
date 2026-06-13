@@ -126,6 +126,128 @@ python -m backplane.mcp
 
 This starts the private Home Assistant-compatible SSE server on port `8000`.
 
+<!-- backplane:mcp-catalog:start -->
+## MCP tools and resources
+
+This section is generated automatically from the registered MCP surface. Run `prek run update-readme-mcp-catalog` to refresh it after changing tools or resources.
+
+**Server:** `Backplane` v0.4.3
+
+### Server instructions
+
+Backplane exposes tools for interacting with the user's personal homelab services — currently their Obsidian vault, with more integrations to follow.
+
+The user is typically speaking through a voice assistant, so keep tool outputs concise — a short confirmation is usually enough.
+
+### Tools
+
+#### `add_to_daily_note`
+
+Add content to a section of the user's Obsidian daily note. Use this when the user wants to capture something into their daily note.
+
+The user's daily-note template defines this section structure (prefer these names verbatim):
+- Summary
+- Tasks
+  - Work
+  - Personal
+- Journal
+- Links
+- Tomorrow
+
+If the user explicitly asks for a section not listed above, set `create_section_if_not_exists=true` — this creates the section and is the correct and supported action in that case. Do not decline or ask for clarification; just call the tool with that flag set.
+
+If the section is missing and `create_section_if_not_exists=false` (the default), the call returns the actual sections in today's note so you can either match an existing one or retry with the flag set to true.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `content` | `string` | yes | — | The text to add to the section. |
+| `create_section_if_not_exists` | `boolean` | no | `false` | Set to true to create the section (and any missing ancestors) when it doesn't exist. Set to false (default) to fail with a list of available sections so you can pick the right one. Use true when the user explicitly asks for a new section, or when retrying after a missing-section error and creation is the right resolution. |
+| `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
+| `heading_path` | `string`[] | yes | — | The headings to traverse to the section to update. Pick based on the content and the section structure provided in the tool description. The top-level date heading is added automatically — do not include it. |
+| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine `content` with any existing section text. `append` is almost always the right choice for voice capture; use `replace` only when the user explicitly asks to overwrite. |
+
+#### `create_task`
+
+Create a structured task note for something actionable.
+
+Use this when the user mentions something they need to do, want to remember to act on, or asks you to 'make a task', 'add to my list', 'remind me to', 'I should...', 'I need to...', etc.
+
+This tool always creates the task. Matching against prior inbox captures is best-effort only: high-confidence matches are linked automatically, uncertain matches are returned as candidates to offer back to the user, and unmatched tasks are created normally.
+
+When the user confirms a specific prior capture, pass its ID as link_capture_id. For an already-created task, use link_task_to_capture.
+
+Do not use this for loose, non-committal ideas unless the user asks to turn one into a task. Use record_idea for speculative captures like 'maybe', 'I could', 'I wonder if', or 'worth investigating'.
+
+Ask for a due date before calling if the request sounds time-sensitive (e.g. 'before the weekend', 'by Friday', 'i need to...').
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `description` | `string` | yes | — | Natural-language task or action description. This is fuzzy-matched against existing inbox captures, so include distinctive nouns, names, and phrases from the original capture when available. Exact wording is helpful but not required; keep extra context that may help extract task metadata. |
+| `due` | `string`? | no | `null` | Optional due date in YYYY-MM-DD format. Ask before setting if timing is implied but not explicit. |
+| `link_capture_id` | `string`? | no | `null` | Optional confirmed inbox capture ID to link, e.g. '2026-05-25T21:15'. Omit unless the user explicitly confirmed which candidate capture to attach. |
+| `priority` | `low` \| `medium` \| `high`? | no | `null` | Optional priority override: 'low', 'medium', or 'high'. Omit unless the user explicitly indicates urgency or importance. |
+| `title` | `string`? | no | `null` | Optional task title override. Omit unless the user supplied a clear title; otherwise inferred from the matched capture or description. |
+
+#### `get_daily_note`
+
+Read the user's Obsidian daily note. Use this when the user asks what's in their daily note, wants to review tasks/ideas/notes they've captured, or needs context about their day to answer a follow-up question.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
+
+#### `link_task_to_capture`
+
+Link an existing task note to a confirmed prior inbox capture.
+
+Use this after create_task offered candidate captures and the user confirms which capture should be connected. Provide the task slug from the creation confirmation and the capture ID from the candidate list.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `capture_id` | `string` | yes | — | Inbox capture ID, e.g. '2026-05-25T21:15'. |
+| `task_slug` | `string` | yes | — | Task note slug, e.g. 'review-backup-logs'. |
+
+#### `record_idea`
+
+Record a loose, non-actionable idea in the Obsidian idea inbox.
+
+Use this for speculative captures such as:
+- "maybe..."
+- "I could..."
+- "I wonder if..."
+- "worth investigating..."
+- a possible automation, improvement, or future project that the user has not committed to doing
+
+Do not use this for tasks or action items. If the user says they need to do something,
+should do something, want to remember to act on something, or asks for a task/reminder/list item,
+use create_task instead.
+
+Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
+as possible.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `idea` | `string` | yes | — | The loose, non-actionable idea to record. Preserve the user's wording as closely as possible. |
+
+### Resources
+
+#### `Today's Daily Note`
+
+- **URI:** `obsidian://daily-note/today` (`text/markdown`)
+- **Description:** The user's Obsidian daily note for today's date.
+
+### Resource templates
+
+#### `Daily Note by Date`
+
+- **URI template:** `obsidian://daily-note/{date}` (`text/markdown`)
+- **Description:** The user's Obsidian daily note for a given ISO date (YYYY-MM-DD), e.g. obsidian://daily-note/2026-05-16.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `date` | `date` (YYYY-MM-DD) | yes | — |  |
+<!-- backplane:mcp-catalog:end -->
+
 ### Public MCP (ChatGPT)
 
 Backplane can also run a separate public streamable HTTP MCP server:

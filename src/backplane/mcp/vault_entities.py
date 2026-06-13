@@ -85,6 +85,11 @@ _LIST_DESCRIPTION = (
     "APIs, vendors, or services. People are collaborators or contacts referenced "
     "in related work."
 )
+_LIST_SECTIONS_DESCRIPTION = (
+    "List sections in a vault entity note. Use before reading or updating a "
+    "specific section when you need to know the available headings. Returns JSON "
+    "section metadata in document order, with paths relative to the note title."
+)
 _GET_DESCRIPTION = (
     "Read a vault entity note as rendered markdown. Use when the user asks about "
     "a domain, person, or resource note's contents."
@@ -120,6 +125,33 @@ async def list_vault_entities(
     logger.info("list_vault_entities: kind={}", kind)
     names = await VaultEntityService.list_entities(VaultEntityKind(kind))
     return json.dumps(names)
+
+
+async def list_vault_entity_sections(
+    kind: Annotated[
+        VaultEntityKindParam,
+        Field(description="Entity kind: domain, person, or resource."),
+    ],
+    name: Annotated[
+        str,
+        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+    ],
+) -> str:
+    """List sections in a vault entity note.
+
+    Args:
+        kind: Entity kind.
+        name: Human-readable entity name.
+
+    Returns:
+        JSON array of section metadata in document order.
+    """
+    logger.info("list_vault_entity_sections: kind={} name={!r}", kind, name)
+    sections = await VaultEntityService.list_entity_sections(
+        VaultEntityKind(kind),
+        name,
+    )
+    return json.dumps(sections)
 
 
 async def get_vault_entity(
@@ -303,6 +335,9 @@ def register_vault_entity_tools(
     update_description = _build_update_description(_load_section_trees())
 
     _ = mcp.tool(description=_LIST_DESCRIPTION, **auth_kwargs)(list_vault_entities)
+    _ = mcp.tool(description=_LIST_SECTIONS_DESCRIPTION, **auth_kwargs)(
+        list_vault_entity_sections,
+    )
     _ = mcp.tool(description=_GET_DESCRIPTION, **auth_kwargs)(get_vault_entity)
     _ = mcp.tool(description=_GET_SECTION_DESCRIPTION, **auth_kwargs)(
         get_vault_entity_section,

@@ -26,7 +26,31 @@ async def test__list_vault_entities__returns_json_names(mocker: MockerFixture) -
     result = await vault_entities.list_vault_entities(kind="domain")
 
     assert json.loads(result) == ["Home Assistant", "Obsidian"]
-    mock_list.assert_awaited_once()
+    _ = mock_list.assert_awaited_once()
+
+
+async def test__list_vault_entity_sections__returns_json_sections(
+    mocker: MockerFixture,
+) -> None:
+    """The section list tool returns section metadata as JSON."""
+    mock_list_sections = mocker.patch(
+        "backplane.mcp.vault_entities.VaultEntityService.list_entity_sections",
+        new=mocker.AsyncMock(
+            return_value=[
+                {"heading": "Overview", "path": ["Overview"], "level": 2},
+            ],
+        ),
+    )
+
+    result = await vault_entities.list_vault_entity_sections(
+        kind="resource",
+        name="MQTT",
+    )
+
+    assert json.loads(result) == [
+        {"heading": "Overview", "path": ["Overview"], "level": 2},
+    ]
+    _ = mock_list_sections.assert_awaited_once()
 
 
 async def test__get_vault_entity__delegates_to_service(mocker: MockerFixture) -> None:
@@ -39,7 +63,7 @@ async def test__get_vault_entity__delegates_to_service(mocker: MockerFixture) ->
     result = await vault_entities.get_vault_entity(kind="domain", name="Home Assistant")
 
     assert result == "# Home Assistant\n"
-    mock_get.assert_awaited_once()
+    _ = mock_get.assert_awaited_once()
 
 
 async def test__get_vault_entity_section__delegates_to_service(
@@ -58,7 +82,7 @@ async def test__get_vault_entity_section__delegates_to_service(
     )
 
     assert result == "## Overview\n\nAutomation platform.\n"
-    mock_get_section.assert_awaited_once()
+    _ = mock_get_section.assert_awaited_once()
 
 
 async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture) -> None:
@@ -74,7 +98,7 @@ async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture)
     )
 
     assert result == "Created domain 'Home Assistant' at Domains/home-assistant.md."
-    mock_create.assert_awaited_once()
+    _ = mock_create.assert_awaited_once()
 
 
 async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture) -> None:
@@ -93,7 +117,7 @@ async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture)
     )
 
     assert "Updated." in result
-    mock_update.assert_awaited_once()
+    _ = mock_update.assert_awaited_once()
 
 
 async def test__list_vault_entities__integration(obsidian_vault: anyio.Path) -> None:

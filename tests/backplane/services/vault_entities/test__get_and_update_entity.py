@@ -38,6 +38,23 @@ async def test__get_entity_raises_not_found() -> None:
         _ = await VaultEntityService.get_entity(VaultEntityKind.PERSON, "Missing")
 
 
+async def test__list_entity_sections_returns_section_metadata() -> None:
+    """Listing entity sections returns ordered metadata relative to the note title."""
+    _ = await VaultEntityService.create_entity(VaultEntityKind.RESOURCE, "Proxmox")
+
+    sections = await VaultEntityService.list_entity_sections(
+        VaultEntityKind.RESOURCE,
+        "Proxmox",
+    )
+
+    assert sections == [
+        {"heading": "Overview", "path": ["Overview"], "level": 2},
+        {"heading": "Links", "path": ["Links"], "level": 2},
+        {"heading": "Related Tasks", "path": ["Related Tasks"], "level": 2},
+        {"heading": "Notes", "path": ["Notes"], "level": 2},
+    ]
+
+
 async def test__get_entity_section_returns_rendered_section() -> None:
     """Reading an entity section returns only that section as markdown."""
     _ = await VaultEntityService.create_entity(VaultEntityKind.DOMAIN, "Networking")

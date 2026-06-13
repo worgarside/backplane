@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import TYPE_CHECKING, Final, Literal, final
+from typing import TYPE_CHECKING, Final, Literal, TypedDict, final, overload
 
 from loguru import logger
 
@@ -22,6 +22,8 @@ from backplane.utils.settings import SETTINGS
 if TYPE_CHECKING:
     import anyio
 
+    from backplane.utils.markdown import MarkdownSection
+
 _ENTITY_DIRECTORIES: Final = {
     VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,
     VaultEntityKind.PERSON: VAULT_PATHS.people_dir,
@@ -35,6 +37,14 @@ _ENTITY_TEMPLATES: Final = {
 }
 
 UpdateMode = Literal["append", "prepend", "replace"]
+
+
+class VaultEntitySection(TypedDict):
+    """A section heading within a vault entity note."""
+
+    heading: str
+    path: list[str]
+    level: int
 
 
 def note_title_from_markdown(text: str) -> str | None:
@@ -63,6 +73,26 @@ def vault_relative_path(path: anyio.Path) -> anyio.Path:
     """Return a vault-relative path for an absolute entity note path."""
     vault_root = SETTINGS.obsidian_vault_path
     return path.relative_to(vault_root)
+
+
+def _section_entries(
+    sections: list[MarkdownSection],
+    *,
+    parent_path: tuple[str, ...] = (),
+) -> list[VaultEntitySection]:
+    """Return flat section metadata in document order."""
+    entries: list[VaultEntitySection] = []
+    for section in sections:
+        section_path = (*parent_path, section.heading)
+        entries.append(
+            {
+                "heading": section.heading,
+                "path": list(section_path),
+                "level": section.level,
+            },
+        )
+        entries.extend(_section_entries(section.sections, parent_path=section_path))
+    return entries
 
 
 @final
@@ -106,33 +136,64 @@ class VaultEntityService:
         )
 
     @staticmethod
-    async def resolve_entity_path(kind: VaultEntityKind, name: str) -> anyio.Path | None:
+    @overload
+    @staticmethod
+    async def resolve_entity_path(
+        kind: VaultEntityKind,
+        name: str,
+        *,
+        must_exist: Literal[True],
+    ) -> anyio.Path: ...
+
+    @overload
+    @staticmethod
+    async def resolve_entity_path(
+        kind: VaultEntityKind,
+        name: str,
+        *,
+        must_exist: Literal[False] = False,
+    ) -> anyio.Path | None: ...
+
+    @staticmethod
+    async def resolve_entity_path(
+        kind: VaultEntityKind,
+        name: str,
+        *,
+        must_exist: bool = False,
+    ) -> anyio.Path | None:
         """Resolve an entity display name to its on-disk path.
 
         Args:
             kind: Entity kind determining the search directory.
             name: Human-readable entity name.
+            must_exist: Raise ``NotFoundError`` instead of returning ``None`` when
+                no matching entity note exists.
 
         Returns:
             Absolute path to the note, or ``None`` when no match exists.
+
+        Raises:
+            NotFoundError: If ``must_exist`` is true and the note does not exist.
         """
         directory = await resolve_under_root(VaultEntityService.directory_for(kind))
         slug_path = directory / f"{safe_slug(name)}.md"
         if await slug_path.exists():
             return slug_path
 
-        if not await directory.is_dir():
-            return None
+        if await directory.is_dir():
+            target = name.casefold()
+            async for entry in directory.iterdir():
+                if entry.suffix != ".md" or not await entry.is_file():
+                    continue
 
-        target = name.casefold()
-        async for entry in directory.iterdir():
-            if entry.suffix != ".md" or not await entry.is_file():
-                continue
+                text = await entry.read_text(encoding="utf-8")
+                title = note_title_from_markdown(text)
+                if title is not None and title.casefold() == target:
+                    return entry
 
-            text = await entry.read_text(encoding="utf-8")
-            title = note_title_from_markdown(text)
-            if title is not None and title.casefold() == target:
-                return entry
+        if must_exist:
+            msg = f"{kind.value.title()} {name!r} not found."
+            raise exc.NotFoundError(message=msg)
 
         return None
 
@@ -166,21 +227,45 @@ class VaultEntityService:
 
         Returns:
             The entity note rendered as markdown.
-
-        Raises:
-            NotFoundError: If the entity note does not exist.
         """
-        path = await VaultEntityService.resolve_entity_path(kind, name)
-        if path is None:
-            msg = f"{kind.value.title()} {name!r} not found."
-            raise exc.NotFoundError(message=msg)
+        path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         rel_path = vault_relative_path(path)
         async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
             return document.render()
 
     @staticmethod
-    async def get_entity_section(kind: VaultEntityKind, name: str, *, section: str) -> str:
+    async def list_entity_sections(
+        kind: VaultEntityKind,
+        name: str,
+    ) -> list[VaultEntitySection]:
+        """List sections in an entity note.
+
+        Args:
+            kind: Entity kind determining the search directory.
+            name: Human-readable entity name.
+
+        Returns:
+            Section metadata in document order. Paths are relative to the note's
+            level-1 title heading.
+        """
+        path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
+
+        rel_path = vault_relative_path(path)
+        async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
+            if len(document.body) != 1 or document.body[0].level != 1:
+                return _section_entries(document.body)
+
+            root_section = document.body[0]
+            return _section_entries(root_section.sections)
+
+    @staticmethod
+    async def get_entity_section(
+        kind: VaultEntityKind,
+        name: str,
+        *,
+        section: str,
+    ) -> str:
         """Read a section of an entity note as rendered markdown.
 
         Args:
@@ -192,13 +277,9 @@ class VaultEntityService:
             The requested section rendered as markdown.
 
         Raises:
-            NotFoundError: If the entity note does not exist.
             InformationRequiredError: If the section is missing.
         """
-        path = await VaultEntityService.resolve_entity_path(kind, name)
-        if path is None:
-            msg = f"{kind.value.title()} {name!r} not found."
-            raise exc.NotFoundError(message=msg)
+        path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         rel_path = vault_relative_path(path)
         async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
@@ -278,14 +359,10 @@ class VaultEntityService:
             The updated section rendered as markdown.
 
         Raises:
-            NotFoundError: If the entity note does not exist.
             InformationRequiredError: If the section is missing and creation is
                 disabled.
         """
-        path = await VaultEntityService.resolve_entity_path(kind, name)
-        if path is None:
-            msg = f"{kind.value.title()} {name!r} not found."
-            raise exc.NotFoundError(message=msg)
+        path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         rel_path = vault_relative_path(path)
         now = dt.datetime.now(tz=SETTINGS.local_timezone).replace(microsecond=0)

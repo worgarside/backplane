@@ -249,6 +249,15 @@ Domains are platforms or broad areas. Resources are specific integrations, APIs,
 | --- | --- | --- | --- | --- |
 | `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind to list: domain, person, or resource. |
 
+#### `list_vault_entity_sections`
+
+List sections in a vault entity note. Use before reading or updating a specific section when you need to know the available headings. Returns JSON section metadata in document order, with paths relative to the note title.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
+
 #### `record_idea`
 
 Record a loose, non-actionable idea in the Obsidian idea inbox.

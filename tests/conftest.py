@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import pathlib
 from typing import TYPE_CHECKING
 
 import anyio
 import pytest
 
-from backplane.utils.helpers.files import atomic_write_text
 from backplane.utils.settings import SETTINGS
 
 DOMAIN_TEMPLATE = """---
@@ -106,14 +106,14 @@ def obsidian_vault(
 ) -> anyio.Path:
     """Point application settings at a temporary vault root."""
     monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
+    _install_entity_templates(vault_path)
     return vault_path
 
 
-@pytest.fixture
-async def entity_templates(obsidian_vault: anyio.Path) -> None:
-    """Install minimal entity templates in the temporary vault."""
-    templates = obsidian_vault / "Templates"
-    await templates.mkdir(parents=True, exist_ok=True)
-    await atomic_write_text(templates / "Domain.md", DOMAIN_TEMPLATE)
-    await atomic_write_text(templates / "Person.md", PERSON_TEMPLATE)
-    await atomic_write_text(templates / "Resource.md", RESOURCE_TEMPLATE)
+def _install_entity_templates(vault_path: anyio.Path) -> None:
+    """Write minimal entity templates into a temporary vault."""
+    templates = pathlib.Path(str(vault_path)) / "Templates"
+    templates.mkdir(parents=True, exist_ok=True)
+    _ = (templates / "Domain.md").write_text(DOMAIN_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Person.md").write_text(PERSON_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Resource.md").write_text(RESOURCE_TEMPLATE, encoding="utf-8")

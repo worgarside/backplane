@@ -4,15 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from backplane.services.tasks import _create_stubs, _ensure_stub
 from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
     import anyio
-
-pytestmark = pytest.mark.usefixtures("entity_templates")
 
 
 async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:

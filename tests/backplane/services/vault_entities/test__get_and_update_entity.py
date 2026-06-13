@@ -13,14 +13,15 @@ from backplane.utils.enums import VaultEntityKind
 if TYPE_CHECKING:
     import anyio
 
+pytestmark = pytest.mark.usefixtures("obsidian_vault")
+
 
 async def test__get_entity_returns_rendered_markdown() -> None:
     """Reading an entity returns the note rendered as markdown."""
-    path = await VaultEntityService.create_entity(
+    _ = await VaultEntityService.create_entity(
         VaultEntityKind.RESOURCE,
         "Geocoding API",
     )
-    _ = path
 
     rendered = await VaultEntityService.get_entity(
         VaultEntityKind.RESOURCE,
@@ -31,9 +32,8 @@ async def test__get_entity_returns_rendered_markdown() -> None:
     assert "## Overview" in rendered
 
 
-async def test__get_entity_raises_not_found(obsidian_vault: anyio.Path) -> None:
+async def test__get_entity_raises_not_found() -> None:
     """Reading a missing entity raises NotFoundError."""
-    _ = obsidian_vault
     with pytest.raises(exc.NotFoundError, match="not found"):
         _ = await VaultEntityService.get_entity(VaultEntityKind.PERSON, "Missing")
 

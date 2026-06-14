@@ -137,7 +137,7 @@ This section is generated automatically from the registered MCP surface. Run `pr
 
 Backplane exposes tools for interacting with the user's personal homelab services — currently their Obsidian vault, with more integrations to follow.
 
-The user is typically speaking through a voice assistant, so keep tool outputs concise — a short confirmation is usually enough.
+Keep tool outputs concise — a short confirmation is usually enough.
 
 ### Tools
 
@@ -164,11 +164,13 @@ If the section is missing and `create_section_if_not_exists=false` (the default)
 | `create_section_if_not_exists` | `boolean` | no | `false` | Set to true to create the section (and any missing ancestors) when it doesn't exist. Set to false (default) to fail with a list of available sections so you can pick the right one. Use true when the user explicitly asks for a new section, or when retrying after a missing-section error and creation is the right resolution. |
 | `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
 | `heading_path` | `string`[] | yes | — | The headings to traverse to the section to update. Pick based on the content and the section structure provided in the tool description. The top-level date heading is added automatically — do not include it. |
-| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine `content` with any existing section text. `append` is almost always the right choice for voice capture; use `replace` only when the user explicitly asks to overwrite. |
+| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine `content` with any existing section text. `append` is almost always the right choice; use `replace` only when the user explicitly asks to overwrite. |
 
 #### `create_task`
 
 Create a structured task note for something actionable.
+
+Backplane uses human-readable Obsidian filenames for tasks (e.g. `Tasks/Build Master Complaint Table.md`). Kebab-case slugs are internal IDs only. Use `canonical_link` from the response when linking notes in markdown. Links use the full vault path with a display alias.
 
 Use this when the user mentions something they need to do, want to remember to act on, or asks you to 'make a task', 'add to my list', 'remind me to', 'I should...', 'I need to...', etc.
 
@@ -182,17 +184,21 @@ Ask for a due date before calling if the request sounds time-sensitive (e.g. 'be
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `description` | `string` | yes | — | Natural-language task or action description. This is fuzzy-matched against existing inbox captures, so include distinctive nouns, names, and phrases from the original capture when available. Exact wording is helpful but not required; keep extra context that may help extract task metadata. |
+| `description` | `string` | yes | — | Natural-language task or action description. This is fuzzy-matched against existing inbox captures, so include distinctive nouns, names, and phrases from any linked inbox entry when available. Exact wording is helpful but not required; keep extra context that may help extract task metadata. |
 | `due` | `string`? | no | `null` | Optional due date in YYYY-MM-DD format. Ask before setting if timing is implied but not explicit. |
 | `link_capture_id` | `string`? | no | `null` | Optional confirmed inbox capture ID to link, e.g. '2026-05-25T21:15'. Omit unless the user explicitly confirmed which candidate capture to attach. |
 | `priority` | `low` \| `medium` \| `high`? | no | `null` | Optional priority override: 'low', 'medium', or 'high'. Omit unless the user explicitly indicates urgency or importance. |
-| `title` | `string`? | no | `null` | Optional task title override. Omit unless the user supplied a clear title; otherwise inferred from the matched capture or description. |
+| `title` | `string`? | no | `null` | Optional task title override. Omit unless the user supplied a clear title; otherwise inferred from the description or linked inbox entry. |
 
 #### `create_vault_entity`
 
 Create a new vault entity note from the vault template.
 
+Backplane uses human-readable Obsidian filenames for entities and tasks (e.g. `Projects/Rented Home Formal Complaint.md`). Kebab-case slugs are internal IDs only. Daily notes remain date-based; inbox/log notes may remain timestamp or slug-based.
+
 Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services — never duplicate the same name as a domain. Projects are scoped outcomes or ongoing efforts with related work. People are individuals referenced in related work.
+
+Use `canonical_link` from the response when linking notes in markdown. Links use the full vault path with a display alias, e.g. `[[Projects/Rented Home Formal Complaint|Rented Home Formal Complaint]]`. Do not infer note links from slugs when `canonical_link` is available.
 
 Fails if a note with the same name already exists.
 
@@ -232,12 +238,12 @@ Read a single section of a vault entity note as rendered markdown. Use when the 
 
 Link an existing task note to a confirmed prior inbox capture.
 
-Use this after create_task offered candidate captures and the user confirms which capture should be connected. Provide the task slug from the creation confirmation and the capture ID from the candidate list.
+Use this after create_task offered candidate captures and the user confirms which capture should be connected. Provide the task title, filename stem, or internal slug from the creation response and the capture ID from the candidate list.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `capture_id` | `string` | yes | — | Inbox capture ID, e.g. '2026-05-25T21:15'. |
-| `task_slug` | `string` | yes | — | Task note slug, e.g. 'review-backup-logs'. |
+| `task_slug` | `string` | yes | — | Task note title, human-readable filename stem, or internal slug. |
 
 #### `list_vault_entities`
 

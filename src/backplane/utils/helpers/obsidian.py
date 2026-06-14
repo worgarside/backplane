@@ -84,38 +84,52 @@ def note_filename(title: str) -> str:
 def obsidian_link_target_from_path(path: str) -> str:
     """Return the filename stem used as a display title for a vault-relative path."""
     stem = path.rsplit("/", maxsplit=1)[-1]
-    if stem.endswith(".md"):
-        return stem.removesuffix(".md")
-    return stem
 
-
-def _path_link_target(path: str) -> str:
-    """Return a vault-relative wikilink target without the ``.md`` extension."""
-    return path.removesuffix(".md") if path.endswith(".md") else path
+    return stem.removesuffix(".md")
 
 
 def build_obsidian_link(
-    path_or_target: str,
+    path_or_target: anyio.Path,
     *,
     alias: str | None = None,
     fragment: str | None = None,
 ) -> str:
     """Build an Obsidian wikilink from a vault path, target, optional alias, and fragment.
 
-    When ``path_or_target`` is a vault-relative path (contains ``/`` or ends with
-    ``.md``), the link target uses the full path and defaults the alias to the note
+    When ``path_or_target`` is a vault-relative path (multiple path components or ends
+    with ``.md``), the link target uses the full path and defaults the alias to the
     title stem so folder prefixes are not shown in the rendered view.
+
+    Args:
+        path_or_target: Vault-relative note path or bare wikilink target name.
+        alias: Optional display text for ``[[target|alias]]`` rendering.
+        fragment: Optional heading or block anchor, with or without a leading ``#``.
 
     Returns:
         A rendered Obsidian wikilink string.
+
+    Examples:
+        >>> build_obsidian_link(anyio.Path("Domains/Home - Property.md"))
+        '[[Domains/Home - Property|Home - Property]]'
+        >>> build_obsidian_link(anyio.Path("Home Assistant"))
+        '[[Home Assistant]]'
+        >>> build_obsidian_link(
+        ...     anyio.Path("Domains/Home - Property.md"),
+        ...     alias="Home / Property",
+        ... )
+        '[[Domains/Home - Property|Home / Property]]'
+        >>> build_obsidian_link(
+        ...     anyio.Path("Projects/Rented Home Formal Complaint.md"),
+        ...     fragment="Tasks",
+        ... )
+        '[[Projects/Rented Home Formal Complaint#Tasks|Rented Home Formal Complaint]]'
     """
-    is_path = "/" in path_or_target or path_or_target.endswith(".md")
-    if is_path:
-        target = _path_link_target(path_or_target)
+    if len(path_or_target.parts) > 1 or path_or_target.suffix == ".md":
+        target = path_or_target.as_posix().removesuffix(".md")
         if alias is None and "/" in target:
             alias = obsidian_link_target_from_path(target)
     else:
-        target = path_or_target
+        target = path_or_target.as_posix()
 
     if fragment:
         fragment_text = fragment if fragment.startswith("#") else f"#{fragment}"

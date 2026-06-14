@@ -11,9 +11,10 @@ from .dttm import (
     substitute_vault_entity_template,
     today,
 )
-from .files import atomic_write_text, resolve_under_root
+from .files import AsyncPath, atomic_write_text, resolve_under_root
 from .obsidian import (
     VaultNoteMetadata,
+    build_entity_wikilink,
     build_obsidian_link,
     build_vault_note_metadata,
     note_filename,

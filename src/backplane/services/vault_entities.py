@@ -105,7 +105,7 @@ class VaultEntityService:
             Sorted unique note titles from H1 headings, or an empty list if the
             directory is missing.
         """
-        dir_path = await resolve_under_root(VaultEntityService.directory_for(kind))
+        dir_path = await resolve_under_root(kind.vault_dir)
         if not await dir_path.is_dir():
             return []
 

@@ -203,16 +203,23 @@ class VaultPaths:
     """Stable relative paths within the Obsidian vault."""
 
     daily_notes_dir: Final = anyio.Path("Daily Notes")
+
     domains_dir: Final = anyio.Path("Domains")
+
     inbox_dir: Final = anyio.Path("Inbox")
+
     people_dir: Final = anyio.Path("People")
-    project_board_path: Final = anyio.Path("Projects") / "Projects Board.md"
+
     projects_dir: Final = anyio.Path("Projects")
+    project_board_path: Final = projects_dir / "Projects Board.md"
+
     resources_dir: Final = anyio.Path("Resources")
+
     templates_dir: Final = anyio.Path("Templates")
+
     tasks_dir: Final = anyio.Path("Tasks")
-    task_notes_dir: Final = anyio.Path("Tasks") / "Tasks"
-    task_board_path: Final = anyio.Path("Tasks") / "Tasks Board.md"
+    task_notes_dir: Final = tasks_dir / "Tasks"
+    task_board_path: Final = tasks_dir / "Tasks Board.md"
 
 
 SETTINGS: Final = Settings()  # pyright: ignore[reportCallIssue]

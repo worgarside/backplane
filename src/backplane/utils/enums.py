@@ -3,6 +3,12 @@
 from __future__ import annotations
 
 import enum
+from typing import TYPE_CHECKING
+
+from .settings import VAULT_PATHS
+
+if TYPE_CHECKING:
+    import anyio
 
 
 class Effort(enum.StrEnum):

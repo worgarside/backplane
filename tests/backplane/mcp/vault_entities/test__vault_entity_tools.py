@@ -9,6 +9,7 @@ import anyio
 
 from backplane.mcp import vault_entities
 from backplane.services.vault_entities import VaultEntityService
+from backplane.utils import build_vault_note_metadata
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
@@ -86,10 +87,16 @@ async def test__get_vault_entity_section__delegates_to_service(
 
 
 async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture) -> None:
-    """The create tool returns a concise confirmation with the vault path."""
+    """The create tool returns JSON metadata for the created note."""
     mock_create = mocker.patch(
         "backplane.mcp.vault_entities.VaultEntityService.create_entity",
-        new=mocker.AsyncMock(return_value=anyio.Path("Projects/garage-migration.md")),
+        new=mocker.AsyncMock(
+            return_value=build_vault_note_metadata(
+                kind=VaultEntityKind.PROJECT,
+                title="Garage Migration",
+                path="Projects/Garage Migration.md",
+            ),
+        ),
     )
 
     result = await vault_entities.create_vault_entity(
@@ -97,7 +104,9 @@ async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture)
         name="Garage Migration",
     )
 
-    assert result == "Created project 'Garage Migration' at Projects/garage-migration.md."
+    payload = json.loads(result)
+    assert payload["path"] == "Projects/Garage Migration.md"
+    assert payload["canonical_link"] == "[[Projects/Garage Migration|Garage Migration]]"
     _ = mock_create.assert_awaited_once_with(VaultEntityKind.PROJECT, "Garage Migration")
 
 

@@ -13,12 +13,12 @@ from backplane.utils.helpers.files import atomic_write_text
 
 async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) -> None:
     """Created entity notes include template frontmatter and section headings."""
-    path = await VaultEntityService.create_entity(
+    metadata = await VaultEntityService.create_entity(
         VaultEntityKind.DOMAIN,
         "Home Assistant",
     )
 
-    text = await (obsidian_vault / path).read_text(encoding="utf-8")
+    text = await (obsidian_vault / metadata.path).read_text(encoding="utf-8")
     assert "type: domain" in text
     assert "# Home Assistant" in text
     assert "## Overview" in text
@@ -30,22 +30,22 @@ async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) ->
 
 async def test__create_entity_supports_projects(obsidian_vault: anyio.Path) -> None:
     """Project entity notes are created under Projects from the project template."""
-    path = await VaultEntityService.create_entity(
+    metadata = await VaultEntityService.create_entity(
         VaultEntityKind.PROJECT,
         "Garage Migration",
     )
 
-    text = await (obsidian_vault / path).read_text(encoding="utf-8")
+    text = await (obsidian_vault / metadata.path).read_text(encoding="utf-8")
     board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
         encoding="utf-8",
     )
-    assert path == anyio.Path("Projects") / "garage-migration.md"
+    assert metadata.path == "Projects/Garage Migration.md"
     assert "type: project" in text
     assert "# Garage Migration" in text
     assert "## Goals" in text
     assert "## Tasks" in text
     assert "## Notes" in text
-    assert "- [ ] [[garage-migration]]" in board
+    assert "- [ ] [[Projects/Garage Migration|Garage Migration]]" in board
 
 
 async def test__create_entity_does_not_add_non_projects_to_board(
@@ -73,7 +73,7 @@ async def test__create_entity_raises_conflict_for_duplicate(
     """Creating an entity with an existing name raises ConflictError."""
     domains = obsidian_vault / "Domains"
     await domains.mkdir(parents=True)
-    await atomic_write_text(domains / "home-assistant.md", "# Home Assistant\n")
+    await atomic_write_text(domains / "Home Assistant.md", "# Home Assistant\n")
 
     with pytest.raises(exc.ConflictError, match="already exists"):
         _ = await VaultEntityService.create_entity(
@@ -84,14 +84,11 @@ async def test__create_entity_raises_conflict_for_duplicate(
 
 async def test__create_entity_appends_provenance_note(obsidian_vault: anyio.Path) -> None:
     """Optional provenance text is appended to the Notes section."""
-    path = await VaultEntityService.create_entity(
+    metadata = await VaultEntityService.create_entity(
         VaultEntityKind.DOMAIN,
         "Home Assistant",
         provenance_note="Created automatically from task intake for [[task]].",
     )
 
-    text = await (obsidian_vault / path).read_text(encoding="utf-8")
-    assert (
-        "Created automatically from task intake for [[task]]."
-        in text
-    )
+    text = await (obsidian_vault / metadata.path).read_text(encoding="utf-8")
+    assert "Created automatically from task intake for [[task]]." in text

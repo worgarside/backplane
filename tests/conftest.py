@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import anyio
 import pytest
 
-from backplane.utils.settings import SETTINGS
+from backplane.utils.settings import SETTINGS, VAULT_PATHS
 
 DOMAIN_TEMPLATE = """---
 type: domain
@@ -167,6 +167,6 @@ def _install_entity_templates(vault_path: anyio.Path) -> None:
 
 def _install_project_board(vault_path: anyio.Path) -> None:
     """Write a minimal project Kanban board into a temporary vault."""
-    board = pathlib.Path(str(vault_path)) / "Projects" / "Board.md"
+    board = pathlib.Path(str(vault_path)) / str(VAULT_PATHS.project_board_path)
     board.parent.mkdir(parents=True, exist_ok=True)
     _ = board.write_text(PROJECT_BOARD, encoding="utf-8")

@@ -9,7 +9,7 @@ from backplane.services.tasks import (
     TaskMetadata,
     TaskService,
 )
-from backplane.utils import VAULT_PATHS, enums
+from backplane.utils import VAULT_PATHS, build_vault_note_metadata, enums
 
 if TYPE_CHECKING:
     import anyio
@@ -20,14 +20,14 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
     obsidian_vault: anyio.Path,
     mocker: MockerFixture,
 ) -> None:
-    """Missing inbox files are skipped and duplicate task slugs get a suffix."""
+    """Missing inbox files are skipped and duplicate task filenames get a suffix."""
     tasks_dir = obsidian_vault / VAULT_PATHS.task_notes_dir
     await tasks_dir.mkdir(parents=True)
     _ = await (obsidian_vault / VAULT_PATHS.task_board_path).write_text(
         "## Backlog\n\n",
         encoding="utf-8",
     )
-    _ = await (tasks_dir / "review-backup-logs.md").write_text(
+    _ = await (tasks_dir / "Review backup logs.md").write_text(
         "# Existing task\n",
         encoding="utf-8",
     )
@@ -48,10 +48,16 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
 
     result = await TaskService.create_task("Review backup logs")
 
+    note_path = VAULT_PATHS.task_notes_dir / "Review backup logs 2.md"
     assert result == CreateTaskResult(
-        slug="review-backup-logs-2",
-        path=VAULT_PATHS.task_notes_dir / "review-backup-logs-2.md",
+        slug="review-backup-logs",
+        path=note_path,
         title="Review backup logs",
+        metadata=build_vault_note_metadata(
+            kind="task",
+            title="Review backup logs",
+            path=str(note_path),
+        ),
         matched_capture_id=None,
         candidate_captures=[],
         domains_created=[],
@@ -59,4 +65,4 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
         projects_created=[],
         people_created=[],
     )
-    assert await (tasks_dir / "review-backup-logs-2.md").exists()
+    assert await (tasks_dir / "Review backup logs 2.md").exists()

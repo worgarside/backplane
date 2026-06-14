@@ -87,9 +87,11 @@ async def test__create_entity_appends_provenance_note(obsidian_vault: anyio.Path
     path = await VaultEntityService.create_entity(
         VaultEntityKind.DOMAIN,
         "Home Assistant",
-        provenance_note="Created automatically from task intake for [[task|Task]].",
+        provenance_note="Created automatically from task intake for [[task]].",
     )
 
     text = await (obsidian_vault / path).read_text(encoding="utf-8")
-    assert "Created automatically from task intake for" in text
-    assert "task" in text
+    assert (
+        "Created automatically from task intake for [[task]]."
+        in text
+    )

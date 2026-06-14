@@ -25,6 +25,7 @@ dependencies = [
     "rapidfuzz>=3.0",
     "uvicorn>=0.46.0",
     "uvloop>=0.22.1",
+    "mdformat-wikilink>=0.3.0",
 ]
 
 [dependency-groups]

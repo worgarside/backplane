@@ -19,7 +19,6 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> 
         "Home Assistant",
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created is True
@@ -29,9 +28,10 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> 
     assert "# Home Assistant" in text
     assert "## Overview" in text
     assert "## Notes" in text
-    assert "Created automatically from task intake for" in text
-    assert "review-home-assistant" in text
-    assert "Review Home Assistant" in text
+    assert (
+        "Created automatically from task intake for [[review-home-assistant]]."
+        in text
+    )
 
 
 async def test__ensure_stub_returns_false_for_existing_note(
@@ -47,7 +47,6 @@ async def test__ensure_stub_returns_false_for_existing_note(
         "Home Assistant",
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created is False
@@ -60,7 +59,6 @@ async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> 
         "Garage Migration",
         "project",
         "plan-garage-migration",
-        "Plan Garage Migration",
     )
 
     assert created is True
@@ -70,7 +68,10 @@ async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> 
     assert "# Garage Migration" in text
     assert "## Goals" in text
     assert "## Tasks" in text
-    assert "Created automatically from task intake for" in text
+    assert (
+        "Created automatically from task intake for [[plan-garage-migration]]."
+        in text
+    )
     board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
         encoding="utf-8",
     )
@@ -89,7 +90,6 @@ async def test__create_stubs_returns_only_newly_created_names(
         ["Existing", "New Domain"],
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created == ["New Domain"]

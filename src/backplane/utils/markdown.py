@@ -146,7 +146,7 @@ def _render_text(text: str) -> str:
     fm, body_text = _parse_frontmatter(text)
     body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
         body_text,
-        extensions={"gfm"},
+        extensions={"gfm", "wikilink"},
     ).lstrip()
     if not fm:
         return body
@@ -481,7 +481,7 @@ class MarkdownDocument(BaseModel):
         """
         body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
             "\n\n".join(section.render() for section in self.body),
-            extensions={"gfm"},  # GitHub-flavored markdown extensions
+            extensions={"gfm", "wikilink"},
         ).lstrip()
 
         if not self.frontmatter:

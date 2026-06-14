@@ -196,6 +196,7 @@ dependencies = [
     { name = "markdown-it-py" },
     { name = "mdformat" },
     { name = "mdformat-gfm" },
+    { name = "mdformat-wikilink" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
     { name = "pydantic-settings" },
@@ -226,6 +227,7 @@ requires-dist = [
     { name = "markdown-it-py", specifier = ">=4.2.0" },
     { name = "mdformat", specifier = ">=1.0.0" },
     { name = "mdformat-gfm", specifier = ">=1.0.0" },
+    { name = "mdformat-wikilink", specifier = ">=0.3.0" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "pydantic-ai", specifier = ">=1.99.0" },
     { name = "pydantic-settings", specifier = ">=2.14.1" },
@@ -1361,6 +1363,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/56/6f/a626ebb142a290474401b67e2d61e73ce096bf7798ee22dfe6270f924b3f/mdformat_gfm-1.0.0.tar.gz", hash = "sha256:d1d49a409a6acb774ce7635c72d69178df7dce1dc8cdd10e19f78e8e57b72623", size = 10112, upload-time = "2025-10-16T09:12:22.402Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/18/6bc2189b744dd383cad03764f41f30352b1278d2205096f77a29c0b327ad/mdformat_gfm-1.0.0-py3-none-any.whl", hash = "sha256:7305a50efd2a140d7c83505b58e3ac5df2b09e293f9bbe72f6c7bee8c678b005", size = 10970, upload-time = "2025-10-16T09:12:21.276Z" },
+]
+
+[[package]]
+name = "mdformat-wikilink"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown-it-py" },
+    { name = "mdformat" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/a1/1717e932fcda67721aa36c207ac87756cbb5c2697591e5b283e73d122171/mdformat_wikilink-0.3.0.tar.gz", hash = "sha256:aa482554b714e6db19a988d014595269c6d2e9e696d14dac717d8c25ecd41201", size = 2465, upload-time = "2025-10-19T04:09:12.148Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/38/fde79baf3fe11b8cd38ec39d8b6fdf271fb5f4801a0c784dadbe45f06d93/mdformat_wikilink-0.3.0-py3-none-any.whl", hash = "sha256:747f0ee016ef8dc879be0a1cfdb5a2015578cadaed35da84133c8ad313d231e9", size = 3467, upload-time = "2025-10-19T04:09:11.039Z" },
 ]
 
 [[package]]

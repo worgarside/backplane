@@ -696,7 +696,6 @@ async def _ensure_stub(
     name: str,
     note_type: Literal["domain", "person", "project", "resource"],
     source_task_slug: str,
-    source_task_title: str,
 ) -> bool:
     """Create a vault entity note from template if it does not already exist.
 
@@ -704,7 +703,6 @@ async def _ensure_stub(
         name: Human-readable name (used as heading and for slug generation).
         note_type: Value for the ``type`` frontmatter field.
         source_task_slug: Slug of the task that caused this stub to be created.
-        source_task_title: Human-readable title of the source task.
 
     Returns:
         True if the note was created, False if it already existed.
@@ -723,7 +721,7 @@ async def _ensure_stub(
 
     provenance_note = (
         "Created automatically from task intake for "
-        f"[[{source_task_slug}|{source_task_title}]]."
+        f"[[{source_task_slug}]]."
     )
     _ = await VaultEntityService.create_entity(
         kind,
@@ -738,7 +736,6 @@ async def _create_stubs(
     names: list[str],
     note_type: Literal["domain", "person", "project", "resource"],
     source_task_slug: str,
-    source_task_title: str,
 ) -> list[str]:
     """Create stub notes for each name that doesn't exist.
 
@@ -746,7 +743,6 @@ async def _create_stubs(
         names: Human-readable names to stub out.
         note_type: Value for the ``type`` frontmatter field.
         source_task_slug: Slug of the task that caused these stubs to be created.
-        source_task_title: Human-readable title of the source task.
 
     Returns:
         Names of notes that were newly created.
@@ -760,7 +756,6 @@ async def _create_stubs(
                 name,
                 note_type,
                 source_task_slug,
-                source_task_title,
             )
             for name in names
         ),
@@ -903,25 +898,21 @@ async def _create_linked_stubs(
             metadata.domains,
             "domain",
             slug,
-            metadata.title,
         ),
         _create_stubs(
             metadata.resources,
             "resource",
             slug,
-            metadata.title,
         ),
         _create_stubs(
             metadata.projects,
             "project",
             slug,
-            metadata.title,
         ),
         _create_stubs(
             metadata.people,
             "person",
             slug,
-            metadata.title,
         ),
     )
 

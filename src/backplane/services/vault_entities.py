@@ -90,7 +90,9 @@ def _section_entries(
 
 def _vault_relative_path(path: AsyncPath) -> pathlib.PurePath:
     """Return a vault-relative pure path for ``MarkdownDocument`` construction."""
-    return pathlib.PurePath(path.relative_to(SETTINGS.obsidian_vault_path).as_posix())
+    root_resolved = pathlib.Path(SETTINGS.obsidian_vault_path.as_posix()).resolve()
+    path_resolved = pathlib.Path(path.as_posix())
+    return pathlib.PurePath(path_resolved.relative_to(root_resolved).as_posix())
 
 
 @final

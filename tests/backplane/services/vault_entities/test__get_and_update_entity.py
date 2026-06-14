@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from backplane.utils.async_path import AsyncPath
+import pathlib
 
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
-from backplane.utils import exc
+from backplane.utils import AsyncPath, exc
 from backplane.utils.enums import VaultEntityKind
+from backplane.utils.settings import SETTINGS
 
 pytestmark = pytest.mark.usefixtures("obsidian_vault")
 
@@ -36,6 +34,30 @@ async def test__get_entity_raises_not_found() -> None:
     """Reading a missing entity raises NotFoundError."""
     with pytest.raises(exc.NotFoundError, match="not found"):
         _ = await VaultEntityService.get_entity(VaultEntityKind.PERSON, "Missing")
+
+
+async def test__get_entity_works_when_vault_root_is_symlink(
+    obsidian_vault: AsyncPath,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Entity reads work when the configured vault root is a symlink."""
+    real_vault = pathlib.Path(obsidian_vault.as_posix())
+    symlink_parent = real_vault.parent / "vault_symlink_parent"
+    symlink_parent.mkdir(exist_ok=True)
+    symlink_vault = symlink_parent / "vault"
+    if symlink_vault.exists() or symlink_vault.is_symlink():
+        symlink_vault.unlink()
+    symlink_vault.symlink_to(real_vault, target_is_directory=True)
+
+    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", AsyncPath(symlink_vault))
+
+    _ = await VaultEntityService.create_entity(VaultEntityKind.RESOURCE, "Symlink Test")
+    rendered = await VaultEntityService.get_entity(
+        VaultEntityKind.RESOURCE,
+        "Symlink Test",
+    )
+
+    assert "# Symlink Test" in rendered
 
 
 async def test__list_entity_sections_returns_section_metadata() -> None:

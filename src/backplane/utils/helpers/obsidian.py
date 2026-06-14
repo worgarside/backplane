@@ -61,6 +61,9 @@ def build_obsidian_link(
     When ``path_or_target`` is a vault-relative path (contains ``/`` or ends with
     ``.md``), the link target uses the full path and defaults the alias to the note
     title stem so folder prefixes are not shown in the rendered view.
+
+    Returns:
+        A rendered Obsidian wikilink string.
     """
     is_path = "/" in path_or_target or path_or_target.endswith(".md")
     if is_path:
@@ -74,7 +77,10 @@ def build_obsidian_link(
         fragment_text = fragment if fragment.startswith("#") else f"#{fragment}"
         target = f"{target}{fragment_text}"
 
-    if alias is not None and ("/" in target.split("#", maxsplit=1)[0] or alias != target.split("#", maxsplit=1)[0]):
+    if alias is not None and (
+        "/" in target.split("#", maxsplit=1)[0]
+        or alias != target.split("#", maxsplit=1)[0]
+    ):
         return f"[[{target}|{alias}]]"
 
     return f"[[{target}]]"
@@ -86,7 +92,11 @@ def build_vault_note_metadata(
     title: str,
     path: str,
 ) -> VaultNoteMetadata:
-    """Build structured note metadata for tool responses."""
+    """Build structured note metadata for tool responses.
+
+    Returns:
+        Metadata describing the created or resolved vault note.
+    """
     filename = path.rsplit("/", maxsplit=1)[-1]
     canonical_link = build_obsidian_link(path)
     return VaultNoteMetadata(

@@ -859,7 +859,11 @@ async def _unique_task_filename(title: str) -> tuple[str, str]:
 async def _resolve_task_reference(
     task_ref: str,
 ) -> tuple[anyio.Path, str] | None:
-    """Resolve a task slug, filename stem, or title to its vault path and link target."""
+    """Resolve a task slug, filename stem, or title to its vault path and link target.
+
+    Returns:
+        Vault-relative task path and filename stem, or ``None`` when not found.
+    """
     tasks_dir = await resolve_under_root(VAULT_PATHS.task_notes_dir)
 
     candidates = [

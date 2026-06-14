@@ -73,7 +73,7 @@ class AsyncPath(anyio.Path):
 
     @override
     def __truediv__(self, other: str | PathLike[str]) -> AsyncPath:
-        return type(self)(self._path / other)
+        return type(self)(pathlib.Path(self) / other)
 
     @override
     def __rtruediv__(self, other: str | PathLike[str]) -> AsyncPath:

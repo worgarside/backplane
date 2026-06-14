@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from backplane.utils.async_path import AsyncPath
+
 from .dttm import (
     format_human_date,
     format_obsidian_moment_date,
@@ -11,7 +13,7 @@ from .dttm import (
     substitute_vault_entity_template,
     today,
 )
-from .files import AsyncPath, atomic_write_text, resolve_under_root
+from .files import atomic_write_text, resolve_under_root
 from .obsidian import (
     VaultNoteMetadata,
     build_entity_wikilink,

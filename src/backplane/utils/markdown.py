@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, ClassVar, Self, cast
 
-import anyio
 import mdformat
 from loguru import logger
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, computed_field
 
+from .async_path import AsyncPath
 from .exceptions import SectionNotFoundError, UserError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
@@ -240,7 +240,7 @@ class MarkdownDocument(BaseModel):
     _loaded_rendered: Annotated[str, PrivateAttr()] = ""
 
     vault_path: Annotated[
-        anyio.Path | pathlib.PurePath,
+        AsyncPath | pathlib.PurePath,
         Field(description="The path within the vault to the markdown file."),
     ]
 
@@ -288,7 +288,7 @@ class MarkdownDocument(BaseModel):
         return self._body
 
     @property
-    def _async_file_path(self) -> anyio.Path:
+    def _async_file_path(self) -> AsyncPath:
         """Async-capable path wrapper for disk I/O."""
         return SETTINGS.obsidian_vault_path / self.vault_path
 

@@ -13,7 +13,7 @@ from pydantic import Field, PastDate
 
 from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
 from backplane.services.obsidian import ObsidianService
-from backplane.utils import exc, format_human_date, today
+from backplane.utils import AsyncPath, exc, format_human_date, today
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
@@ -296,7 +296,7 @@ async def record_idea(
 
 async def move_note(
     source_path: Annotated[
-        str,
+        AsyncPath,
         Field(
             description=(
                 "Vault-relative path to the note to move, e.g. 'Tasks/old-name.md'."
@@ -304,7 +304,7 @@ async def move_note(
         ),
     ],
     destination_path: Annotated[
-        str,
+        AsyncPath,
         Field(
             description=(
                 "Vault-relative destination path; parent directories are created if "

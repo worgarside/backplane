@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import pathlib
 from typing import TYPE_CHECKING, Final, Literal, TypedDict, final, overload
 
 from loguru import logger
 
 from backplane.utils import (
     VAULT_PATHS,
+    AsyncPath,
     MarkdownDocument,
     append_board_card,
     atomic_write_text,
@@ -23,8 +25,6 @@ from backplane.utils.enums import VaultEntityKind
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
-    import anyio
-
     from backplane.utils.helpers.obsidian import VaultNoteMetadata
     from backplane.utils.markdown import MarkdownSection
 
@@ -88,12 +88,17 @@ def _section_entries(
     return entries
 
 
+def _vault_relative_path(path: AsyncPath) -> pathlib.PurePath:
+    """Return a vault-relative pure path for ``MarkdownDocument`` construction."""
+    return pathlib.PurePath(path.relative_to(SETTINGS.obsidian_vault_path).as_posix())
+
+
 @final
 class VaultEntityService:
     """Service for listing, reading, creating, and updating vault entity notes."""
 
     @staticmethod
-    def template_path_for(kind: VaultEntityKind) -> anyio.Path:
+    def template_path_for(kind: VaultEntityKind) -> AsyncPath:
         """Return the vault-relative template path for an entity kind."""
         return _ENTITY_TEMPLATES[kind]
 
@@ -131,7 +136,7 @@ class VaultEntityService:
         name: str,
         *,
         must_exist: Literal[True],
-    ) -> anyio.Path: ...
+    ) -> AsyncPath: ...
 
     @overload
     @staticmethod
@@ -140,7 +145,7 @@ class VaultEntityService:
         name: str,
         *,
         must_exist: Literal[False] = False,
-    ) -> anyio.Path | None: ...
+    ) -> AsyncPath | None: ...
 
     @staticmethod
     async def resolve_entity_path(
@@ -148,7 +153,7 @@ class VaultEntityService:
         name: str,
         *,
         must_exist: bool = False,
-    ) -> anyio.Path | None:
+    ) -> AsyncPath | None:
         """Resolve an entity display name to its on-disk path.
 
         Args:
@@ -166,11 +171,11 @@ class VaultEntityService:
         directory = await resolve_under_root(kind.vault_dir)
         readable_path = directory / f"{note_filename(name)}.md"
         if await readable_path.exists():
-            return readable_path
+            return AsyncPath(readable_path.as_posix())
 
         slug_path = directory / f"{safe_slug(name)}.md"
         if await slug_path.exists():
-            return slug_path
+            return AsyncPath(slug_path.as_posix())
 
         if await directory.is_dir():
             target = name.casefold()
@@ -181,7 +186,7 @@ class VaultEntityService:
                 text = await entry.read_text(encoding="utf-8")
                 title = note_title_from_markdown(text)
                 if title is not None and title.casefold() == target:
-                    return entry
+                    return AsyncPath(entry.as_posix())
 
         if must_exist:
             msg = f"{kind.value.title()} {name!r} not found."
@@ -223,7 +228,7 @@ class VaultEntityService:
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         async with MarkdownDocument(
-            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            vault_path=_vault_relative_path(path),
             read_only=True,
         ) as document:
             return document.render()
@@ -246,7 +251,7 @@ class VaultEntityService:
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         async with MarkdownDocument(
-            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            vault_path=_vault_relative_path(path),
             read_only=True,
         ) as document:
             if len(document.body) != 1 or document.body[0].level != 1:
@@ -278,7 +283,7 @@ class VaultEntityService:
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
         async with MarkdownDocument(
-            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            vault_path=_vault_relative_path(path),
             read_only=True,
         ) as document:
             try:
@@ -375,7 +380,7 @@ class VaultEntityService:
         now = dt.datetime.now(tz=SETTINGS.local_timezone).replace(microsecond=0)
 
         async with MarkdownDocument(
-            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            vault_path=_vault_relative_path(path),
             read_only=False,
         ) as document:
             try:

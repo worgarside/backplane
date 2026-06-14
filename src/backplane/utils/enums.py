@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from .settings import VAULT_PATHS
 
 if TYPE_CHECKING:
-    import anyio
+    from .async_path import AsyncPath
 
 
 class Effort(enum.StrEnum):
@@ -36,7 +36,7 @@ class VaultEntityKind(enum.StrEnum):
     RESOURCE = enum.auto()
 
     @property
-    def vault_dir(self) -> anyio.Path:
+    def vault_dir(self) -> AsyncPath:
         """Return the vault subdirectory for this entity kind."""
         return {
             VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,

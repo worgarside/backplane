@@ -15,13 +15,13 @@ from .helpers.obsidian import build_obsidian_link
 from .settings import SETTINGS
 
 if TYPE_CHECKING:
-    import anyio
+    from .async_path import AsyncPath
 
 _NEXT_SECTION_RE: Final = re.compile(r"^## ", re.MULTILINE)
 
 
 def _format_card_line(
-    note_path: anyio.Path,
+    note_path: AsyncPath,
     *,
     due: dt.date | dt.datetime | None = None,
 ) -> str:
@@ -51,7 +51,7 @@ def _section_heading_re(section: str) -> re.Pattern[str]:
 
 def add_card_to_list(
     text: str,
-    note_path: anyio.Path,
+    note_path: AsyncPath,
     section: str,
     *,
     due: dt.date | dt.datetime | None = None,
@@ -87,8 +87,8 @@ def add_card_to_list(
 
 
 async def append_board_card(
-    board_path: anyio.Path,
-    note_path: anyio.Path,
+    board_path: AsyncPath,
+    note_path: AsyncPath,
     *,
     section: str = "Backlog",
     due: dt.date | dt.datetime | None = None,

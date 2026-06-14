@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from . import exceptions as exc
+from .async_path import AsyncPath
 from .helpers import (
-    AsyncPath,
     VaultNoteMetadata,
     atomic_write_text,
     build_entity_wikilink,
@@ -28,8 +28,8 @@ __all__ = [
     "SETTINGS",
     "VAULT_PATHS",
     "YAML_LOADER",
-    "MarkdownDocument",
     "AsyncPath",
+    "MarkdownDocument",
     "VaultNoteMetadata",
     "append_board_card",
     "atomic_write_text",

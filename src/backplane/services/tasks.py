@@ -22,6 +22,7 @@ from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
     YAML_LOADER,
+    AsyncPath,
     MarkdownDocument,
     VaultNoteMetadata,
     atomic_write_text,
@@ -58,7 +59,7 @@ class Capture:
     date: str
     time: str
     text: str
-    path: anyio.Path
+    path: AsyncPath
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +81,7 @@ class CreateTaskResult(BaseModel, frozen=True, arbitrary_types_allowed=True):
     """Outcome of creating a task note from a description or capture."""
 
     slug: str
-    path: anyio.Path
+    path: AsyncPath
     title: str
     metadata: VaultNoteMetadata
     matched_capture_id: str | None
@@ -955,7 +956,7 @@ async def _unique_task_filename(title: str) -> tuple[str, str]:
 
 async def _resolve_task_reference(
     task_ref: str,
-) -> tuple[anyio.Path, str] | None:
+) -> tuple[AsyncPath, str] | None:
     """Resolve a task slug, filename stem, or title to its vault path and link target.
 
     Returns:
@@ -999,7 +1000,7 @@ async def _create_task_note(
     capture: Capture | None,
     description: str,
     due: str | None,
-) -> anyio.Path:
+) -> AsyncPath:
     """Create the markdown task note for a new task.
 
     Returns:

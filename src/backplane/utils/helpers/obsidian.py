@@ -5,11 +5,9 @@ from __future__ import annotations
 import re
 from typing import Annotated, Final, Literal
 
-import anyio
 from pydantic import BaseModel, Field, computed_field
 
-from backplane.utils.helpers.files import AsyncPath
-
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.enums import VaultEntityKind
 
 from .slug import safe_slug
@@ -89,7 +87,7 @@ def obsidian_link_target_from_path(path: str) -> str:
 
 
 def build_obsidian_link(
-    path_or_target: anyio.Path,
+    path_or_target: AsyncPath,
     *,
     alias: str | None = None,
     fragment: str | None = None,
@@ -109,17 +107,17 @@ def build_obsidian_link(
         A rendered Obsidian wikilink string.
 
     Examples:
-        >>> build_obsidian_link(anyio.Path("Domains/Home - Property.md"))
+        >>> build_obsidian_link(AsyncPath("Domains/Home - Property.md"))
         '[[Domains/Home - Property|Home - Property]]'
-        >>> build_obsidian_link(anyio.Path("Home Assistant"))
+        >>> build_obsidian_link(AsyncPath("Home Assistant"))
         '[[Home Assistant]]'
         >>> build_obsidian_link(
-        ...     anyio.Path("Domains/Home - Property.md"),
+        ...     AsyncPath("Domains/Home - Property.md"),
         ...     alias="Home / Property",
         ... )
         '[[Domains/Home - Property|Home / Property]]'
         >>> build_obsidian_link(
-        ...     anyio.Path("Projects/Rented Home Formal Complaint.md"),
+        ...     AsyncPath("Projects/Rented Home Formal Complaint.md"),
         ...     fragment="Tasks",
         ... )
         '[[Projects/Rented Home Formal Complaint#Tasks|Rented Home Formal Complaint]]'
@@ -164,7 +162,7 @@ def build_vault_note_metadata(
     *,
     kind: VaultNoteKind,
     title: str,
-    path: anyio.Path,
+    path: AsyncPath,
 ) -> VaultNoteMetadata:
     """Build structured note metadata for tool responses.
 

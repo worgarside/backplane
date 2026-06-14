@@ -2,12 +2,136 @@
 
 from __future__ import annotations
 
+import pathlib
 from typing import TYPE_CHECKING
 
 import anyio
 import pytest
 
-from backplane.utils.settings import SETTINGS
+from backplane.utils.settings import SETTINGS, VAULT_PATHS
+
+DOMAIN_TEMPLATE = """---
+type: domain
+status: active
+created:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+updated:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+tags:
+  - domain
+---
+# {{title}}
+
+## Overview
+
+## Key Resources
+
+-
+
+## Active Projects
+
+-
+
+## Related Tasks
+
+-
+
+## Notes
+"""
+
+PERSON_TEMPLATE = """---
+type: person
+status: active
+created:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+updated:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+tags:
+  - person
+---
+# {{title}}
+
+## Overview
+
+## Context
+
+## Related Tasks
+
+-
+
+## Notes
+"""
+
+RESOURCE_TEMPLATE = """---
+type: resource
+status: active
+created:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+updated:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+domains: []
+url:
+tags:
+  - resource
+---
+# {{title}}
+
+## Overview
+
+## Links
+
+-
+
+## Related Tasks
+
+-
+
+## Notes
+"""
+
+PROJECT_BOARD = """---
+
+kanban-plugin: board
+
+---
+
+## Backlog
+
+
+
+## Todo
+"""
+
+PROJECT_TEMPLATE = """---
+type: project
+status: planning
+created:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+updated:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+domains: []
+resources: []
+people: []
+priority: medium
+due:
+completed:
+tags:
+  - project
+---
+# {{title}}
+
+## Overview
+
+## Goals
+
+-
+
+## Tasks
+
+-
+
+## Notes
+"""
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -26,4 +150,23 @@ def obsidian_vault(
 ) -> anyio.Path:
     """Point application settings at a temporary vault root."""
     monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
+    _install_entity_templates(vault_path)
+    _install_project_board(vault_path)
     return vault_path
+
+
+def _install_entity_templates(vault_path: anyio.Path) -> None:
+    """Write minimal entity templates into a temporary vault."""
+    templates = pathlib.Path(str(vault_path)) / "Templates"
+    templates.mkdir(parents=True, exist_ok=True)
+    _ = (templates / "Domain.md").write_text(DOMAIN_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Person.md").write_text(PERSON_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Project.md").write_text(PROJECT_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Resource.md").write_text(RESOURCE_TEMPLATE, encoding="utf-8")
+
+
+def _install_project_board(vault_path: anyio.Path) -> None:
+    """Write a minimal project Kanban board into a temporary vault."""
+    board = pathlib.Path(str(vault_path)) / str(VAULT_PATHS.project_board_path)
+    board.parent.mkdir(parents=True, exist_ok=True)
+    _ = board.write_text(PROJECT_BOARD, encoding="utf-8")

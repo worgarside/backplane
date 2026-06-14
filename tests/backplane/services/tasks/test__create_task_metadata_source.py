@@ -45,6 +45,7 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
         title="Stub",
         domains=[],
         resources=[],
+        projects=[],
         people=["Jordan"],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -57,4 +58,4 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
 
     _ = await TaskService.create_task("calendar dashboard")
 
-    extract.assert_awaited_once_with(capture_text, None, None)
+    _ = extract.assert_awaited_once_with(capture_text, None, None)

@@ -10,6 +10,7 @@ from fastmcp.server.lifespan import lifespan
 from backplane import __version__
 from backplane.mcp.obsidian import register_obsidian_tools
 from backplane.mcp.tasks import register_task_tools
+from backplane.mcp.vault_entities import register_vault_entity_tools
 from backplane.services.home_assistant import notify_startup, reload_mcp_integration
 
 if TYPE_CHECKING:
@@ -20,8 +21,7 @@ if TYPE_CHECKING:
 _INSTRUCTIONS = (
     "Backplane exposes tools for interacting with the user's personal homelab "
     "services — currently their Obsidian vault, with more integrations to follow.\n\n"
-    "The user is typically speaking through a voice assistant, so keep tool "
-    "outputs concise — a short confirmation is usually enough."
+    "Keep tool outputs concise — a short confirmation is usually enough."
 )
 
 
@@ -68,5 +68,6 @@ def create_mcp_server(
 
     register_obsidian_tools(mcp, require_oauth=require_oauth)
     register_task_tools(mcp, require_oauth=require_oauth)
+    register_vault_entity_tools(mcp, require_oauth=require_oauth)
 
     return mcp

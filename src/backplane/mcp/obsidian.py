@@ -134,6 +134,14 @@ use create_task instead.
 
 Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
 as possible."""
+_MOVE_NOTE_DESCRIPTION = (
+    "Move an Obsidian markdown note to a new vault-relative path. Use this when "
+    "the user wants to relocate, reorganise, or rename a note.\n\n"
+    "Both paths are relative to the vault root, e.g. 'Tasks/review-logs.md' or "
+    "'Projects/Home/Plan.md'. You do not need to create destination folders first — "
+    "missing parent directories are created automatically.\n\n"
+    "The source note must exist. The destination must not already exist."
+)
 
 
 async def add_to_daily_note(
@@ -156,7 +164,7 @@ async def add_to_daily_note(
         Field(
             description=(
                 "How to combine `content` with any existing section text. `append` "
-                "is almost always the right choice for voice capture; use `replace` "
+                "is almost always the right choice; use `replace` "
                 "only when the user explicitly asks to overwrite."
             ),
         ),
@@ -286,6 +294,43 @@ async def record_idea(
     return "Idea recorded successfully."
 
 
+async def move_note(
+    source_path: Annotated[
+        str,
+        Field(
+            description=(
+                "Vault-relative path to the note to move, e.g. 'Tasks/old-name.md'."
+            ),
+        ),
+    ],
+    destination_path: Annotated[
+        str,
+        Field(
+            description=(
+                "Vault-relative destination path; parent directories are created if "
+                "needed, e.g. 'Projects/New Folder/new-name.md'."
+            ),
+        ),
+    ],
+) -> str:
+    """Move a vault note to a new vault-relative path.
+
+    Args:
+        source_path: Vault-relative path to the note to move.
+        destination_path: Vault-relative destination path for the note.
+
+    Returns:
+        Short confirmation with the destination path.
+    """
+    logger.info(
+        "move_note: source={!r} destination={!r}",
+        source_path,
+        destination_path,
+    )
+    path = await ObsidianService.move_note(source_path, destination_path)
+    return f"Moved note to {path}."
+
+
 # ------------------------------------------------------------
 # Resources
 
@@ -318,6 +363,7 @@ def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) 
     _ = mcp.tool(description=_ADD_DESCRIPTION, **auth_kwargs)(add_to_daily_note)
     _ = mcp.tool(description=_GET_DAILY_NOTE_DESCRIPTION, **auth_kwargs)(get_daily_note)
     _ = mcp.tool(description=_RECORD_IDEA_DESCRIPTION, **auth_kwargs)(record_idea)
+    _ = mcp.tool(description=_MOVE_NOTE_DESCRIPTION, **auth_kwargs)(move_note)
     _ = mcp.resource(
         uri="obsidian://daily-note/today",
         name="Today's Daily Note",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -23,13 +24,13 @@ async def test__extract_metadata_returns_defaults_when_agent_fails(
     mocker: MockerFixture,
 ) -> None:
     """Agent failures fall back to deterministic task metadata."""
-    mocker.patch(
+    _ = mocker.patch(
         "backplane.services.tasks._metadata_catalog_prompt",
         new=mocker.AsyncMock(return_value=""),
     )
     mock_agent = mocker.Mock()
     mock_agent.run = mocker.AsyncMock(side_effect=RuntimeError("boom"))
-    mocker.patch("backplane.services.tasks._metadata_agent", return_value=mock_agent)
+    _ = mocker.patch("backplane.services.tasks._metadata_agent", return_value=mock_agent)
 
     metadata = await _extract_metadata(
         "Install the hallway motion sensor",
@@ -41,6 +42,7 @@ async def test__extract_metadata_returns_defaults_when_agent_fails(
         title="Install the hallway motion sensor",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -52,7 +54,7 @@ async def test__extract_metadata_applies_catalog_and_user_overrides(
     mocker: MockerFixture,
 ) -> None:
     """Catalog text is sent to the agent and explicit fields win."""
-    mocker.patch(
+    _ = mocker.patch(
         "backplane.services.tasks._metadata_catalog_prompt",
         new=mocker.AsyncMock(return_value="Existing domains: Home Assistant"),
     )
@@ -63,6 +65,7 @@ async def test__extract_metadata_applies_catalog_and_user_overrides(
                 title="Generated title",
                 domains=["Home Assistant", "MQTT"],
                 resources=["mqtt"],
+                projects=["Hallway Refresh"],
                 people=["Jordan"],
                 priority=enums.Priority.LOW,
                 effort=enums.Effort.SMALL,
@@ -70,8 +73,8 @@ async def test__extract_metadata_applies_catalog_and_user_overrides(
             ),
         ),
     )
-    mocker.patch("backplane.services.tasks._metadata_agent", return_value=mock_agent)
-    mocker.patch("backplane.services.tasks._log_metadata_agent_run")
+    _ = mocker.patch("backplane.services.tasks._metadata_agent", return_value=mock_agent)
+    _ = mocker.patch("backplane.services.tasks._log_metadata_agent_run")
 
     metadata = await _extract_metadata(
         "Install the hallway motion sensor",
@@ -83,6 +86,7 @@ async def test__extract_metadata_applies_catalog_and_user_overrides(
         title="Install hallway sensor",
         domains=["Home Assistant"],
         resources=["mqtt"],
+        projects=["Hallway Refresh"],
         people=["Jordan"],
         priority=enums.Priority.HIGH,
         effort=enums.Effort.SMALL,

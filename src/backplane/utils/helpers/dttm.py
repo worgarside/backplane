@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 _ORDINAL_SUFFIXES: Final = {1: "st", 2: "nd", 3: "rd"}  # codespell:ignore nd
 _TEEN_RANGE: Final = range(11, 14)
 _DATE_TEMPLATE: Final = re.compile(r"\{\{\s*date\s*(?::([^}]*))?\s*\}\}", re.IGNORECASE)
+_TITLE_TEMPLATE: Final = re.compile(r"\{\{\s*title\s*\}\}", re.IGNORECASE)
+_CORE_DATETIME_TEMPLATE: Final = re.compile(
+    r"\{\s*date\s*:\s*([^}]+)\s*\}",
+    re.IGNORECASE,
+)
 
 
 def today() -> dt.date:
@@ -33,48 +38,82 @@ def ordinal_day_of_month(day: int) -> str:
     return f"{day}{ordinal_suffix_for_day(day)}"
 
 
-def format_obsidian_moment_date(date: dt.date, fmt: str) -> str:
-    """Format a date using a subset of Obsidian / moment.js display tokens.
+_OBSIDIAN_FORMAT_HANDLERS: Final[list[tuple[str, Callable[[dt.datetime], str]]]] = [
+    ("YYYY", lambda t: t.strftime("%Y")),
+    ("MMMM", lambda t: t.strftime("%B")),
+    ("dddd", lambda t: t.strftime("%A")),
+    ("MMM", lambda t: t.strftime("%b")),
+    ("ddd", lambda t: t.strftime("%a")),
+    ("MM", lambda t: t.strftime("%m")),
+    ("DD", lambda t: t.strftime("%d")),
+    ("Do", lambda t: ordinal_day_of_month(t.day)),
+    ("HH", lambda t: t.strftime("%H")),
+    ("mm", lambda t: t.strftime("%M")),
+    ("ss", lambda t: t.strftime("%S")),
+    ("YY", lambda t: t.strftime("%y")),
+    ("M", lambda t: str(t.month)),
+    ("D", lambda t: str(t.day)),
+]
 
-    Supported tokens (longest match wins): ``YYYY``, ``YY``, ``MMMM``, ``MMM``,
-    ``MM``, ``M``, ``DD``, ``D``, ``Do``, ``dddd``, ``ddd``. Any other characters
-    are copied through unchanged.
 
-    Args:
-        date: The calendar date to format.
-        fmt: The moment-style format string.
+def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
+    """Expand an Obsidian template format string using ``_OBSIDIAN_FORMAT_HANDLERS``.
 
     Returns:
-        The formatted string.
+        The format string with token placeholders replaced.
     """
-    token_handlers: list[tuple[str, Callable[[dt.date], str]]] = [
-        ("YYYY", lambda d: d.strftime("%Y")),
-        ("MMMM", lambda d: d.strftime("%B")),
-        ("dddd", lambda d: d.strftime("%A")),
-        ("MMM", lambda d: d.strftime("%b")),
-        ("ddd", lambda d: d.strftime("%a")),
-        ("MM", lambda d: d.strftime("%m")),
-        ("DD", lambda d: d.strftime("%d")),
-        ("Do", lambda d: ordinal_day_of_month(d.day)),
-        ("YY", lambda d: d.strftime("%y")),
-        ("M", lambda d: str(d.month)),
-        ("D", lambda d: str(d.day)),
-    ]
-    token_handlers.sort(key=lambda item: len(item[0]), reverse=True)
-
+    sorted_handlers = sorted(
+        _OBSIDIAN_FORMAT_HANDLERS,
+        key=lambda item: len(item[0]),
+        reverse=True,
+    )
     parts: list[str] = []
     i = 0
     n = len(fmt)
     while i < n:
-        for token, handler in token_handlers:
+        for token, handler in sorted_handlers:
             if fmt.startswith(token, i):
-                parts.append(handler(date))
+                parts.append(handler(moment))
                 i += len(token)
                 break
         else:
             parts.append(fmt[i])
             i += 1
     return "".join(parts)
+
+
+def _obsidian_format_moment(value: dt.date | dt.datetime) -> dt.datetime:
+    """Normalize a calendar date or datetime for Obsidian token expansion.
+
+    Returns:
+        A datetime suitable for token handler dispatch.
+    """
+    if isinstance(value, dt.datetime):
+        return value
+    return dt.datetime.combine(value, dt.time.min, tzinfo=SETTINGS.local_timezone)
+
+
+def format_obsidian_moment_date(date: dt.date, fmt: str) -> str:
+    """Format a value for Obsidian ``{{date}}`` / ``{{date:...}}`` placeholders.
+
+    Intended for double-brace core-template variables in note bodies and titles.
+    Formats are usually date-focused and may use human-readable moment.js tokens
+    such as ``MMMM``, ``dddd``, and ``Do``. A plain :class:`~datetime.date` is
+    treated as midnight in the configured local timezone; time tokens (``HH``,
+    ``mm``, ``ss``) expand against that instant when present.
+
+    Supported tokens (longest match wins): ``YYYY``, ``YY``, ``MMMM``, ``MMM``,
+    ``MM``, ``M``, ``DD``, ``D``, ``Do``, ``dddd``, ``ddd``, ``HH``, ``mm``,
+    ``ss``. Unrecognized characters are copied through unchanged.
+
+    Args:
+        date: The calendar date to format.
+        fmt: The format string from inside ``{{date:...}}``.
+
+    Returns:
+        The formatted string.
+    """
+    return _expand_obsidian_format(fmt, _obsidian_format_moment(date))
 
 
 def format_human_date(date: dt.date) -> str:
@@ -107,3 +146,51 @@ def substitute_obsidian_core_date_variables(template: str, date: dt.date) -> str
         return format_obsidian_moment_date(date, inner.strip())
 
     return _DATE_TEMPLATE.sub(_replace, template)
+
+
+def format_obsidian_datetime(now: dt.datetime, fmt: str) -> str:
+    """Format a timestamp for Obsidian ``{ date:... }`` single-brace placeholders.
+
+    Intended for core-template datetime variables embedded in YAML frontmatter,
+    such as ``"{ date:YYYY-MM-DDTHH:mm:ss }"`` in entity/task templates. Uses the
+    same token vocabulary as :func:`format_obsidian_moment_date`; pass a
+    :class:`~datetime.datetime` so time tokens reflect the actual clock time.
+
+    Args:
+        now: The local datetime to format.
+        fmt: The format string from inside ``{ date:... }``.
+
+    Returns:
+        The formatted string.
+    """
+    return _expand_obsidian_format(fmt, _obsidian_format_moment(now))
+
+
+def substitute_vault_entity_template(
+    template: str,
+    *,
+    title: str,
+    now: dt.datetime | None = None,
+) -> str:
+    """Expand Obsidian template placeholders used for vault entity notes.
+
+    Handles ``{{title}}``, ``{ date:... }`` (datetime), and ``{{date}}`` /
+    ``{{date:...}}`` (date-only) placeholders.
+
+    Args:
+        template: Raw template file contents.
+        title: Display title substituted for ``{{title}}``.
+        now: Timestamp used for date/datetime placeholders. Defaults to now in
+            the configured local timezone.
+
+    Returns:
+        Template text with placeholders expanded.
+    """
+    timestamp = now or dt.datetime.now(tz=SETTINGS.local_timezone)
+    text = _TITLE_TEMPLATE.sub(title, template)
+
+    def _replace_datetime(match: re.Match[str]) -> str:
+        return format_obsidian_datetime(timestamp, match.group(1).strip())
+
+    text = _CORE_DATETIME_TEMPLATE.sub(_replace_datetime, text)
+    return substitute_obsidian_core_date_variables(text, timestamp.date())

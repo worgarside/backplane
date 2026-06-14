@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 from typing import TYPE_CHECKING
 
 from backplane.services.tasks import _create_stubs, _ensure_stub
@@ -13,28 +14,21 @@ if TYPE_CHECKING:
 
 
 async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:
-    """A missing entity note is created as a minimal stub."""
+    """A missing entity note is created from the vault template with provenance."""
     created = await _ensure_stub(
-        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created is True
-    assert await (obsidian_vault / "Domains/home-assistant.md").read_text(
+    text = await (obsidian_vault / "Domains/home-assistant.md").read_text(
         encoding="utf-8",
-    ) == (
-        "---\n"
-        "type: domain\n"
-        "status: active\n"
-        "---\n\n"
-        "# Home Assistant\n\n"
-        "## Notes\n\n"
-        "Created automatically from task intake for "
-        "[[review-home-assistant|Review Home Assistant]].\n"
     )
+    assert "# Home Assistant" in text
+    assert "## Overview" in text
+    assert "## Notes" in text
+    assert "Created automatically from task intake for [[review-home-assistant]]." in text
 
 
 async def test__ensure_stub_returns_false_for_existing_note(
@@ -47,15 +41,35 @@ async def test__ensure_stub_returns_false_for_existing_note(
     await atomic_write_text(existing, "# Existing\n")
 
     created = await _ensure_stub(
-        VAULT_PATHS.domains_dir,
         "Home Assistant",
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created is False
     assert await existing.read_text(encoding="utf-8") == "# Existing\n"
+
+
+async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> None:
+    """Project stub notes are created from the project template."""
+    created = await _ensure_stub(
+        "Garage Migration",
+        "project",
+        "plan-garage-migration",
+    )
+
+    assert created is True
+    text = await (obsidian_vault / "Projects/garage-migration.md").read_text(
+        encoding="utf-8",
+    )
+    assert "# Garage Migration" in text
+    assert "## Goals" in text
+    assert "## Tasks" in text
+    assert "Created automatically from task intake for [[plan-garage-migration]]." in text
+    board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
+        encoding="utf-8",
+    )
+    assert "- [ ] [[garage-migration]]" in board
 
 
 async def test__create_stubs_returns_only_newly_created_names(
@@ -68,10 +82,8 @@ async def test__create_stubs_returns_only_newly_created_names(
 
     created = await _create_stubs(
         ["Existing", "New Domain"],
-        VAULT_PATHS.domains_dir,
         "domain",
         "review-home-assistant",
-        "Review Home Assistant",
     )
 
     assert created == ["New Domain"]

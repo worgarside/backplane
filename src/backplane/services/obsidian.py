@@ -4,19 +4,27 @@ from __future__ import annotations
 
 import datetime as dt  # noqa: TC003
 import json
+import pathlib
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final, cast, final
+
+import anyio
+from loguru import logger
 
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
     MarkdownDocument,
+    exc,
+    resolve_under_root,
     substitute_obsidian_core_date_variables,
     today,
 )
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
+
+_OBSIDIAN_CONFIG_DIR: Final = ".obsidian"
 
 
 @final
@@ -117,3 +125,83 @@ class ObsidianService:
             read_only=read_only,
         ) as idea_inbox:
             yield idea_inbox
+
+    @staticmethod
+    def _validate_vault_note_path(
+        relative: str | pathlib.PurePath | anyio.Path,
+    ) -> pathlib.PurePath:
+        """Validate a vault-relative markdown note path.
+
+        Args:
+            relative: Path relative to the vault root.
+
+        Returns:
+            Normalised pure path for resolution.
+
+        Raises:
+            UserError: If the path is empty, not a markdown file, or under ``.obsidian/``.
+        """
+        path = pathlib.PurePath(relative)
+        if not path.parts:
+            msg = "Note path must not be empty."
+            raise exc.UserError(message=msg)
+        if path.suffix != ".md":
+            msg = f"Note path must be a markdown file ending in .md: {path!s}"
+            raise exc.UserError(message=msg)
+        if path.parts[0] == _OBSIDIAN_CONFIG_DIR:
+            msg = f"Paths under .obsidian/ are not allowed: {path!s}"
+            raise exc.UserError(message=msg)
+        return path
+
+    @staticmethod
+    async def move_note(
+        source_path: str | pathlib.PurePath | anyio.Path,
+        destination_path: str | pathlib.PurePath | anyio.Path,
+    ) -> anyio.Path:
+        """Move a vault note to a new vault-relative path.
+
+        Creates missing destination parent directories. Removes the source note's
+        immediate parent directory when it becomes empty after the move.
+
+        Args:
+            source_path: Vault-relative path to the note to move.
+            destination_path: Vault-relative destination path for the note.
+
+        Returns:
+            Vault-relative path to the moved note.
+
+        Raises:
+            NotFoundError: If the source note does not exist.
+            ConflictError: If the destination note already exists.
+        """
+        source_rel = ObsidianService._validate_vault_note_path(source_path)
+        destination_rel = ObsidianService._validate_vault_note_path(destination_path)
+
+        source_abs = await resolve_under_root(source_rel)
+        destination_abs = await resolve_under_root(destination_rel)
+
+        if not await source_abs.is_file():
+            msg = f"Note not found: {source_rel!s}"
+            raise exc.NotFoundError(message=msg)
+
+        if await destination_abs.exists():
+            msg = f"Destination already exists: {destination_rel!s}"
+            raise exc.ConflictError(message=msg)
+
+        source_parent = source_abs.parent
+        vault_root = await SETTINGS.obsidian_vault_path.resolve()
+
+        await destination_abs.parent.mkdir(parents=True, exist_ok=True)
+        _ = await source_abs.rename(destination_abs)
+
+        if source_parent != vault_root and await source_parent.is_dir():
+            empty = True
+            async for _ in source_parent.iterdir():
+                empty = False
+                break
+            if empty:
+                await source_parent.rmdir()
+                logger.debug("Removed empty directory after move: {}", source_parent)
+
+        logger.info("Moved note from {} to {}", source_rel, destination_rel)
+        return anyio.Path(*destination_rel.parts)

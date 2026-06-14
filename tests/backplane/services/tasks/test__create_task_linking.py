@@ -13,12 +13,13 @@ from backplane.services.tasks import (
 from backplane.utils import VAULT_PATHS, enums, today
 
 if TYPE_CHECKING:
-    import anyio
     from pytest_mock import MockerFixture
+
+    from backplane.utils.async_path import AsyncPath
 
 
 async def test__create_task_uses_explicit_capture_link(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """An explicit capture ID links the task without fuzzy matching."""
@@ -66,7 +67,7 @@ async def test__create_task_uses_explicit_capture_link(
 
 
 async def test__create_task_unknown_explicit_capture_link_creates_unlinked_task(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """An unknown explicit capture ID does not block task creation."""
@@ -109,7 +110,7 @@ Rotate the hallway camera battery.
 
 
 async def test__create_task_returns_candidates_without_blocking(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """Borderline capture matches are returned while the task is still created."""

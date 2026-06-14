@@ -2,20 +2,21 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
+import pathlib
 
 import pytest
 
 from backplane.utils.exceptions import SectionNotFoundError, UserError
 from backplane.utils.markdown import MarkdownDocument
 
-if TYPE_CHECKING:
-    import anyio
-
 
 async def test__get_section__rejects_empty_heading_path(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """An empty heading path is rejected before any section traversal."""
     rel = pathlib.PurePath("note.md")
@@ -31,7 +32,7 @@ async def test__get_section__rejects_empty_heading_path(
 
 
 async def test__get_section__raises_when_section_missing(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Missing sections list available siblings when creation is disabled."""
     rel = pathlib.PurePath("note.md")
@@ -52,7 +53,7 @@ async def test__get_section__raises_when_section_missing(
 
 
 async def test__get_section__raises_for_missing_nested_section(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Nested lookups report the parent heading and sibling names."""
     rel = pathlib.PurePath("note.md")

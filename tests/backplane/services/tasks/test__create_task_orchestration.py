@@ -12,12 +12,13 @@ from backplane.services.tasks import (
 from backplane.utils import VAULT_PATHS, build_vault_note_metadata, enums
 
 if TYPE_CHECKING:
-    import anyio
     from pytest_mock import MockerFixture
+
+    from backplane.utils.async_path import AsyncPath
 
 
 async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """Missing inbox files are skipped and duplicate task filenames get a suffix."""
@@ -56,7 +57,7 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
         metadata=build_vault_note_metadata(
             kind="task",
             title="Review backup logs",
-            path=str(note_path),
+            path=note_path,
         ),
         matched_capture_id=None,
         candidate_captures=[],

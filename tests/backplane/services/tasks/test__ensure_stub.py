@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-# pyright: reportPrivateUsage=false
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
+# pyright: reportPrivateUsage=false
 from backplane.services.tasks import _create_stubs, _ensure_stub
 from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
 
-if TYPE_CHECKING:
-    import anyio
 
-
-async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> None:
+async def test__ensure_stub_creates_missing_note(obsidian_vault: AsyncPath) -> None:
     """A missing entity note is created from the vault template with provenance."""
     created = await _ensure_stub(
         "Home Assistant",
@@ -32,7 +32,7 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: anyio.Path) -> 
 
 
 async def test__ensure_stub_returns_false_for_existing_note(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Existing entity notes are left unchanged."""
     domains = obsidian_vault / "Domains"
@@ -50,7 +50,7 @@ async def test__ensure_stub_returns_false_for_existing_note(
     assert await existing.read_text(encoding="utf-8") == "# Existing\n"
 
 
-async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> None:
+async def test__ensure_stub_creates_project_note(obsidian_vault: AsyncPath) -> None:
     """Project stub notes are created from the project template."""
     created = await _ensure_stub(
         "Garage Migration",
@@ -73,7 +73,7 @@ async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> 
 
 
 async def test__create_stubs_returns_only_newly_created_names(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Bulk stub creation reports names that were actually created."""
     domains = obsidian_vault / "Domains"

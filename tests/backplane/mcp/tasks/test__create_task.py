@@ -33,7 +33,7 @@ def _task_result(
         metadata=build_vault_note_metadata(
             kind="task",
             title=title,
-            path=str(note_path),
+            path=note_path,
         ),
         matched_capture_id=matched_capture_id,
         candidate_captures=candidate_captures or [],

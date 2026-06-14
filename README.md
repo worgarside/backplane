@@ -172,6 +172,8 @@ Create a structured task note for something actionable.
 
 Backplane uses human-readable Obsidian filenames for tasks (e.g. `Tasks/Build Master Complaint Table.md`). Kebab-case slugs are internal IDs only. Use `canonical_link` from the response when linking notes in markdown. Links use the full vault path with a display alias.
 
+Entity associations (domains, resources, projects, people) are stored as Obsidian wikilinks in task frontmatter, not plain display names.
+
 Use this when the user mentions something they need to do, want to remember to act on, or asks you to 'make a task', 'add to my list', 'remind me to', 'I should...', 'I need to...', etc.
 
 This tool always creates the task. Matching against prior inbox captures is best-effort only: high-confidence matches are linked automatically, uncertain matches are returned as candidates to offer back to the user, and unmatched tasks are created normally.

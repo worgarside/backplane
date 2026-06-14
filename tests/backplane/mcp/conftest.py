@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import anyio
 import httpx
 import pytest
 from fastmcp.server.auth.oidc_proxy import OIDCConfiguration
 
 from backplane.mcp.public import create_public_mcp_app
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.settings import Settings
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ def public_mcp_http_app(
     """Build the public MCP HTTP app the same way as ``public.py``."""
     settings = Settings.model_validate(
         {
-            "obsidian_vault_path": anyio.Path("/tmp/vault"),
+            "obsidian_vault_path": AsyncPath("/tmp/vault"),
             "mcp_public_base_url": PUBLIC_MCP_BASE_URL,
             "mcp_oidc_config_url": (
                 "https://auth.example.com/application/o/backplane-mcp/"

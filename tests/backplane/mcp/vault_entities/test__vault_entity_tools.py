@@ -5,11 +5,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-import anyio
-
 from backplane.mcp import vault_entities
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import build_vault_note_metadata
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
@@ -94,7 +93,7 @@ async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture)
             return_value=build_vault_note_metadata(
                 kind=VaultEntityKind.PROJECT,
                 title="Garage Migration",
-                path="Projects/Garage Migration.md",
+                path=AsyncPath("Projects/Garage Migration.md"),
             ),
         ),
     )
@@ -129,7 +128,7 @@ async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture)
     _ = mock_update.assert_awaited_once()
 
 
-async def test__list_vault_entities__integration(obsidian_vault: anyio.Path) -> None:
+async def test__list_vault_entities__integration(obsidian_vault: AsyncPath) -> None:
     """The list tool reads entity names from the vault."""
     domains = obsidian_vault / "Domains"
     await domains.mkdir(parents=True)

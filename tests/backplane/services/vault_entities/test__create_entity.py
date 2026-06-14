@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-import anyio
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
@@ -11,7 +15,7 @@ from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
 
-async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) -> None:
+async def test__create_entity_uses_template_shape(obsidian_vault: AsyncPath) -> None:
     """Created entity notes include template frontmatter and section headings."""
     metadata = await VaultEntityService.create_entity(
         VaultEntityKind.DOMAIN,
@@ -28,7 +32,7 @@ async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) ->
     assert "{ date:YYYY-MM-DDTHH:mm:ss }" not in text
 
 
-async def test__create_entity_supports_projects(obsidian_vault: anyio.Path) -> None:
+async def test__create_entity_supports_projects(obsidian_vault: AsyncPath) -> None:
     """Project entity notes are created under Projects from the project template."""
     metadata = await VaultEntityService.create_entity(
         VaultEntityKind.PROJECT,
@@ -49,7 +53,7 @@ async def test__create_entity_supports_projects(obsidian_vault: anyio.Path) -> N
 
 
 async def test__create_entity_does_not_add_non_projects_to_board(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Only project notes are appended to the project Kanban board."""
     board_before = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
@@ -68,7 +72,7 @@ async def test__create_entity_does_not_add_non_projects_to_board(
 
 
 async def test__create_entity_raises_conflict_for_duplicate(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Creating an entity with an existing name raises ConflictError."""
     domains = obsidian_vault / "Domains"
@@ -82,7 +86,7 @@ async def test__create_entity_raises_conflict_for_duplicate(
         )
 
 
-async def test__create_entity_appends_provenance_note(obsidian_vault: anyio.Path) -> None:
+async def test__create_entity_appends_provenance_note(obsidian_vault: AsyncPath) -> None:
     """Optional provenance text is appended to the Notes section."""
     metadata = await VaultEntityService.create_entity(
         VaultEntityKind.DOMAIN,

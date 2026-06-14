@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
 from backplane.services.obsidian import ObsidianService
 from backplane.services.tasks import TaskService
 from backplane.utils import VAULT_PATHS, today
 from backplane.utils.markdown import MarkdownDocument
 
-if TYPE_CHECKING:
-    import anyio
-
 
 async def test__link_capture_sets_task_frontmatter_and_annotates_capture(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """A confirmed capture link updates the task and capture notes."""
     capture_date = today().isoformat()
@@ -64,7 +64,7 @@ source_capture:
 
 
 async def test__link_capture_unknown_capture_does_not_change_task(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """An unknown capture ID returns a safe no-op confirmation."""
     inbox = obsidian_vault / ObsidianService.IDEA_INBOX_PATH

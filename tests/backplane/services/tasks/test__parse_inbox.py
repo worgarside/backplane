@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-import datetime as dt
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
+import datetime as dt
 
 from backplane.services.obsidian import ObsidianService
 from backplane.services.tasks import _parse_inbox
 from backplane.utils import today
 from backplane.utils.markdown import MarkdownDocument
 
-if TYPE_CHECKING:
-    import anyio
 
-
-async def test__parse_inbox_returns_recent_captures(obsidian_vault: anyio.Path) -> None:
+async def test__parse_inbox_returns_recent_captures(obsidian_vault: AsyncPath) -> None:
     """Captures within the lookback window are parsed with stable IDs."""
     base_date = today()
     today_iso = base_date.isoformat()
@@ -58,7 +59,7 @@ Too old
 
 
 async def test__parse_inbox_strips_task_backlink_annotations(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Generated task back-links are not treated as capture text."""
     today_iso = today().isoformat()
@@ -88,7 +89,7 @@ Update the Open Banking integration.
 
 
 async def test__parse_inbox_skips_invalid_dates_and_empty_captures(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Non-date headings and empty capture sections are ignored."""
     today_iso = today().isoformat()

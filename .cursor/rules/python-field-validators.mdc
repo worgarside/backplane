@@ -16,14 +16,14 @@ readability.
 ```python
 # Preferred for one-off field parsing.
 class Settings(BaseSettings):
-    obsidian_vault_path: anyio.Path
+    obsidian_vault_path: AsyncPath
 
     @field_validator("obsidian_vault_path", mode="before")
     @classmethod
-    def _parse_obsidian_vault_path(cls, v: anyio.Path | str) -> anyio.Path:
-        if isinstance(v, anyio.Path):
+    def _parse_obsidian_vault_path(cls, v: AsyncPath | str) -> AsyncPath:
+        if isinstance(v, AsyncPath):
             return v
-        return anyio.Path(v)
+        return AsyncPath(v)
 ```
 
 ```python

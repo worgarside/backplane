@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import anyio
 import pytest
 
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.settings import Settings
 
 _TEST_OAUTH_CREDENTIAL = "test-oauth-credential"
@@ -13,7 +13,7 @@ _TEST_OAUTH_CREDENTIAL = "test-oauth-credential"
 def test__mcp_oauth_configured__returns_false_when_oauth_env_vars_are_missing() -> None:
     """OAuth is considered unconfigured when any required MCP OAuth env var is absent."""
     settings = Settings(
-        obsidian_vault_path=anyio.Path("/tmp/vault"),
+        obsidian_vault_path=AsyncPath("/tmp/vault"),
     )
 
     assert settings.mcp_oauth_configured is False

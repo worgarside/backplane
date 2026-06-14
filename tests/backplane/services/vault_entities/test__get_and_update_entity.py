@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import exc
 from backplane.utils.enums import VaultEntityKind
-
-if TYPE_CHECKING:
-    import anyio
 
 pytestmark = pytest.mark.usefixtures("obsidian_vault")
 
@@ -90,7 +90,7 @@ async def test__get_entity_section_wraps_missing_section() -> None:
     assert isinstance(exc_info.value.__cause__, exc.SectionNotFoundError)
 
 
-async def test__update_entity_appends_to_section(obsidian_vault: anyio.Path) -> None:
+async def test__update_entity_appends_to_section(obsidian_vault: AsyncPath) -> None:
     """Updates append content to the requested section."""
     _ = await VaultEntityService.create_entity(VaultEntityKind.DOMAIN, "Home Assistant")
 
@@ -110,7 +110,7 @@ async def test__update_entity_appends_to_section(obsidian_vault: anyio.Path) -> 
 
 
 async def test__update_entity_bumps_updated_frontmatter(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Successful updates set the updated frontmatter timestamp."""
     _ = await VaultEntityService.create_entity(VaultEntityKind.PERSON, "Vic")

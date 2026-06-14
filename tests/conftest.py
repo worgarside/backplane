@@ -5,9 +5,9 @@ from __future__ import annotations
 import pathlib
 from typing import TYPE_CHECKING
 
-import anyio
 import pytest
 
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.settings import SETTINGS, VAULT_PATHS
 
 DOMAIN_TEMPLATE = """---
@@ -138,16 +138,16 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def vault_path(tmp_path: Path) -> anyio.Path:
+def vault_path(tmp_path: Path) -> AsyncPath:
     """Provide a temporary vault root for path-resolution tests."""
-    return anyio.Path(tmp_path)
+    return AsyncPath(tmp_path)
 
 
 @pytest.fixture
 def obsidian_vault(
-    vault_path: anyio.Path,
+    vault_path: AsyncPath,
     monkeypatch: pytest.MonkeyPatch,
-) -> anyio.Path:
+) -> AsyncPath:
     """Point application settings at a temporary vault root."""
     monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
     _install_entity_templates(vault_path)
@@ -155,7 +155,7 @@ def obsidian_vault(
     return vault_path
 
 
-def _install_entity_templates(vault_path: anyio.Path) -> None:
+def _install_entity_templates(vault_path: AsyncPath) -> None:
     """Write minimal entity templates into a temporary vault."""
     templates = pathlib.Path(str(vault_path)) / "Templates"
     templates.mkdir(parents=True, exist_ok=True)
@@ -165,7 +165,7 @@ def _install_entity_templates(vault_path: anyio.Path) -> None:
     _ = (templates / "Resource.md").write_text(RESOURCE_TEMPLATE, encoding="utf-8")
 
 
-def _install_project_board(vault_path: anyio.Path) -> None:
+def _install_project_board(vault_path: AsyncPath) -> None:
     """Write a minimal project Kanban board into a temporary vault."""
     board = pathlib.Path(str(vault_path)) / str(VAULT_PATHS.project_board_path)
     board.parent.mkdir(parents=True, exist_ok=True)

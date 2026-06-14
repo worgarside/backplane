@@ -45,7 +45,9 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
 
     assert "priority: high\n" in note
     assert "effort: small\n" in note
-    assert "- Backup Hardening\n" in note
+    assert "- '[[Domains/Infrastructure|Infrastructure]]'\n" in note
+    assert "- '[[Resources/Backups|Backups]]'\n" in note
+    assert "- '[[Projects/Backup Hardening|Backup Hardening]]'\n" in note
     assert "source_capture: 2026-05-25T21:15\n" in note
     assert "> Review backup logs\n" in note
 
@@ -72,7 +74,6 @@ def test__task_frontmatter_defaults_fixed_task_fields() -> None:
         "status": "backlog",
         "created": "2026-05-25T21:30:00",
         "updated": "2026-05-25T21:30:00",
-        "source": "voice-capture",
         "source_capture": None,
         "domains": [],
         "resources": [],

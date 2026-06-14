@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
-if TYPE_CHECKING:
-    import anyio
 
-
-async def test__list_entities_returns_sorted_titles(obsidian_vault: anyio.Path) -> None:
+async def test__list_entities_returns_sorted_titles(obsidian_vault: AsyncPath) -> None:
     """Note titles are read from H1 headings and deduplicated case-insensitively."""
     domains = obsidian_vault / "Domains"
     await domains.mkdir(parents=True)
@@ -31,7 +31,7 @@ async def test__list_entities_returns_sorted_titles(obsidian_vault: anyio.Path) 
 
 
 async def test__list_entities_skips_non_markdown_and_untitled_notes(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Only Markdown notes with level-1 headings are included."""
     domains = obsidian_vault / "Domains"
@@ -45,7 +45,7 @@ async def test__list_entities_skips_non_markdown_and_untitled_notes(
     assert names == ["Zigbee"]
 
 
-async def test__list_entities_missing_directory(obsidian_vault: anyio.Path) -> None:
+async def test__list_entities_missing_directory(obsidian_vault: AsyncPath) -> None:
     """A missing catalog directory yields an empty list."""
     _ = obsidian_vault
     assert await VaultEntityService.list_entities(VaultEntityKind.DOMAIN) == []

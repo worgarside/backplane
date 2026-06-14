@@ -323,7 +323,10 @@ Person sections:
 - Notes
 
 Project sections:
-(template structure unavailable)
+- Overview
+- Goals
+- Tasks
+- Notes
 
 Resource sections:
 - Overview

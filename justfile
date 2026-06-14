@@ -89,9 +89,9 @@ setup log_dir="/var/log/backplane":
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "$(id -u)" -eq 0 ]]; then
-        env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
+        env LOG_DIR="{{ log_dir }}" ./deploy/setup.sh
     else
-        sudo env LOG_DIR="{{ log_dir }}" ./scripts/setup.sh
+        sudo env LOG_DIR="{{ log_dir }}" ./deploy/setup.sh
     fi
 
 # Checkout a specific tag, sync deps, and restart via systemd — called by CI

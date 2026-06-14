@@ -36,7 +36,7 @@ Set `OBSIDIAN_VAULT_PATH` to the local path where the vault will be synced.
 
 If you plan to run the public ChatGPT-facing MCP service, also configure the
 OAuth variables documented in `.env.example` before running setup with
-`INSTALL_PUBLIC_MCP=true`. See `scripts/authentik-backplane-mcp.env.example`
+`INSTALL_PUBLIC_MCP=true`. See `deploy/authentik-backplane-mcp.env.example`
 for Authentik provider setup.
 
 ### 3. Set up Obsidian Sync
@@ -55,7 +55,7 @@ By default `setup.sh` expects the vault at `/root/obsidian/vaults/my-vault`. Ove
 Install the private `backplane` and `obsidian-sync` systemd services:
 
 ```bash
-sudo VAULT_DIR=/path/to/vault bash scripts/setup.sh
+sudo VAULT_DIR=/path/to/vault bash deploy/setup.sh
 ```
 
 This will:
@@ -74,12 +74,12 @@ these in `.env` **before** enabling the service:
 - `MCP_OIDC_CLIENT_ID`
 - `MCP_OIDC_CLIENT_SECRET`
 
-See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+See `deploy/authentik-backplane-mcp.env.example` for Authentik provider setup.
 
 Then install and start the public service:
 
 ```bash
-sudo INSTALL_PUBLIC_MCP=true VAULT_DIR=/path/to/vault bash scripts/setup.sh
+sudo INSTALL_PUBLIC_MCP=true VAULT_DIR=/path/to/vault bash deploy/setup.sh
 ```
 
 `setup.sh` validates the OAuth variables before installing or starting
@@ -259,7 +259,7 @@ python -m backplane.mcp.public
 This starts the authenticated public streamable HTTP MCP server on port `8001`.
 The MCP OAuth environment variables in `.env.example` are required; the server
 refuses to start without them. It uses FastMCP's `OIDCProxy` against Authentik.
-See `scripts/authentik-backplane-mcp.env.example` for Authentik provider setup.
+See `deploy/authentik-backplane-mcp.env.example` for Authentik provider setup.
 Terminate TLS at your reverse proxy (for example NGINX Proxy Manager) and forward
 `backplane-mcp.example.com` to port `8001`.
 
@@ -319,7 +319,7 @@ On the **Backplane MCP** OAuth2/OpenID provider (`Applications` → `Providers` 
 include scopes **`openid`** and **`offline_access`**. ChatGPT custom connectors need a
 `refresh_token` from the upstream IdP; without `offline_access` in Authentik, OAuth can
 succeed in the browser but ChatGPT reports *"There was a problem connecting …"*. See
-`scripts/authentik-backplane-mcp.env.example` for the full provider checklist.
+`deploy/authentik-backplane-mcp.env.example` for the full provider checklist.
 
 ChatGPT redirect patterns (`https://chatgpt.com/connector/oauth/*` and
 `https://chatgpt.com/connector_platform_oauth_redirect`) are already allowed by Backplane;

@@ -25,9 +25,9 @@ from .yaml import YAML_LOADER
 __all__ = [
     "SETTINGS",
     "VAULT_PATHS",
-    "VaultNoteMetadata",
     "YAML_LOADER",
     "MarkdownDocument",
+    "VaultNoteMetadata",
     "append_board_card",
     "atomic_write_text",
     "build_obsidian_link",

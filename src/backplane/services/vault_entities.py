@@ -20,12 +20,12 @@ from backplane.utils import (
     substitute_vault_entity_template,
 )
 from backplane.utils.enums import VaultEntityKind
-from backplane.utils.helpers.obsidian import VaultNoteMetadata
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     import anyio
 
+    from backplane.utils.helpers.obsidian import VaultNoteMetadata
     from backplane.utils.markdown import MarkdownSection
 
 _ENTITY_DIRECTORIES: Final = {

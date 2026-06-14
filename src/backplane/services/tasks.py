@@ -158,21 +158,102 @@ class TaskMetadata(BaseModel):
 class TaskFrontmatter(BaseModel, frozen=True):
     """YAML frontmatter contract for task notes."""
 
-    id: str
-    type: Literal["task"] = "task"
-    status: Literal["backlog"] = "backlog"
-    created: str
-    updated: str
-    source_capture: str | None = None
-    domains: list[str]
-    resources: list[str]
-    projects: list[str]
-    people: list[str]
-    priority: enums.Priority
-    effort: enums.Effort
-    due: str | None
-    completed: str | None = None
-    tags: list[str] = Field(default_factory=lambda: ["task"])
+    id: Annotated[
+        str,
+        Field(description="Stable task identifier, e.g. task-20260525-211500."),
+    ]
+    type: Annotated[
+        Literal["task"],
+        Field(description="Note kind; always `task` for structured task notes."),
+    ] = "task"
+    status: Annotated[
+        Literal["backlog"],
+        Field(description="Workflow status; newly created tasks start in `backlog`."),
+    ] = "backlog"
+    created: Annotated[
+        str,
+        Field(description="ISO 8601 local timestamp when the note was first created."),
+    ]
+    updated: Annotated[
+        str,
+        Field(description="ISO 8601 local timestamp of the last frontmatter update."),
+    ]
+    source_capture: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Inbox capture ID used as provenance, e.g. 2026-05-25T21:15, "
+                "or null when created from free-text description."
+            ),
+        ),
+    ] = None
+    domains: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to domain notes (platforms or broad knowledge areas), "
+                "e.g. [[Domains/Home - Property|Home / Property]]."
+            ),
+        ),
+    ]
+    resources: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to resource notes (integrations, APIs, vendors, or "
+                "services), e.g. [[Resources/Frigate|Frigate]]."
+            ),
+        ),
+    ]
+    projects: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to project notes (scoped outcomes or ongoing "
+                "initiatives), e.g. [[Projects/Rented Home Formal Complaint|Rented Home "
+                "Formal Complaint]]."
+            ),
+        ),
+    ]
+    people: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to person notes for people involved or referenced, "
+                "e.g. [[People/Will|Will]]."
+            ),
+        ),
+    ]
+    priority: Annotated[
+        enums.Priority,
+        Field(description="Relative urgency: `low`, `medium`, or `high`."),
+    ]
+    effort: Annotated[
+        enums.Effort,
+        Field(
+            description=(
+                "Estimated effort: `small` (under 1 hour), `medium` (1-4 hours), or "
+                "`large` (over 4 hours)."
+            ),
+        ),
+    ]
+    due: Annotated[
+        str | None,
+        Field(description="Optional due date as YYYY-MM-DD, or null when unset."),
+    ]
+    completed: Annotated[
+        str | None,
+        Field(
+            description=(
+                "ISO 8601 local timestamp when the task was marked done, or null while "
+                "open."
+            ),
+        ),
+    ] = None
+    tags: list[str] = Field(
+        default_factory=lambda: ["task"],
+        description="Obsidian tags for filtering; new tasks include `task`.",
+    )
 
     def model_dump_yaml(self) -> str:
         """Serialize the frontmatter as YAML.

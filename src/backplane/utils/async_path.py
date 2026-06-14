@@ -39,10 +39,13 @@ class AsyncPath(anyio.Path):
         def validate(value: object) -> AsyncPath:
             if isinstance(value, cls):
                 return value
+
             if isinstance(value, anyio.Path):
                 return cls(value.as_posix())
+
             if isinstance(value, str | pathlib.Path):
                 return cls(value)
+
             msg = f"Expected path, got {type(value)!r}"
             raise TypeError(msg)
 

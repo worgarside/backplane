@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 README_PATH = REPO_ROOT / "README.md"
 FIXTURE_VAULT = REPO_ROOT / "scripts" / "fixtures" / "readme-vault"
 
@@ -21,7 +21,7 @@ def main() -> int:
     if "LOCAL_TIMEZONE" not in os.environ:
         os.environ["LOCAL_TIMEZONE"] = "UTC"
 
-    from backplane.docs.mcp_catalog import refresh_readme_catalog  # noqa: PLC0415
+    from .mcp_catalog import refresh_readme_catalog  # noqa: PLC0415
 
     changed = refresh_readme_catalog(README_PATH)
     return 1 if changed else 0

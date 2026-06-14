@@ -321,7 +321,9 @@ def _load_section_trees() -> dict[VaultEntityKind, str]:
     trees: dict[VaultEntityKind, str] = {}
     for kind in VaultEntityKind:
         template_rel = VaultEntityService.template_path_for(kind)
-        template_path = pathlib.Path(str(SETTINGS.obsidian_vault_path)) / template_rel
+        template_path = (
+            pathlib.Path(SETTINGS.obsidian_vault_path.as_posix()) / template_rel
+        )
         try:
             template_text = template_path.read_text(encoding="utf-8")
         except FileNotFoundError:

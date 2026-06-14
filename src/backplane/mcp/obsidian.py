@@ -30,7 +30,8 @@ def _read_template_text() -> str | None:
         Raw template text, or ``None`` if the config or template file is missing
         or malformed.
     """
-    vault = pathlib.Path(str(SETTINGS.obsidian_vault_path))
+    # This is a sync function, so use pathlib.Path for the vault path
+    vault = pathlib.Path(SETTINGS.obsidian_vault_path.as_posix())
 
     config_path = vault / ".obsidian" / "daily-notes.json"
     try:

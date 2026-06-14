@@ -241,11 +241,11 @@ async def create_vault_entity(
         name: Human-readable entity name.
 
     Returns:
-        Short confirmation with the vault-relative path.
+        JSON metadata for the created note, including `canonical_link`.
     """
     logger.info("create_vault_entity: kind={} name={!r}", kind, name)
-    path = await VaultEntityService.create_entity(VaultEntityKind(kind), name)
-    return f"Created {kind} {name!r} at {path}."
+    metadata = await VaultEntityService.create_entity(VaultEntityKind(kind), name)
+    return metadata.model_dump_json()
 
 
 async def update_vault_entity(

@@ -130,7 +130,7 @@ async def create_task(
         link_capture_id=link_capture_id,
     )
 
-    parts = [f"Task '{task.title}' created at {task.path}."]
+    parts: list[str] = []
     if task.matched_capture_id:
         parts.append(f"Matched inbox capture from {task.matched_capture_id}.")
     elif task.candidate_captures:

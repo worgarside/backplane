@@ -723,9 +723,7 @@ async def _ensure_stub(
         logger.debug("Stub note already exists: {} {}", note_type, name)
         return False
 
-    provenance_note = (
-        f"Created automatically from task intake for {source_task_link}."
-    )
+    provenance_note = f"Created automatically from task intake for {source_task_link}."
     _ = await VaultEntityService.create_entity(
         kind,
         name,

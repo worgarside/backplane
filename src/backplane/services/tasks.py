@@ -81,6 +81,7 @@ class CreateTaskResult(BaseModel, frozen=True, arbitrary_types_allowed=True):
     slug: str
     path: anyio.Path
     title: str
+    metadata: VaultNoteMetadata
     matched_capture_id: str | None
     candidate_captures: list[CaptureCandidate]
     domains_created: list[str]
@@ -658,8 +659,8 @@ def _build_task_note(
         title: Task title.
         now: Creation timestamp (local time).
         metadata: Extracted task metadata.
-        capture: Matched inbox capture, or None if unmatched.
-        description: Original description (used when no capture matched).
+        capture: Linked inbox entry, or None if the task was created directly.
+        description: Task description (used when no inbox entry is linked).
         due: Optional due date string (YYYY-MM-DD).
 
     Returns:
@@ -680,18 +681,17 @@ def _build_task_note(
         due=due,
     )
 
-    original = (capture.text if capture else description).strip()
+    description_text = (capture.text if capture else description).strip()
     blockquote = "\n".join(
-        f"> {line}" if line.strip() else ">" for line in (original.splitlines() or [""])
+        f"> {line}" if line.strip() else ">"
+        for line in (description_text.splitlines() or [""])
     )
 
     body = (
         f"# {title}\n\n"
-        f"## Original Capture\n\n{blockquote}\n\n"
+        f"## Description\n\n{blockquote}\n\n"
         f"## Next Action\n\n{metadata.next_action.strip()}\n\n"
         "## Notes\n\n"
-        "## Related\n\n"
-        f"## Activity Log\n\n### {now.strftime('%Y-%m-%d %H:%M')}\n\nTask created from voice capture.\n"
     )
     return f"{fm.model_dump_yaml()}---\n{body}"
 
@@ -780,18 +780,18 @@ async def _create_stubs(
     return created
 
 
-async def _annotate_capture(match: Capture, slug: str) -> None:
+async def _annotate_capture(match: Capture, task_link: str) -> None:
     """Best-effort: append a task back-link to the matched inbox capture.
 
     Args:
         match: The inbox capture to annotate.
-        slug: Task slug to link back to.
+        task_link: Canonical wikilink to the task note.
     """
     try:
         async with ObsidianService().idea_inbox() as inbox:
             section = inbox.get_section((match.date, match.time))
-            section.append_content(f"\n↗ [[{slug}]]")
-        logger.debug("Annotated inbox capture {} with task [[{}]]", match.id, slug)
+            section.append_content(f"\n↗ {task_link}")
+        logger.debug("Annotated inbox capture {} with task {}", match.id, task_link)
     except (ValueError, FileNotFoundError) as exc:
         logger.warning("Could not annotate inbox capture: {}", exc)
 
@@ -916,7 +916,7 @@ async def _create_task_note(
         due=due,
     )
 
-    path_in_vault = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+    path_in_vault = VAULT_PATHS.task_notes_dir / f"{filename_stem}.md"
     task_path = await resolve_under_root(path_in_vault)
 
     await atomic_write_text(task_path, note_content)
@@ -927,7 +927,7 @@ async def _create_task_note(
 
 async def _create_linked_stubs(
     metadata: TaskMetadata,
-    slug: str,
+    source_task_link: str,
 ) -> tuple[list[str], list[str], list[str], list[str]]:
     """Create domain, resource, project, and people stub notes for task metadata.
 
@@ -938,29 +938,29 @@ async def _create_linked_stubs(
         _create_stubs(
             metadata.domains,
             "domain",
-            slug,
+            source_task_link,
         ),
         _create_stubs(
             metadata.resources,
             "resource",
-            slug,
+            source_task_link,
         ),
         _create_stubs(
             metadata.projects,
             "project",
-            slug,
+            source_task_link,
         ),
         _create_stubs(
             metadata.people,
             "person",
-            slug,
+            source_task_link,
         ),
     )
 
 
 @final
 class TaskService:
-    """Service for creating structured task notes from voice captures."""
+    """Service for creating structured task notes."""
 
     @staticmethod
     async def create_task(
@@ -989,27 +989,35 @@ class TaskService:
             title,
             priority,
         )
-        slug = await _unique_task_slug(metadata.title)
+        filename_stem, slug = await _unique_task_filename(metadata.title)
 
         note_path = await _create_task_note(
-            slug=slug,
+            filename_stem=filename_stem,
             metadata=metadata,
             capture=capture_selection.matched,
             description=description,
             due=due,
         )
+        note_metadata = build_vault_note_metadata(
+            kind="task",
+            title=metadata.title,
+            path=str(note_path),
+        )
         board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
-        await append_board_card(board_path, slug)
+        await append_board_card(board_path, str(note_path))
 
         (
             domains_created,
             resources_created,
             projects_created,
             people_created,
-        ) = await _create_linked_stubs(metadata, slug)
+        ) = await _create_linked_stubs(metadata, note_metadata.canonical_link)
 
         if capture_selection.matched is not None:
-            await _annotate_capture(capture_selection.matched, slug)
+            await _annotate_capture(
+                capture_selection.matched,
+                note_metadata.canonical_link,
+            )
 
         logger.info(
             (
@@ -1029,6 +1037,7 @@ class TaskService:
             slug=slug,
             path=note_path,
             title=metadata.title,
+            metadata=note_metadata,
             matched_capture_id=(
                 capture_selection.matched.id if capture_selection.matched else None
             ),

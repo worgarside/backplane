@@ -20,13 +20,13 @@ if TYPE_CHECKING:
 _NEXT_SECTION_RE: Final = re.compile(r"^## ", re.MULTILINE)
 
 
-def _format_card_line(slug: str, *, due: dt.date | dt.datetime | None = None) -> str:
-    """Build a single Obsidian Kanban task line for ``slug``.
+def _format_card_line(note_path: str, *, due: dt.date | dt.datetime | None = None) -> str:
+    """Build a single Obsidian Kanban task line for a vault note path.
 
     Returns:
         A markdown task line, optionally including ``@{…}`` due metadata.
     """
-    line = f"- [ ] [[{slug}]]"
+    line = f"- [ ] {build_obsidian_link(note_path)}"
     if due is None:
         return line
 
@@ -47,7 +47,7 @@ def _section_heading_re(section: str) -> re.Pattern[str]:
 
 def add_card_to_list(
     text: str,
-    slug: str,
+    note_path: str,
     section: str,
     *,
     due: dt.date | dt.datetime | None = None,
@@ -56,7 +56,7 @@ def add_card_to_list(
 
     Args:
         text: Full board markdown contents.
-        slug: Task slug used as the wiki-link target.
+        note_path: Vault-relative path to the note (e.g. ``Projects/Foo.md``).
         section: Heading text after ``##`` (e.g. ``Backlog``, ``Todo``).
         due: Optional due date or datetime rendered as Obsidian Kanban ``@{…}`` metadata.
 

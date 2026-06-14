@@ -12,12 +12,15 @@ from backplane.utils import (
     MarkdownDocument,
     append_board_card,
     atomic_write_text,
+    build_vault_note_metadata,
     exc,
+    note_filename,
     resolve_under_root,
     safe_slug,
     substitute_vault_entity_template,
 )
 from backplane.utils.enums import VaultEntityKind
+from backplane.utils.helpers.obsidian import VaultNoteMetadata
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
@@ -302,7 +305,7 @@ class VaultEntityService:
         name: str,
         *,
         provenance_note: str | None = None,
-    ) -> anyio.Path:
+    ) -> VaultNoteMetadata:
         """Create a new entity note from the vault template.
 
         Args:
@@ -321,8 +324,8 @@ class VaultEntityService:
             msg = f"{kind.value.title()} {name!r} already exists."
             raise exc.ConflictError(message=msg)
 
-        slug = safe_slug(name)
-        rel_path = VaultEntityService.directory_for(kind) / f"{slug}.md"
+        filename_stem = note_filename(name)
+        rel_path = VaultEntityService.directory_for(kind) / f"{filename_stem}.md"
         content = await VaultEntityService.render_entity_from_template(kind, name)
         target = await resolve_under_root(rel_path)
         await target.parent.mkdir(parents=True, exist_ok=True)
@@ -330,7 +333,7 @@ class VaultEntityService:
 
         if kind == VaultEntityKind.PROJECT:
             board_path = await resolve_under_root(VAULT_PATHS.project_board_path)
-            await append_board_card(board_path, slug)
+            await append_board_card(board_path, str(rel_path))
 
         if provenance_note:
             async with MarkdownDocument(vault_path=rel_path, read_only=False) as document:

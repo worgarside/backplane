@@ -18,6 +18,10 @@ if TYPE_CHECKING:
 _CANDIDATE_SNIPPET_MAX_LEN = 80
 _CREATE_TASK_DESCRIPTION = (
     "Create a structured task note for something actionable.\n\n"
+    "Backplane uses human-readable Obsidian filenames for tasks "
+    "(e.g. `Tasks/Build Master Complaint Table.md`). Kebab-case slugs are "
+    "internal IDs only. Use `canonical_link` from the response when linking "
+    "notes in markdown. Links use the full vault path with a display alias.\n\n"
     "Use this when the user mentions something they need to do, want to remember "
     "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
     "'I should...', 'I need to...', etc.\n\n"
@@ -36,8 +40,8 @@ _CREATE_TASK_DESCRIPTION = (
 _LINK_TASK_TO_CAPTURE_DESCRIPTION = (
     "Link an existing task note to a confirmed prior inbox capture.\n\n"
     "Use this after create_task offered candidate captures and the user confirms "
-    "which capture should be connected. Provide the task slug from the creation "
-    "confirmation and the capture ID from the candidate list."
+    "which capture should be connected. Provide the task title, filename stem, or "
+    "internal slug from the creation response and the capture ID from the candidate list."
 )
 
 
@@ -93,17 +97,18 @@ async def create_task(
         ),
     ] = None,
 ) -> str:
-    """Create a structured task note from a voice capture or description.
+    """Create a structured task note from a description.
 
     Args:
         description: Natural-language task description.
         title: Task title. Inferred via LLM if omitted.
         due: Due date in YYYY-MM-DD format.
         priority: Priority override: 'low', 'medium', or 'high'.
-        link_capture_id: Explicit confirmed inbox capture ID to link.
+        link_capture_id: Explicit confirmed inbox entry ID to link.
 
     Returns:
-        Concise confirmation suitable for voice assistant output.
+        JSON metadata for the created task, including `canonical_link`, plus any
+        inbox linking notes in `_message`.
     """
     logger.info(
         (
@@ -164,7 +169,7 @@ async def link_task_to_capture(
     """Link an existing task note to a confirmed inbox capture.
 
     Returns:
-        Concise confirmation suitable for voice assistant output.
+        Concise confirmation of the linking outcome.
     """
     logger.info(
         "link_task_to_capture called: task_slug={!r} capture_id={!r}",

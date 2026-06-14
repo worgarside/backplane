@@ -101,10 +101,18 @@ _GET_SECTION_DESCRIPTION = (
 )
 _CREATE_DESCRIPTION = (
     "Create a new vault entity note from the vault template.\n\n"
+    "Backplane uses human-readable Obsidian filenames for entities and tasks "
+    "(e.g. `Projects/Rented Home Formal Complaint.md`). Kebab-case slugs are "
+    "internal IDs only. Daily notes remain date-based; inbox/log notes may "
+    "remain timestamp or slug-based.\n\n"
     "Domains are platforms or broad areas. Resources are specific integrations, "
     "APIs, vendors, or services — never duplicate the same name as a domain. "
     "Projects are scoped outcomes or ongoing efforts with related work. "
     "People are individuals referenced in related work.\n\n"
+    "Use `canonical_link` from the response when linking notes in markdown. "
+    "Links use the full vault path with a display alias, e.g. "
+    "`[[Projects/Rented Home Formal Complaint|Rented Home Formal Complaint]]`. "
+    "Do not infer note links from slugs when `canonical_link` is available.\n\n"
     "Fails if a note with the same name already exists."
 )
 

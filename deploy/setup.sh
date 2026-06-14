@@ -42,7 +42,7 @@ Error: INSTALL_PUBLIC_MCP=true requires these variables in ${ENV_FILE}:
 
 Configure OAuth before enabling the public MCP service. See:
   .env.example
-  scripts/authentik-backplane-mcp.env.example
+  deploy/authentik-backplane-mcp.env.example
 EOF
         exit 1
     fi
@@ -53,12 +53,12 @@ install_public_mcp_systemd_units() {
         -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
         -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
         -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
-        "${INSTALL_DIR}/scripts/backplane-public.service.tmpl" \
+        "${INSTALL_DIR}/deploy/backplane-public.service.tmpl" \
         >"/etc/systemd/system/${PUBLIC_SERVICE_NAME}.service"
 
     sed \
         -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
-        "${INSTALL_DIR}/scripts/backplane-public.logrotate.tmpl" \
+        "${INSTALL_DIR}/deploy/backplane-public.logrotate.tmpl" \
         >"/etc/logrotate.d/${PUBLIC_SERVICE_NAME}"
 }
 
@@ -74,7 +74,7 @@ sed \
     -e "s|%%INSTALL_DIR%%|${INSTALL_DIR}|g" \
     -e "s|%%SERVICE_USER%%|${SERVICE_USER}|g" \
     -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
-    "${INSTALL_DIR}/scripts/backplane.service.tmpl" \
+    "${INSTALL_DIR}/deploy/backplane.service.tmpl" \
     >"/etc/systemd/system/${SERVICE_NAME}.service"
 
 # Install obsidian-sync unit (substitute placeholders)
@@ -84,17 +84,17 @@ sed \
     -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
     -e "s|%%VAULT_DIR%%|${VAULT_DIR}|g" \
     -e "s|/usr/bin/ob|${OB_BIN}|g" \
-    "${INSTALL_DIR}/scripts/obsidian-sync.service.tmpl" \
+    "${INSTALL_DIR}/deploy/obsidian-sync.service.tmpl" \
     >"/etc/systemd/system/obsidian-sync.service"
 
 # Install logrotate configs
 sed \
     -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
-    "${INSTALL_DIR}/scripts/backplane.logrotate.tmpl" \
+    "${INSTALL_DIR}/deploy/backplane.logrotate.tmpl" \
     >"/etc/logrotate.d/${SERVICE_NAME}"
 sed \
     -e "s|%%LOG_DIR%%|${LOG_DIR}|g" \
-    "${INSTALL_DIR}/scripts/obsidian-sync.logrotate.tmpl" \
+    "${INSTALL_DIR}/deploy/obsidian-sync.logrotate.tmpl" \
     >"/etc/logrotate.d/obsidian-sync"
 
 if [[ "${INSTALL_PUBLIC_MCP}" == "true" ]]; then

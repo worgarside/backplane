@@ -129,4 +129,4 @@ repos:
         language: system
         pass_filenames: false
         # yamllint disable-line rule:line-length
-        files: ^(src/backplane/mcp/|src/backplane/scripts/dev/(mcp_catalog|update_readme_mcp_catalog)\.py|scripts/fixtures/readme-vault/)
+        files: ^(src/backplane/mcp/|scripts/dev/(mcp_catalog|update_readme_mcp_catalog)\.py|scripts/fixtures/readme-vault/)

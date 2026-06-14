@@ -634,7 +634,8 @@ def _normalize_domains_and_resources(
             "Metadata normalization removed domains also listed as resources: {}",
             removed_domains,
         )
-    return normalized_domains, normalized_resources
+    resources[:] = normalized_resources
+    domains[:] = normalized_domains
 
 
 def _log_task_metadata(metadata: TaskMetadata, *, context: str) -> None:
@@ -711,18 +712,30 @@ async def _extract_metadata(
         _log_task_metadata(fallback, context="fallback")
         return fallback
 
-    domains, resources = _normalize_domains_and_resources(
-        metadata.domains,
-        metadata.resources,
-    )
-    metadata = metadata.model_copy(update={"domains": domains, "resources": resources})
+    _normalize_domains_and_resources(metadata.domains, metadata.resources)
 
     if title:
-        metadata = metadata.model_copy(update={"title": title})
+        metadata.title = title
+
     if priority:
-        metadata = metadata.model_copy(update={"priority": priority})
+        metadata.priority = priority
+
     _log_task_metadata(metadata, context="final")
+
     return metadata
+
+
+def _entity_wikilinks(kind: enums.VaultEntityKind, names: list[str]) -> list[str]:
+    """Convert entity display names to Obsidian wikilinks for task frontmatter.
+
+    Args:
+        kind: Entity kind determining the vault subdirectory for each link.
+        names: Human-readable display names to convert.
+
+    Returns:
+        Wikilink strings in the same order as ``names``.
+    """
+    return [build_entity_wikilink(kind, name) for name in names]
 
 
 def _build_task_note(

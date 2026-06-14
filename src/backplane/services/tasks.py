@@ -699,14 +699,14 @@ def _build_task_note(
 async def _ensure_stub(
     name: str,
     note_type: Literal["domain", "person", "project", "resource"],
-    source_task_slug: str,
+    source_task_link: str,
 ) -> bool:
     """Create a vault entity note from template if it does not already exist.
 
     Args:
-        name: Human-readable name (used as heading and for slug generation).
+        name: Human-readable name (used as heading and for filename generation).
         note_type: Value for the ``type`` frontmatter field.
-        source_task_slug: Slug of the task that caused this stub to be created.
+        source_task_link: Canonical wikilink to the task that caused this stub.
 
     Returns:
         True if the note was created, False if it already existed.
@@ -724,8 +724,7 @@ async def _ensure_stub(
         return False
 
     provenance_note = (
-        "Created automatically from task intake for "
-        f"[[{source_task_slug}]]."
+        f"Created automatically from task intake for {source_task_link}."
     )
     _ = await VaultEntityService.create_entity(
         kind,
@@ -739,14 +738,14 @@ async def _ensure_stub(
 async def _create_stubs(
     names: list[str],
     note_type: Literal["domain", "person", "project", "resource"],
-    source_task_slug: str,
+    source_task_link: str,
 ) -> list[str]:
     """Create stub notes for each name that doesn't exist.
 
     Args:
         names: Human-readable names to stub out.
         note_type: Value for the ``type`` frontmatter field.
-        source_task_slug: Slug of the task that caused these stubs to be created.
+        source_task_link: Canonical wikilink to the task that caused these stubs.
 
     Returns:
         Names of notes that were newly created.
@@ -759,7 +758,7 @@ async def _create_stubs(
             _ensure_stub(
                 name,
                 note_type,
-                source_task_slug,
+                source_task_link,
             )
             for name in names
         ),
@@ -1073,15 +1072,27 @@ class TaskService:
                 f"Capture {capture_id} was not found; task {task_slug} was not changed."
             )
 
-        slug = safe_slug(task_slug)
-        task_path = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+        resolved = await _resolve_task_reference(task_slug)
+        if resolved is None:
+            logger.warning(
+                "Task {} not found while linking capture {}",
+                task_slug,
+                capture_id,
+            )
+            return f"Task {task_slug} was not found; capture {capture_id} was not linked."
+
+        task_path, _link_target = resolved
         try:
             async with MarkdownDocument(vault_path=task_path) as task:
                 task.frontmatter["source_capture"] = capture.id
         except FileNotFoundError:
-            logger.warning("Task {} not found while linking capture {}", slug, capture_id)
-            return f"Task {slug} was not found; capture {capture_id} was not linked."
+            logger.warning(
+                "Task {} not found while linking capture {}",
+                task_path,
+                capture_id,
+            )
+            return f"Task {task_path} was not found; capture {capture_id} was not linked."
 
-        await _annotate_capture(capture, slug)
-        logger.info("Linked task {} to capture {}", slug, capture_id)
-        return f"Task {slug} linked to capture {capture_id}."
+        await _annotate_capture(capture, build_obsidian_link(str(task_path)))
+        logger.info("Linked task {} to capture {}", task_path, capture_id)
+        return f"Task {obsidian_link_target_from_path(str(task_path))} linked to capture {capture_id}."

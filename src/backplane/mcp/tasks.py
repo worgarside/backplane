@@ -53,7 +53,7 @@ async def create_task(
             description=(
                 "Natural-language task or action description. This is fuzzy-matched "
                 "against existing inbox captures, so include distinctive nouns, "
-                "names, and phrases from the original capture when available. "
+                "names, and phrases from any linked inbox entry when available. "
                 "Exact wording is helpful but not required; keep extra context "
                 "that may help extract task metadata."
             ),
@@ -64,7 +64,7 @@ async def create_task(
         Field(
             description=(
                 "Optional task title override. Omit unless the user supplied a clear "
-                "title; otherwise inferred from the matched capture or description."
+                "title; otherwise inferred from the description or linked inbox entry."
             ),
         ),
     ] = None,
@@ -145,7 +145,11 @@ async def create_task(
             ),
         )
 
-    response = " ".join(parts)
+    payload = task.metadata.model_dump(mode="json")
+    if parts:
+        payload["_message"] = " ".join(parts)
+
+    response = json.dumps(payload)
     logger.info(
         "create_task succeeded: slug={} matched_capture_id={} response={!r}",
         task.slug,
@@ -159,7 +163,11 @@ async def link_task_to_capture(
     *,
     task_slug: Annotated[
         str,
-        Field(description="Task note slug, e.g. 'review-backup-logs'."),
+        Field(
+            description=(
+                "Task note title, human-readable filename stem, or internal slug."
+            ),
+        ),
     ],
     capture_id: Annotated[
         str,

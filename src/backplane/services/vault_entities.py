@@ -182,6 +182,10 @@ class VaultEntityService:
             NotFoundError: If ``must_exist`` is true and the note does not exist.
         """
         directory = await resolve_under_root(VaultEntityService.directory_for(kind))
+        readable_path = directory / f"{note_filename(name)}.md"
+        if await readable_path.exists():
+            return readable_path
+
         slug_path = directory / f"{safe_slug(name)}.md"
         if await slug_path.exists():
             return slug_path
@@ -315,7 +319,7 @@ class VaultEntityService:
                 creation (used when task intake creates linked stubs).
 
         Returns:
-            Vault-relative path to the created note.
+            Structured metadata for the created note.
 
         Raises:
             ConflictError: If a note with the same name already exists.
@@ -344,7 +348,11 @@ class VaultEntityService:
                 section.append_content(provenance_note)
 
         logger.info("Created vault entity note: {}", rel_path)
-        return rel_path
+        return build_vault_note_metadata(
+            kind=kind,
+            title=name,
+            path=str(rel_path),
+        )
 
     @staticmethod
     async def update_entity(

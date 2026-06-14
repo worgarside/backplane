@@ -54,15 +54,6 @@ class VaultNoteMetadata(BaseModel, frozen=True):
             ),
         ),
     ]
-    canonical_link_with_alias: Annotated[
-        str,
-        Field(
-            description=(
-                "Wikilink rendered for display, including an alias when the path "
-                "includes folder prefixes."
-            ),
-        ),
-    ]
 
     @computed_field
     @property
@@ -178,5 +169,4 @@ def build_vault_note_metadata(
         path=AsyncPath(path),
         slug=safe_slug(title),
         canonical_link=canonical_link,
-        canonical_link_with_alias=canonical_link,
     )

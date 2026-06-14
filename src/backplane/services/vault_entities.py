@@ -181,7 +181,7 @@ class VaultEntityService:
         Raises:
             NotFoundError: If ``must_exist`` is true and the note does not exist.
         """
-        directory = await resolve_under_root(VaultEntityService.directory_for(kind))
+        directory = await resolve_under_root(kind.vault_dir)
         readable_path = directory / f"{note_filename(name)}.md"
         if await readable_path.exists():
             return readable_path
@@ -354,7 +354,7 @@ class VaultEntityService:
         return build_vault_note_metadata(
             kind=kind,
             title=name,
-            path=str(rel_path),
+            path=rel_path,
         )
 
     @staticmethod
@@ -386,10 +386,12 @@ class VaultEntityService:
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
-        rel_path = vault_relative_path(path)
         now = dt.datetime.now(tz=SETTINGS.local_timezone).replace(microsecond=0)
 
-        async with MarkdownDocument(vault_path=rel_path, read_only=False) as document:
+        async with MarkdownDocument(
+            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            read_only=False,
+        ) as document:
             try:
                 target_section = document.get_section(
                     (name, section),

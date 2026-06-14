@@ -22,8 +22,10 @@ from .obsidian import (
 from .slug import safe_slug
 
 __all__ = [
+    "AsyncPath",
     "VaultNoteMetadata",
     "atomic_write_text",
+    "build_entity_wikilink",
     "build_obsidian_link",
     "build_vault_note_metadata",
     "format_human_date",

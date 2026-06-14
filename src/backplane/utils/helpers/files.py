@@ -2,15 +2,58 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import pathlib
+from os import PathLike
 
 import anyio
 from anyio import NamedTemporaryFile
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
+from typing_extensions import override
 
 from backplane.utils.settings import SETTINGS
 
-if TYPE_CHECKING:
-    import pathlib
+
+class AsyncPath(anyio.Path):
+    """Pydantic-compatible ``anyio.Path`` for models and tool responses."""
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: object,
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        def validate(value: object) -> AsyncPath:
+            if isinstance(value, cls):
+                return value
+            if isinstance(value, anyio.Path):
+                return cls(value.as_posix())
+            if isinstance(value, str | pathlib.Path):
+                return cls(value)
+            msg = f"Expected path, got {type(value)!r}"
+            raise TypeError(msg)
+
+        def serialize_path(path: AsyncPath) -> str:
+            return path.as_posix()
+
+        return core_schema.json_or_python_schema(
+            json_schema=core_schema.no_info_plain_validator_function(validate),
+            python_schema=core_schema.union_schema([
+                core_schema.is_instance_schema(cls),
+                core_schema.no_info_plain_validator_function(validate),
+            ]),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                serialize_path,
+            ),
+        )
+
+    @override
+    def __truediv__(self, other: str | PathLike[str]) -> AsyncPath:
+        return type(self)(self._path / other)
+
+    @override
+    def __rtruediv__(self, other: str | PathLike[str]) -> AsyncPath:
+        return type(self)(other) / self
 
 
 async def atomic_write_text(path: anyio.Path, content: str) -> None:

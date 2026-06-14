@@ -1097,10 +1097,10 @@ class TaskService:
         note_metadata = build_vault_note_metadata(
             kind="task",
             title=metadata.title,
-            path=str(note_path),
+            path=note_path,
         )
         board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
-        await append_board_card(board_path, str(note_path))
+        await append_board_card(board_path, note_path)
 
         (
             domains_created,
@@ -1190,6 +1190,6 @@ class TaskService:
             )
             return f"Task {task_path} was not found; capture {capture_id} was not linked."
 
-        await _annotate_capture(capture, build_obsidian_link(str(task_path)))
+        await _annotate_capture(capture, build_obsidian_link(task_path))
         logger.info("Linked task {} to capture {}", task_path, capture_id)
         return f"Task {obsidian_link_target_from_path(str(task_path))} linked to capture {capture_id}."

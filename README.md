@@ -192,13 +192,13 @@ Ask for a due date before calling if the request sounds time-sensitive (e.g. 'be
 
 Create a new vault entity note from the vault template.
 
-Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services — never duplicate the same name as a domain. People are individuals referenced in related work.
+Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services — never duplicate the same name as a domain. Projects are scoped outcomes or ongoing efforts with related work. People are individuals referenced in related work.
 
 Fails if a note with the same name already exists.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name used as the note title. |
 
 #### `get_daily_note`
@@ -211,20 +211,20 @@ Read the user's Obsidian daily note. Use this when the user asks what's in their
 
 #### `get_vault_entity`
 
-Read a vault entity note as rendered markdown. Use when the user asks about a domain, person, or resource note's contents.
+Read a vault entity note as rendered markdown. Use when the user asks about a domain, person, project, or resource note's contents.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
 
 #### `get_vault_entity_section`
 
-Read a single section of a vault entity note as rendered markdown. Use when the user needs specific context from a domain, person, or resource note without loading the whole note.
+Read a single section of a vault entity note as rendered markdown. Use when the user needs specific context from a domain, person, project, or resource note without loading the whole note.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
 | `section` | `string` | yes | — | Top-level section heading to read, e.g. 'Overview'. |
 
@@ -243,11 +243,11 @@ Use this after create_task offered candidate captures and the user confirms whic
 
 List display names of vault entity notes for a given kind.
 
-Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services. People are collaborators or contacts referenced in related work.
+Domains are platforms or broad areas. Resources are specific integrations, APIs, vendors, or services. Projects are scoped outcomes or ongoing efforts. People are collaborators or contacts referenced in related work.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind to list: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind to list: domain, person, project, or resource. |
 
 #### `list_vault_entity_sections`
 
@@ -255,8 +255,21 @@ List sections in a vault entity note. Use before reading or updating a specific 
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
+
+#### `move_note`
+
+Move an Obsidian markdown note to a new vault-relative path. Use this when the user wants to relocate, reorganise, or rename a note.
+
+Both paths are relative to the vault root, e.g. 'Tasks/review-logs.md' or 'Projects/Home/Plan.md'. You do not need to create destination folders first — missing parent directories are created automatically.
+
+The source note must exist. The destination must not already exist.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `destination_path` | `string` | yes | — | Vault-relative destination path; parent directories are created if needed, e.g. 'Projects/New Folder/new-name.md'. |
+| `source_path` | `string` | yes | — | Vault-relative path to the note to move, e.g. 'Tasks/old-name.md'. |
 
 #### `record_idea`
 
@@ -282,7 +295,7 @@ as possible.
 
 #### `update_vault_entity`
 
-Update a section of a vault entity note (Domain, Person, or Resource).
+Update a section of a vault entity note (Domain, Person, Project, or Resource).
 
 Use append for most captures; replace only when the user asks to overwrite.
 
@@ -301,6 +314,9 @@ Person sections:
 - Related Tasks
 - Notes
 
+Project sections:
+(template structure unavailable)
+
 Resource sections:
 - Overview
 - Links
@@ -313,7 +329,7 @@ If the section is missing, set `create_section_if_not_exists=true` to create it.
 | --- | --- | --- | --- | --- |
 | `content` | `string` | yes | — | Markdown content to add or replace in the section. |
 | `create_section_if_not_exists` | `boolean` | no | `false` | Create the section when missing. Use true when the user explicitly asks for a new section or after a missing-section error. |
-| `kind` | `domain` \| `person` \| `resource` | yes | — | Entity kind: domain, person, or resource. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine content with existing section text. append is usually best. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
 | `section` | `string` | yes | — | Top-level section heading to update, e.g. 'Overview' or 'Notes'. |

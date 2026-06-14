@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pathlib
 
+import anyio
+import pytest
 from pydantic import BaseModel
 
 from backplane.utils.async_path import AsyncPath
@@ -20,9 +22,15 @@ def test__async_path_validates_from_string() -> None:
 
 
 def test__async_path_validates_from_anyio_path() -> None:
-    """AsyncPath fields accept plain AsyncPath instances."""
-    metadata = _SampleMetadata(path=AsyncPath("Domains/Home - Property.md"))  # pyright: ignore[reportArgumentType]
+    """AsyncPath fields accept plain anyio.Path instances."""
+    metadata = _SampleMetadata(path=anyio.Path("Domains/Home - Property.md"))  # pyright: ignore[reportArgumentType]
     assert metadata.path == AsyncPath("Domains/Home - Property.md")
+
+
+def test__async_path_rejects_invalid_type() -> None:
+    """AsyncPath fields reject non-path values."""
+    with pytest.raises(TypeError, match="Expected path"):
+        _ = _SampleMetadata(path=123)  # pyright: ignore[reportArgumentType]
 
 
 def test__async_path_validates_from_pure_path() -> None:

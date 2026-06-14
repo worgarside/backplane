@@ -113,16 +113,16 @@ async def test__update_entity_bumps_updated_frontmatter(
     obsidian_vault: AsyncPath,
 ) -> None:
     """Successful updates set the updated frontmatter timestamp."""
-    _ = await VaultEntityService.create_entity(VaultEntityKind.PERSON, "Vic")
+    _ = await VaultEntityService.create_entity(VaultEntityKind.PERSON, "Alice")
 
     _ = await VaultEntityService.update_entity(
         VaultEntityKind.PERSON,
-        "Vic",
+        "Alice",
         section="Notes",
         content="Prefers concise updates.",
     )
 
-    note = await (obsidian_vault / "People/vic.md").read_text(encoding="utf-8")
+    note = await (obsidian_vault / "People/Alice.md").read_text(encoding="utf-8")
     assert "updated:" in note
     assert "Prefers concise updates." in note
 

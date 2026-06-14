@@ -7,10 +7,22 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from backplane.utils.async_path import AsyncPath
 
+import pytest
+
 # pyright: reportPrivateUsage=false
 from backplane.services.tasks import _create_stubs, _ensure_stub
 from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
+
+
+async def test__ensure_stub_raises_for_unsupported_type() -> None:
+    """Unsupported stub note types are rejected before vault writes."""
+    with pytest.raises(ValueError, match="Unsupported stub note type"):
+        _ = await _ensure_stub(
+            "Home Assistant",
+            "task",  # pyright: ignore[reportArgumentType]
+            "review-home-assistant",
+        )
 
 
 async def test__ensure_stub_creates_missing_note(obsidian_vault: AsyncPath) -> None:

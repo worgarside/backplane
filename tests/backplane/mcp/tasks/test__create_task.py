@@ -63,6 +63,7 @@ async def test__create_task__forwards_fields_to_task_service(
             candidate_captures=[],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )
@@ -102,6 +103,7 @@ async def test__create_task__matched_capture_is_included_in_confirmation(
             candidate_captures=[],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )
@@ -132,6 +134,7 @@ async def test__create_task__logs_success_response(
             candidate_captures=[],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )
@@ -141,7 +144,8 @@ async def test__create_task__logs_success_response(
     _ = await tasks.create_task(description="Review backup logs")
 
     assert any(
-        "create_task succeeded" in str(call.args[0]) for call in mock_info.call_args_list
+        "create_task succeeded" in str(call.args[0])  # pyright: ignore[reportAny]
+        for call in mock_info.call_args_list
     )
 
 
@@ -163,6 +167,7 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
             ],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )
@@ -198,6 +203,7 @@ async def test__create_task__long_candidate_snippet_is_truncated(
             ],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )
@@ -224,6 +230,7 @@ async def test__create_task__forwards_link_capture_id(
             candidate_captures=[],
             domains_created=[],
             resources_created=[],
+            projects_created=[],
             people_created=[],
         ),
     )

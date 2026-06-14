@@ -35,12 +35,13 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
         title="Review backup logs",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
         next_action="Open the latest backup report.",
     )
-    mocker.patch(
+    _ = mocker.patch(
         "backplane.services.tasks._extract_metadata",
         new=mocker.AsyncMock(return_value=metadata),
     )
@@ -55,6 +56,7 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
         candidate_captures=[],
         domains_created=[],
         resources_created=[],
+        projects_created=[],
         people_created=[],
     )
     assert await (tasks_dir / "review-backup-logs-2.md").exists()

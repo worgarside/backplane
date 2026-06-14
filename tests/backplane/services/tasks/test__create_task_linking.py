@@ -42,6 +42,7 @@ async def test__create_task_uses_explicit_capture_link(
         title="Review backup logs",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -60,7 +61,7 @@ async def test__create_task_uses_explicit_capture_link(
 
     assert result.matched_capture_id == f"{capture_date}T09:15"
     assert result.candidate_captures == []
-    mock_extract.assert_awaited_once_with(capture_text, None, None)
+    _ = mock_extract.assert_awaited_once_with(capture_text, None, None)
     mock_find_match.assert_not_called()
 
 
@@ -87,6 +88,7 @@ Rotate the hallway camera battery.
         title="Review backup logs",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -134,6 +136,7 @@ Track LLM usage and cost in Home Assistant.
         title="Update rain alert notification",
         domains=["Home Assistant"],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,

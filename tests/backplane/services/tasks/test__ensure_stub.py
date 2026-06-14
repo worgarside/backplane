@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 from typing import TYPE_CHECKING
 
 from backplane.services.tasks import _create_stubs, _ensure_stub
@@ -50,6 +51,25 @@ async def test__ensure_stub_returns_false_for_existing_note(
 
     assert created is False
     assert await existing.read_text(encoding="utf-8") == "# Existing\n"
+
+
+async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> None:
+    """Project stub notes are created from the project template."""
+    created = await _ensure_stub(
+        "Garage Migration",
+        "project",
+        "plan-garage-migration",
+        "Plan Garage Migration",
+    )
+
+    assert created is True
+    text = await (obsidian_vault / "Projects/garage-migration.md").read_text(
+        encoding="utf-8",
+    )
+    assert "# Garage Migration" in text
+    assert "## Goals" in text
+    assert "## Tasks" in text
+    assert "Created automatically from task intake for" in text
 
 
 async def test__create_stubs_returns_only_newly_created_names(

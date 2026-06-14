@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
+import anyio
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import exc
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
-
-if TYPE_CHECKING:
-    import anyio
 
 
 async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) -> None:
@@ -30,6 +26,22 @@ async def test__create_entity_uses_template_shape(obsidian_vault: anyio.Path) ->
     assert "## Notes" in text
     assert "{{title}}" not in text
     assert "{ date:YYYY-MM-DDTHH:mm:ss }" not in text
+
+
+async def test__create_entity_supports_projects(obsidian_vault: anyio.Path) -> None:
+    """Project entity notes are created under Projects from the project template."""
+    path = await VaultEntityService.create_entity(
+        VaultEntityKind.PROJECT,
+        "Garage Migration",
+    )
+
+    text = await (obsidian_vault / path).read_text(encoding="utf-8")
+    assert path == anyio.Path("Projects") / "garage-migration.md"
+    assert "type: project" in text
+    assert "# Garage Migration" in text
+    assert "## Goals" in text
+    assert "## Tasks" in text
+    assert "## Notes" in text
 
 
 async def test__create_entity_raises_conflict_for_duplicate(

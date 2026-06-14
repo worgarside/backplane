@@ -89,6 +89,37 @@ tags:
 ## Notes
 """
 
+PROJECT_TEMPLATE = """---
+type: project
+status: planning
+created:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+updated:
+  "{ date:YYYY-MM-DDTHH:mm:ss }":
+domains: []
+resources: []
+people: []
+priority: medium
+due:
+completed:
+tags:
+  - project
+---
+# {{title}}
+
+## Overview
+
+## Goals
+
+-
+
+## Tasks
+
+-
+
+## Notes
+"""
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -116,4 +147,5 @@ def _install_entity_templates(vault_path: anyio.Path) -> None:
     templates.mkdir(parents=True, exist_ok=True)
     _ = (templates / "Domain.md").write_text(DOMAIN_TEMPLATE, encoding="utf-8")
     _ = (templates / "Person.md").write_text(PERSON_TEMPLATE, encoding="utf-8")
+    _ = (templates / "Project.md").write_text(PROJECT_TEMPLATE, encoding="utf-8")
     _ = (templates / "Resource.md").write_text(RESOURCE_TEMPLATE, encoding="utf-8")

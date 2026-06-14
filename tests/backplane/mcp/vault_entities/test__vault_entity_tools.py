@@ -89,16 +89,16 @@ async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture)
     """The create tool returns a concise confirmation with the vault path."""
     mock_create = mocker.patch(
         "backplane.mcp.vault_entities.VaultEntityService.create_entity",
-        new=mocker.AsyncMock(return_value=anyio.Path("Domains/home-assistant.md")),
+        new=mocker.AsyncMock(return_value=anyio.Path("Projects/garage-migration.md")),
     )
 
     result = await vault_entities.create_vault_entity(
-        kind="domain",
-        name="Home Assistant",
+        kind="project",
+        name="Garage Migration",
     )
 
-    assert result == "Created domain 'Home Assistant' at Domains/home-assistant.md."
-    _ = mock_create.assert_awaited_once()
+    assert result == "Created project 'Garage Migration' at Projects/garage-migration.md."
+    _ = mock_create.assert_awaited_once_with(VaultEntityKind.PROJECT, "Garage Migration")
 
 
 async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture) -> None:

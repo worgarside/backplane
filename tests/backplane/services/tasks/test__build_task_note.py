@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 import datetime as dt
 
 from backplane.services.tasks import (
@@ -26,6 +27,7 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
         title="Review backup logs",
         domains=["Infrastructure"],
         resources=["Backups"],
+        projects=["Backup Hardening"],
         people=[],
         priority=enums.Priority.HIGH,
         effort=enums.Effort.SMALL,
@@ -43,6 +45,7 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
 
     assert "priority: high\n" in note
     assert "effort: small\n" in note
+    assert "- Backup Hardening\n" in note
     assert "source_capture: 2026-05-25T21:15\n" in note
     assert "> Review backup logs\n" in note
 
@@ -56,6 +59,7 @@ def test__task_frontmatter_defaults_fixed_task_fields() -> None:
         source_capture=None,
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.SMALL,
@@ -72,6 +76,7 @@ def test__task_frontmatter_defaults_fixed_task_fields() -> None:
         "source_capture": None,
         "domains": [],
         "resources": [],
+        "projects": [],
         "people": [],
         "priority": enums.Priority.MEDIUM,
         "effort": enums.Effort.SMALL,

@@ -22,6 +22,8 @@ _CREATE_TASK_DESCRIPTION = (
     "(e.g. `Tasks/Build Master Complaint Table.md`). Kebab-case slugs are "
     "internal IDs only. Use `canonical_link` from the response when linking "
     "notes in markdown. Links use the full vault path with a display alias.\n\n"
+    "Entity associations (domains, resources, projects, people) are stored as "
+    "Obsidian wikilinks in task frontmatter, not plain display names.\n\n"
     "Use this when the user mentions something they need to do, want to remember "
     "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
     "'I should...', 'I need to...', etc.\n\n"

@@ -20,7 +20,11 @@ if TYPE_CHECKING:
 _NEXT_SECTION_RE: Final = re.compile(r"^## ", re.MULTILINE)
 
 
-def _format_card_line(note_path: str, *, due: dt.date | dt.datetime | None = None) -> str:
+def _format_card_line(
+    note_path: anyio.Path,
+    *,
+    due: dt.date | dt.datetime | None = None,
+) -> str:
     """Build a single Obsidian Kanban task line for a vault note path.
 
     Returns:

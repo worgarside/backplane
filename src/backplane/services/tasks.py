@@ -613,13 +613,14 @@ def _dedupe_entity_names(names: list[str]) -> list[str]:
 def _normalize_domains_and_resources(
     domains: list[str],
     resources: list[str],
-) -> tuple[list[str], list[str]]:
+) -> None:
     """Dedupe lists and resolve cross-list duplicates in favour of resources.
 
     Integrations/APIs should not also appear as domains when the model assigns both.
 
-    Returns:
-        Normalized domain and resource name lists.
+    Args:
+        domains: Domain names to normalize in place.
+        resources: Resource names to normalize in place.
     """
     normalized_resources = _dedupe_entity_names(resources)
     resource_keys = {name.casefold() for name in normalized_resources}

@@ -1,4 +1,4 @@
-"""Task creation service for structured task management from voice captures."""
+"""Task creation service for structured task note management."""
 
 from __future__ import annotations
 
@@ -17,14 +17,19 @@ from pydantic_ai import Agent, AgentRunResult
 from rapidfuzz import fuzz
 
 from backplane.services import ObsidianService
-from backplane.services.vault_entities import VaultEntityService
+from backplane.services.vault_entities import VaultEntityService, note_title_from_markdown
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
     YAML_LOADER,
     MarkdownDocument,
+    VaultNoteMetadata,
     atomic_write_text,
+    build_obsidian_link,
+    build_vault_note_metadata,
     enums,
+    note_filename,
+    obsidian_link_target_from_path,
     resolve_under_root,
     safe_slug,
     today,
@@ -46,7 +51,7 @@ _STUB_NOTE_TYPES: Final = frozenset({"domain", "person", "project", "resource"})
 
 @dataclass(frozen=True, slots=True)
 class Capture:
-    """A single timestamped entry from the voice capture inbox."""
+    """A single timestamped entry from the idea inbox."""
 
     id: str
     date: str
@@ -157,8 +162,7 @@ class TaskFrontmatter(BaseModel, frozen=True):
     status: Literal["backlog"] = "backlog"
     created: str
     updated: str
-    source: Literal["voice-capture"] = "voice-capture"
-    source_capture: str | None
+    source_capture: str | None = None
     domains: list[str]
     resources: list[str]
     projects: list[str]
@@ -836,26 +840,63 @@ def _metadata_source(description: str, capture: Capture | None) -> str:
     return description
 
 
-async def _unique_task_slug(title: str) -> str:
-    """Return a task slug that does not collide with an existing task note."""
-    slug = base_slug = safe_slug(title)
+async def _unique_task_filename(title: str) -> tuple[str, str]:
+    """Return a unique human-readable task filename stem and internal slug."""
+    base_stem = note_filename(title)
+    slug = safe_slug(title)
+    stem = base_stem
     counter = 2
     while await (
-        await resolve_under_root(VAULT_PATHS.task_notes_dir / f"{slug}.md")
+        await resolve_under_root(VAULT_PATHS.task_notes_dir / f"{stem}.md")
     ).exists():
         logger.debug(
-            "Task slug collision: {} already exists, trying {}",
-            slug,
-            f"{base_slug}-{counter}",
+            "Task filename collision: {} already exists, trying {}",
+            stem,
+            f"{base_stem} {counter}",
         )
-        slug = f"{base_slug}-{counter}"
+        stem = f"{base_stem} {counter}"
         counter += 1
-    return slug
+    return stem, slug
+
+
+async def _resolve_task_reference(
+    task_ref: str,
+) -> tuple[anyio.Path, str] | None:
+    """Resolve a task slug, filename stem, or title to its vault path and link target."""
+    tasks_dir = await resolve_under_root(VAULT_PATHS.task_notes_dir)
+
+    candidates = [
+        tasks_dir / f"{note_filename(task_ref)}.md",
+        tasks_dir / f"{safe_slug(task_ref)}.md",
+    ]
+    for candidate in candidates:
+        if await candidate.exists():
+            rel_path = VAULT_PATHS.task_notes_dir / candidate.name
+            return rel_path, candidate.stem
+
+    if not await tasks_dir.is_dir():
+        return None
+
+    target = task_ref.casefold()
+    async for entry in tasks_dir.iterdir():
+        if entry.suffix != ".md" or not await entry.is_file():
+            continue
+        if entry.stem.casefold() == target:
+            rel_path = VAULT_PATHS.task_notes_dir / entry.name
+            return rel_path, entry.stem
+
+        text = await entry.read_text(encoding="utf-8")
+        title = note_title_from_markdown(text)
+        if title is not None and title.casefold() == target:
+            rel_path = VAULT_PATHS.task_notes_dir / entry.name
+            return rel_path, entry.stem
+
+    return None
 
 
 async def _create_task_note(
     *,
-    slug: str,
+    filename_stem: str,
     metadata: TaskMetadata,
     capture: Capture | None,
     description: str,

@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from . import exceptions as exc
 from .helpers import (
+    VaultNoteMetadata,
     atomic_write_text,
+    build_obsidian_link,
+    build_vault_note_metadata,
     format_human_date,
+    note_filename,
+    obsidian_link_target_from_path,
     resolve_under_root,
     safe_slug,
     substitute_obsidian_core_date_variables,

@@ -164,7 +164,7 @@ async def add_to_daily_note(
         Field(
             description=(
                 "How to combine `content` with any existing section text. `append` "
-                "is almost always the right choice for voice capture; use `replace` "
+                "is almost always the right choice; use `replace` "
                 "only when the user explicitly asks to overwrite."
             ),
         ),

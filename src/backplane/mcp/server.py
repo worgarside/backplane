@@ -21,8 +21,7 @@ if TYPE_CHECKING:
 _INSTRUCTIONS = (
     "Backplane exposes tools for interacting with the user's personal homelab "
     "services — currently their Obsidian vault, with more integrations to follow.\n\n"
-    "The user is typically speaking through a voice assistant, so keep tool "
-    "outputs concise — a short confirmation is usually enough."
+    "Keep tool outputs concise — a short confirmation is usually enough."
 )
 
 

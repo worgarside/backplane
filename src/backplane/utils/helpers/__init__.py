@@ -12,12 +12,24 @@ from .dttm import (
     today,
 )
 from .files import atomic_write_text, resolve_under_root
+from .obsidian import (
+    VaultNoteMetadata,
+    build_obsidian_link,
+    build_vault_note_metadata,
+    note_filename,
+    obsidian_link_target_from_path,
+)
 from .slug import safe_slug
 
 __all__ = [
+    "VaultNoteMetadata",
     "atomic_write_text",
+    "build_obsidian_link",
+    "build_vault_note_metadata",
     "format_human_date",
     "format_obsidian_moment_date",
+    "note_filename",
+    "obsidian_link_target_from_path",
     "ordinal_day_of_month",
     "ordinal_suffix_for_day",
     "resolve_under_root",

@@ -11,6 +11,7 @@ from loguru import logger
 
 from .exceptions import SectionNotFoundError
 from .helpers.files import atomic_write_text
+from .helpers.obsidian import build_obsidian_link
 from .settings import SETTINGS
 
 if TYPE_CHECKING:

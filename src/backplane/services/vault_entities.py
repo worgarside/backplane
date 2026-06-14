@@ -245,8 +245,10 @@ class VaultEntityService:
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
-        rel_path = vault_relative_path(path)
-        async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
+        async with MarkdownDocument(
+            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            read_only=True,
+        ) as document:
             if len(document.body) != 1 or document.body[0].level != 1:
                 return _section_entries(document.body)
 
@@ -275,8 +277,10 @@ class VaultEntityService:
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
-        rel_path = vault_relative_path(path)
-        async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
+        async with MarkdownDocument(
+            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            read_only=True,
+        ) as document:
             try:
                 target_section = document.get_section((name, section))
             except exc.SectionNotFoundError as err:

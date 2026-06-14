@@ -689,6 +689,7 @@ async def _extract_metadata(
         logger.debug("Metadata extraction priority override supplied: {}", priority)
 
     prompt = "\n".join(prompt_parts)
+
     logger.debug(
         "Metadata extraction prompt: description_len={} catalog_present={} prompt_len={}",
         len(description),
@@ -788,7 +789,7 @@ def _build_task_note(
         f"## Next Action\n\n{metadata.next_action.strip()}\n\n"
         "## Notes\n\n"
     )
-    return f"{fm.model_dump_yaml()}---\n{body}"
+    return f"---\n{fm.model_dump_yaml()}---\n{body}"
 
 
 async def _ensure_stub(

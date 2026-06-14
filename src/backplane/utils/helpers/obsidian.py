@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import re
-from typing import Final, Literal
+from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel
+import anyio
+from pydantic import BaseModel, Field, computed_field
+
+from backplane.utils.helpers.files import AsyncPath
 
 from backplane.utils.enums import VaultEntityKind
 
@@ -127,25 +130,40 @@ def build_obsidian_link(
     return f"[[{target}]]"
 
 
+def build_entity_wikilink(kind: VaultEntityKind, name: str) -> str:
+    """Build a frontmatter-safe wikilink to a domain, person, project, or resource note.
+
+    Args:
+        kind: Entity kind determining the vault subdirectory.
+        name: Human-readable display name used as the link alias.
+
+    Returns:
+        Obsidian wikilink string, e.g. ``[[Domains/Home - Property|Home / Property]]``.
+    """
+    return build_obsidian_link(
+        kind.vault_dir / f"{note_filename(name)}.md",
+        alias=name,
+    )
+
+
 def build_vault_note_metadata(
     *,
     kind: VaultNoteKind,
     title: str,
-    path: str,
+    path: anyio.Path,
 ) -> VaultNoteMetadata:
     """Build structured note metadata for tool responses.
 
     Returns:
         Metadata describing the created or resolved vault note.
     """
-    filename = path.rsplit("/", maxsplit=1)[-1]
     canonical_link = build_obsidian_link(path)
+
     return VaultNoteMetadata(
         kind=kind,
         display_name=title,
         title=title,
-        path=path,
-        filename=filename,
+        path=AsyncPath(path),
         slug=safe_slug(title),
         canonical_link=canonical_link,
         canonical_link_with_alias=canonical_link,

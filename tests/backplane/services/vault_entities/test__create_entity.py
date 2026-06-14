@@ -11,6 +11,7 @@ import pytest
 
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import VAULT_PATHS, exc
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
@@ -43,7 +44,7 @@ async def test__create_entity_supports_projects(obsidian_vault: AsyncPath) -> No
     board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
         encoding="utf-8",
     )
-    assert metadata.path == "Projects/Garage Migration.md"
+    assert metadata.path == AsyncPath("Projects/Garage Migration.md")
     assert "type: project" in text
     assert "# Garage Migration" in text
     assert "## Goals" in text

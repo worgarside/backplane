@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pathlib
+
 from pydantic import BaseModel
 
 from backplane.utils.async_path import AsyncPath
@@ -21,6 +23,12 @@ def test__async_path_validates_from_anyio_path() -> None:
     """AsyncPath fields accept plain AsyncPath instances."""
     metadata = _SampleMetadata(path=AsyncPath("Domains/Home - Property.md"))  # pyright: ignore[reportArgumentType]
     assert metadata.path == AsyncPath("Domains/Home - Property.md")
+
+
+def test__async_path_validates_from_pure_path() -> None:
+    """AsyncPath fields accept pathlib.PurePath values."""
+    metadata = _SampleMetadata(path=pathlib.PurePath("Daily Notes/2026-05-20.md"))  # pyright: ignore[reportArgumentType]
+    assert metadata.path == AsyncPath("Daily Notes/2026-05-20.md")
 
 
 def test__async_path_serializes_to_posix_string() -> None:

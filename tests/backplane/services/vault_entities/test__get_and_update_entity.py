@@ -103,7 +103,7 @@ async def test__update_entity_appends_to_section(obsidian_vault: AsyncPath) -> N
     )
 
     assert "Primary automation platform." in rendered
-    note = await (obsidian_vault / "Domains/home-assistant.md").read_text(
+    note = await (obsidian_vault / "Domains/Home Assistant.md").read_text(
         encoding="utf-8",
     )
     assert "Primary automation platform." in note

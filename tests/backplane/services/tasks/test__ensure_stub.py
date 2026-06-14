@@ -22,13 +22,13 @@ async def test__ensure_stub_creates_missing_note(obsidian_vault: AsyncPath) -> N
     )
 
     assert created is True
-    text = await (obsidian_vault / "Domains/home-assistant.md").read_text(
+    text = await (obsidian_vault / "Domains/Home Assistant.md").read_text(
         encoding="utf-8",
     )
     assert "# Home Assistant" in text
     assert "## Overview" in text
     assert "## Notes" in text
-    assert "Created automatically from task intake for [[review-home-assistant]]." in text
+    assert "Created automatically from task intake for review-home-assistant." in text
 
 
 async def test__ensure_stub_returns_false_for_existing_note(
@@ -59,17 +59,17 @@ async def test__ensure_stub_creates_project_note(obsidian_vault: AsyncPath) -> N
     )
 
     assert created is True
-    text = await (obsidian_vault / "Projects/garage-migration.md").read_text(
+    text = await (obsidian_vault / "Projects/Garage Migration.md").read_text(
         encoding="utf-8",
     )
     assert "# Garage Migration" in text
     assert "## Goals" in text
     assert "## Tasks" in text
-    assert "Created automatically from task intake for [[plan-garage-migration]]." in text
+    assert "Created automatically from task intake for plan-garage-migration." in text
     board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
         encoding="utf-8",
     )
-    assert "- [ ] [[garage-migration]]" in board
+    assert "- [ ] [[Projects/Garage Migration|Garage Migration]]" in board
 
 
 async def test__create_stubs_returns_only_newly_created_names(

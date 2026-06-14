@@ -53,7 +53,7 @@ source_capture:
     ) as inbox_doc:
         capture_section = inbox_doc.get_section((capture_date, "09:15"))
         assert capture_section.content == (
-            "Review backup logs\n\n↗ [[review-backup-logs]]"
+            "Review backup logs\n\n↗ [[Tasks/Tasks/review-backup-logs|review-backup-logs]]"
         )
 
     async with MarkdownDocument(

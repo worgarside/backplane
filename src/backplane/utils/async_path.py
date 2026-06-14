@@ -25,8 +25,9 @@ class AsyncPath(anyio.Path):
     ) -> CoreSchema:
         """Register Pydantic validation and serialization for ``AsyncPath``.
 
-        Accepts ``AsyncPath``, ``anyio.Path``, ``pathlib.Path``, or vault-relative
-        path strings. Serializes to a posix string for JSON and ``model_dump()``.
+        Accepts ``AsyncPath``, ``anyio.Path``, ``pathlib.Path``, ``pathlib.PurePath``,
+        or vault-relative path strings. Serializes to a posix string for JSON and
+        ``model_dump()``.
 
         Args:
             source_type: Annotated or generic source type Pydantic is resolving.
@@ -43,7 +44,7 @@ class AsyncPath(anyio.Path):
             if isinstance(value, anyio.Path):
                 return cls(value.as_posix())
 
-            if isinstance(value, str | pathlib.Path):
+            if isinstance(value, str | pathlib.PurePath):
                 return cls(value)
 
             msg = f"Expected path, got {type(value)!r}"

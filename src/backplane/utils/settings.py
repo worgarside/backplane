@@ -206,13 +206,13 @@ class VaultPaths:
     domains_dir: Final = anyio.Path("Domains")
     inbox_dir: Final = anyio.Path("Inbox")
     people_dir: Final = anyio.Path("People")
-    project_board_path: Final = anyio.Path("Projects") / "Board.md"
+    project_board_path: Final = anyio.Path("Projects") / "Projects Board.md"
     projects_dir: Final = anyio.Path("Projects")
     resources_dir: Final = anyio.Path("Resources")
     templates_dir: Final = anyio.Path("Templates")
     tasks_dir: Final = anyio.Path("Tasks")
     task_notes_dir: Final = anyio.Path("Tasks") / "Tasks"
-    task_board_path: Final = anyio.Path("Tasks") / "Board.md"
+    task_board_path: Final = anyio.Path("Tasks") / "Tasks Board.md"
 
 
 SETTINGS: Final = Settings()  # pyright: ignore[reportCallIssue]

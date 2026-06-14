@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
 
-import anyio
 from loguru import logger
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, AgentRunResult

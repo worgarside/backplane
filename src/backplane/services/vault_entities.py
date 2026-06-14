@@ -1,4 +1,4 @@
-"""Vault entity notes for Domains, People, and Resources."""
+"""Vault entity notes for Domains, People, Projects, and Resources."""
 
 from __future__ import annotations
 
@@ -27,12 +27,14 @@ if TYPE_CHECKING:
 _ENTITY_DIRECTORIES: Final = {
     VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,
     VaultEntityKind.PERSON: VAULT_PATHS.people_dir,
+    VaultEntityKind.PROJECT: VAULT_PATHS.projects_dir,
     VaultEntityKind.RESOURCE: VAULT_PATHS.resources_dir,
 }
 
 _ENTITY_TEMPLATES: Final = {
     VaultEntityKind.DOMAIN: VAULT_PATHS.templates_dir / "Domain.md",
     VaultEntityKind.PERSON: VAULT_PATHS.templates_dir / "Person.md",
+    VaultEntityKind.PROJECT: VAULT_PATHS.templates_dir / "Project.md",
     VaultEntityKind.RESOURCE: VAULT_PATHS.templates_dir / "Resource.md",
 }
 

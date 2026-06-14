@@ -1,4 +1,4 @@
-"""MCP tools for vault entity notes (Domains, People, Resources)."""
+"""MCP tools for vault entity notes (Domains, People, Projects, Resources)."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 _HEADING_LINE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _CODE_FENCE = re.compile(r"^\s*```")
-VaultEntityKindParam = Literal["domain", "person", "resource"]
+VaultEntityKindParam = Literal["domain", "person", "project", "resource"]
 
 
 def _format_template_heading_tree(template_text: str) -> str:
@@ -56,7 +56,7 @@ def _build_update_description(section_trees: dict[VaultEntityKind, str]) -> str:
         Tool description text for ``update_vault_entity``.
     """
     lines = [
-        "Update a section of a vault entity note (Domain, Person, or Resource).",
+        "Update a section of a vault entity note (Domain, Person, Project, or Resource).",
         "",
         "Use append for most captures; replace only when the user asks to overwrite.",
         "",
@@ -82,8 +82,8 @@ def _build_update_description(section_trees: dict[VaultEntityKind, str]) -> str:
 _LIST_DESCRIPTION = (
     "List display names of vault entity notes for a given kind.\n\n"
     "Domains are platforms or broad areas. Resources are specific integrations, "
-    "APIs, vendors, or services. People are collaborators or contacts referenced "
-    "in related work."
+    "APIs, vendors, or services. Projects are scoped outcomes or ongoing efforts. "
+    "People are collaborators or contacts referenced in related work."
 )
 _LIST_SECTIONS_DESCRIPTION = (
     "List sections in a vault entity note. Use before reading or updating a "
@@ -92,17 +92,18 @@ _LIST_SECTIONS_DESCRIPTION = (
 )
 _GET_DESCRIPTION = (
     "Read a vault entity note as rendered markdown. Use when the user asks about "
-    "a domain, person, or resource note's contents."
+    "a domain, person, project, or resource note's contents."
 )
 _GET_SECTION_DESCRIPTION = (
     "Read a single section of a vault entity note as rendered markdown. Use when "
-    "the user needs specific context from a domain, person, or resource note "
+    "the user needs specific context from a domain, person, project, or resource note "
     "without loading the whole note."
 )
 _CREATE_DESCRIPTION = (
     "Create a new vault entity note from the vault template.\n\n"
     "Domains are platforms or broad areas. Resources are specific integrations, "
     "APIs, vendors, or services — never duplicate the same name as a domain. "
+    "Projects are scoped outcomes or ongoing efforts with related work. "
     "People are individuals referenced in related work.\n\n"
     "Fails if a note with the same name already exists."
 )
@@ -111,7 +112,7 @@ _CREATE_DESCRIPTION = (
 async def list_vault_entities(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind to list: domain, person, or resource."),
+        Field(description="Entity kind to list: domain, person, project, or resource."),
     ],
 ) -> str:
     """List display names of vault entity notes.
@@ -130,7 +131,7 @@ async def list_vault_entities(
 async def list_vault_entity_sections(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, or resource."),
+        Field(description="Entity kind: domain, person, project, or resource."),
     ],
     name: Annotated[
         str,
@@ -157,7 +158,7 @@ async def list_vault_entity_sections(
 async def get_vault_entity(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, or resource."),
+        Field(description="Entity kind: domain, person, project, or resource."),
     ],
     name: Annotated[
         str,
@@ -181,7 +182,7 @@ async def get_vault_entity_section(
     *,
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, or resource."),
+        Field(description="Entity kind: domain, person, project, or resource."),
     ],
     name: Annotated[
         str,
@@ -218,7 +219,7 @@ async def get_vault_entity_section(
 async def create_vault_entity(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, or resource."),
+        Field(description="Entity kind: domain, person, project, or resource."),
     ],
     name: Annotated[
         str,
@@ -243,7 +244,7 @@ async def update_vault_entity(
     *,
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, or resource."),
+        Field(description="Entity kind: domain, person, project, or resource."),
     ],
     name: Annotated[
         str,

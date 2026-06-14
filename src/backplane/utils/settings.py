@@ -206,6 +206,7 @@ class VaultPaths:
     domains_dir: Final = anyio.Path("Domains")
     inbox_dir: Final = anyio.Path("Inbox")
     people_dir: Final = anyio.Path("People")
+    projects_dir: Final = anyio.Path("Projects")
     resources_dir: Final = anyio.Path("Resources")
     templates_dir: Final = anyio.Path("Templates")
     tasks_dir: Final = anyio.Path("Tasks")

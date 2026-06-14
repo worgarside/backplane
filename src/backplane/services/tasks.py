@@ -41,7 +41,7 @@ _SCORE_CANDIDATE: Final = 60.0
 _MIN_AUTO_GAP: Final = 10.0
 _LOG_TEXT_MAX_LEN: Final = 80
 _MATCH_TOP_CANDIDATES: Final = 3
-_STUB_NOTE_TYPES: Final = frozenset({"domain", "person", "resource"})
+_STUB_NOTE_TYPES: Final = frozenset({"domain", "person", "project", "resource"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +80,7 @@ class CreateTaskResult(BaseModel, frozen=True, arbitrary_types_allowed=True):
     candidate_captures: list[CaptureCandidate]
     domains_created: list[str]
     resources_created: list[str]
+    projects_created: list[str]
     people_created: list[str]
 
 
@@ -106,6 +107,17 @@ class TaskMetadata(BaseModel):
             description=(
                 "Specific integrations, APIs, vendors, or services to touch "
                 "(e.g. a named API or device integration), not parent platforms."
+            ),
+        ),
+    ]
+
+    projects: Annotated[
+        list[str],
+        Field(
+            default_factory=list,
+            description=(
+                "Scoped outcomes, initiatives, or ongoing efforts the task contributes "
+                "to, not platforms, integrations, or people."
             ),
         ),
     ]
@@ -149,6 +161,7 @@ class TaskFrontmatter(BaseModel, frozen=True):
     source_capture: str | None
     domains: list[str]
     resources: list[str]
+    projects: list[str]
     people: list[str]
     priority: enums.Priority
     effort: enums.Effort
@@ -180,6 +193,8 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
             "(e.g. 'Home Assistant', 'Inventory'). "
             "Resources are specific integrations, APIs, vendors, or services you will "
             "configure or call (e.g. 'Acme API', 'MQTT'). "
+            "Projects are scoped outcomes or ongoing efforts the task contributes to "
+            "(e.g. 'Garage Migration', 'Kitchen Dashboard'). "
             "Never put the same name in both domains and resources. "
             "If a task mentions adding or updating an integration inside a platform, "
             "put the platform in domains and the integration in resources only — "
@@ -188,9 +203,9 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
             "For people: every person named or clearly implied in the task (e.g. 'Jordan' from "
             "\"Jordan's laptop\", or the person behind 'their' when a name appears in the same "
             "sentence). "
-            "When the user message lists existing domains, resources, or people, prefer those "
-            "exact spellings when they clearly apply; add new names when the task mentions someone "
-            "not in the list. "
+            "When the user message lists existing domains, resources, projects, or people, "
+            "prefer those exact spellings when they clearly apply; add new names when the "
+            "task mentions someone or something not in the list. "
             "For title: a concise imperative phrase under 60 characters. "
             "For next_action: one concrete first step as an imperative sentence. "
             "For effort: 'small' under 1 hour, 'medium' 1-4 hours, 'large' over 4 hours."
@@ -446,9 +461,10 @@ async def _metadata_catalog_prompt() -> str:
     Returns:
         Catalog lines for the metadata agent user prompt, or an empty string.
     """
-    domains, resources, people = await asyncio.gather(
+    domains, resources, projects, people = await asyncio.gather(
         VaultEntityService.list_entities(enums.VaultEntityKind.DOMAIN),
         VaultEntityService.list_entities(enums.VaultEntityKind.RESOURCE),
+        VaultEntityService.list_entities(enums.VaultEntityKind.PROJECT),
         VaultEntityService.list_entities(enums.VaultEntityKind.PERSON),
     )
 
@@ -465,6 +481,12 @@ async def _metadata_catalog_prompt() -> str:
             + ", ".join(resources),
         )
 
+    if projects:
+        lines.append(
+            "Existing projects (prefer exact spelling when applicable): "
+            + ", ".join(projects),
+        )
+
     if people:
         lines.append(
             "Existing people (prefer exact spelling when applicable): "
@@ -472,13 +494,14 @@ async def _metadata_catalog_prompt() -> str:
         )
 
     if not lines:
-        logger.debug("Metadata catalog empty (no domain/resource/person notes)")
+        logger.debug("Metadata catalog empty (no domain/resource/project/person notes)")
         return ""
 
     logger.debug(
-        "Metadata catalog: domains={} resources={} people={}",
+        "Metadata catalog: domains={} resources={} projects={} people={}",
         len(domains),
         len(resources),
+        len(projects),
         len(people),
     )
     return "\n".join(lines)
@@ -532,13 +555,14 @@ def _log_task_metadata(metadata: TaskMetadata, *, context: str) -> None:
     """Log extracted task metadata fields at INFO."""
     logger.info(
         (
-            "Task metadata {}: title={!r} domains={} resources={} people={} "
+            "Task metadata {}: title={!r} domains={} resources={} projects={} people={} "
             "priority={} effort={} next_action_len={}"
         ),
         context,
         metadata.title,
         metadata.domains,
         metadata.resources,
+        metadata.projects,
         metadata.people,
         metadata.priority,
         metadata.effort,
@@ -595,6 +619,7 @@ async def _extract_metadata(
             title=title or description[:60],
             domains=[],
             resources=[],
+            projects=[],
             people=[],
         )
         _log_task_metadata(fallback, context="fallback")
@@ -644,6 +669,7 @@ def _build_task_note(
         source_capture=capture.id if capture else None,
         domains=metadata.domains,
         resources=metadata.resources,
+        projects=metadata.projects,
         people=metadata.people,
         priority=metadata.priority,
         effort=metadata.effort,
@@ -668,7 +694,7 @@ def _build_task_note(
 
 async def _ensure_stub(
     name: str,
-    note_type: Literal["domain", "person", "resource"],
+    note_type: Literal["domain", "person", "project", "resource"],
     source_task_slug: str,
     source_task_title: str,
 ) -> bool:
@@ -710,7 +736,7 @@ async def _ensure_stub(
 
 async def _create_stubs(
     names: list[str],
-    note_type: Literal["domain", "person", "resource"],
+    note_type: Literal["domain", "person", "project", "resource"],
     source_task_slug: str,
     source_task_title: str,
 ) -> list[str]:
@@ -866,11 +892,11 @@ async def _create_task_note(
 async def _create_linked_stubs(
     metadata: TaskMetadata,
     slug: str,
-) -> tuple[list[str], list[str], list[str]]:
-    """Create domain, resource, and people stub notes for task metadata.
+) -> tuple[list[str], list[str], list[str], list[str]]:
+    """Create domain, resource, project, and people stub notes for task metadata.
 
     Returns:
-        Created domain, resource, and people names.
+        Created domain, resource, project, and people names.
     """
     return await asyncio.gather(
         _create_stubs(
@@ -882,6 +908,12 @@ async def _create_linked_stubs(
         _create_stubs(
             metadata.resources,
             "resource",
+            slug,
+            metadata.title,
+        ),
+        _create_stubs(
+            metadata.projects,
+            "project",
             slug,
             metadata.title,
         ),
@@ -906,7 +938,7 @@ class TaskService:
         priority: enums.Priority | None = None,
         link_capture_id: str | None = None,
     ) -> CreateTaskResult:
-        """Create a task note, update the Kanban board, and stub missing domain/resource notes.
+        """Create a task note, update the Kanban board, and stub missing entity notes.
 
         Args:
             description: Natural-language task description.
@@ -937,10 +969,12 @@ class TaskService:
         board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
         await append_board_card(board_path, slug)
 
-        domains_created, resources_created, people_created = await _create_linked_stubs(
-            metadata,
-            slug,
-        )
+        (
+            domains_created,
+            resources_created,
+            projects_created,
+            people_created,
+        ) = await _create_linked_stubs(metadata, slug)
 
         if capture_selection.matched is not None:
             await _annotate_capture(capture_selection.matched, slug)
@@ -948,12 +982,14 @@ class TaskService:
         logger.info(
             (
                 "Task intake complete: slug={} matched_capture_id={} "
-                "domains_created={} resources_created={} people_created={}"
+                "domains_created={} resources_created={} projects_created={} "
+                "people_created={}"
             ),
             slug,
             capture_selection.matched.id if capture_selection.matched else None,
             domains_created,
             resources_created,
+            projects_created,
             people_created,
         )
 
@@ -969,6 +1005,7 @@ class TaskService:
             ],
             domains_created=domains_created,
             resources_created=resources_created,
+            projects_created=projects_created,
             people_created=people_created,
         )
 

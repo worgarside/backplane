@@ -6,7 +6,7 @@ import anyio
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
-from backplane.utils import exc
+from backplane.utils import VAULT_PATHS, exc
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
 
@@ -36,12 +36,35 @@ async def test__create_entity_supports_projects(obsidian_vault: anyio.Path) -> N
     )
 
     text = await (obsidian_vault / path).read_text(encoding="utf-8")
+    board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
+        encoding="utf-8",
+    )
     assert path == anyio.Path("Projects") / "garage-migration.md"
     assert "type: project" in text
     assert "# Garage Migration" in text
     assert "## Goals" in text
     assert "## Tasks" in text
     assert "## Notes" in text
+    assert "- [ ] [[garage-migration]]" in board
+
+
+async def test__create_entity_does_not_add_non_projects_to_board(
+    obsidian_vault: anyio.Path,
+) -> None:
+    """Only project notes are appended to the project Kanban board."""
+    board_before = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
+        encoding="utf-8",
+    )
+
+    _ = await VaultEntityService.create_entity(
+        VaultEntityKind.DOMAIN,
+        "Home Assistant",
+    )
+
+    board_after = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
+        encoding="utf-8",
+    )
+    assert board_after == board_before
 
 
 async def test__create_entity_raises_conflict_for_duplicate(

@@ -89,6 +89,19 @@ tags:
 ## Notes
 """
 
+PROJECT_BOARD = """---
+
+kanban-plugin: board
+
+---
+
+## Backlog
+
+
+
+## Todo
+"""
+
 PROJECT_TEMPLATE = """---
 type: project
 status: planning
@@ -138,6 +151,7 @@ def obsidian_vault(
     """Point application settings at a temporary vault root."""
     monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
     _install_entity_templates(vault_path)
+    _install_project_board(vault_path)
     return vault_path
 
 
@@ -149,3 +163,10 @@ def _install_entity_templates(vault_path: anyio.Path) -> None:
     _ = (templates / "Person.md").write_text(PERSON_TEMPLATE, encoding="utf-8")
     _ = (templates / "Project.md").write_text(PROJECT_TEMPLATE, encoding="utf-8")
     _ = (templates / "Resource.md").write_text(RESOURCE_TEMPLATE, encoding="utf-8")
+
+
+def _install_project_board(vault_path: anyio.Path) -> None:
+    """Write a minimal project Kanban board into a temporary vault."""
+    board = pathlib.Path(str(vault_path)) / "Projects" / "Board.md"
+    board.parent.mkdir(parents=True, exist_ok=True)
+    _ = board.write_text(PROJECT_BOARD, encoding="utf-8")

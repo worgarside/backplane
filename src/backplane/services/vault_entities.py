@@ -10,6 +10,7 @@ from loguru import logger
 from backplane.utils import (
     VAULT_PATHS,
     MarkdownDocument,
+    append_board_card,
     atomic_write_text,
     exc,
     resolve_under_root,
@@ -320,11 +321,16 @@ class VaultEntityService:
             msg = f"{kind.value.title()} {name!r} already exists."
             raise exc.ConflictError(message=msg)
 
-        rel_path = VaultEntityService.directory_for(kind) / f"{safe_slug(name)}.md"
+        slug = safe_slug(name)
+        rel_path = VaultEntityService.directory_for(kind) / f"{slug}.md"
         content = await VaultEntityService.render_entity_from_template(kind, name)
         target = await resolve_under_root(rel_path)
         await target.parent.mkdir(parents=True, exist_ok=True)
         await atomic_write_text(target, content)
+
+        if kind == VaultEntityKind.PROJECT:
+            board_path = await resolve_under_root(VAULT_PATHS.project_board_path)
+            await append_board_card(board_path, slug)
 
         if provenance_note:
             async with MarkdownDocument(vault_path=rel_path, read_only=False) as document:

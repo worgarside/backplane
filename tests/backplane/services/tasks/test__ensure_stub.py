@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from backplane.services.tasks import _create_stubs, _ensure_stub
+from backplane.utils import VAULT_PATHS
 from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
@@ -70,6 +71,10 @@ async def test__ensure_stub_creates_project_note(obsidian_vault: anyio.Path) -> 
     assert "## Goals" in text
     assert "## Tasks" in text
     assert "Created automatically from task intake for" in text
+    board = await (obsidian_vault / VAULT_PATHS.project_board_path).read_text(
+        encoding="utf-8",
+    )
+    assert "- [ ] [[garage-migration]]" in board
 
 
 async def test__create_stubs_returns_only_newly_created_names(

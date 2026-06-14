@@ -91,7 +91,7 @@ async def append_board_card(
     """Append a Kanban card at the end of a board column section.
 
     Args:
-        board_path: Absolute path to Tasks/Board.md.
+        board_path: Absolute path to a vault Kanban board markdown file.
         slug: Task slug used as the wiki-link target.
         section: Heading text after ``##`` (e.g. ``Backlog``, ``Todo``).
         due: Optional due date or datetime rendered as Obsidian Kanban ``@{…}`` metadata.

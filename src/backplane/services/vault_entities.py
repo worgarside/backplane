@@ -240,8 +240,10 @@ class VaultEntityService:
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
-        rel_path = vault_relative_path(path)
-        async with MarkdownDocument(vault_path=rel_path, read_only=True) as document:
+        async with MarkdownDocument(
+            vault_path=path.relative_to(SETTINGS.obsidian_vault_path),
+            read_only=True,
+        ) as document:
             return document.render()
 
     @staticmethod
@@ -328,16 +330,17 @@ class VaultEntityService:
             msg = f"{kind.value.title()} {name!r} already exists."
             raise exc.ConflictError(message=msg)
 
-        filename_stem = note_filename(name)
-        rel_path = VaultEntityService.directory_for(kind) / f"{filename_stem}.md"
+        rel_path = kind.vault_dir / f"{note_filename(name)}.md"
+
         content = await VaultEntityService.render_entity_from_template(kind, name)
         target = await resolve_under_root(rel_path)
+
         await target.parent.mkdir(parents=True, exist_ok=True)
         await atomic_write_text(target, content)
 
         if kind == VaultEntityKind.PROJECT:
             board_path = await resolve_under_root(VAULT_PATHS.project_board_path)
-            await append_board_card(board_path, str(rel_path))
+            await append_board_card(board_path, rel_path)
 
         if provenance_note:
             async with MarkdownDocument(vault_path=rel_path, read_only=False) as document:

@@ -19,14 +19,55 @@ _FILENAME_INVALID_RE: Final = re.compile(r'[\\/:*?"<>|]')
 class VaultNoteMetadata(BaseModel, frozen=True):
     """Structured metadata for a vault note returned by Backplane tools."""
 
-    kind: VaultNoteKind
-    display_name: str
-    title: str
-    path: str
-    filename: str
-    slug: str
-    canonical_link: str
-    canonical_link_with_alias: str
+    kind: Annotated[
+        VaultNoteKind,
+        Field(
+            description=(
+                "Note kind: a vault entity (`domain`, `person`, `project`, `resource`) "
+                "or `task`."
+            ),
+        ),
+    ]
+    display_name: Annotated[
+        str,
+        Field(description="Human-readable name shown to users and MCP tool responses."),
+    ]
+    title: Annotated[
+        str,
+        Field(description="Note H1 title, typically matching ``display_name``."),
+    ]
+    path: Annotated[
+        AsyncPath,
+        Field(description="Vault-relative path to the note file."),
+    ]
+    slug: Annotated[
+        str,
+        Field(description="URL-safe slug derived from the title."),
+    ]
+    canonical_link: Annotated[
+        str,
+        Field(
+            description=(
+                "Primary Obsidian wikilink for referencing the note, e.g. "
+                "``[[Domains/Home - Property|Home - Property]]``."
+            ),
+        ),
+    ]
+    canonical_link_with_alias: Annotated[
+        str,
+        Field(
+            description=(
+                "Wikilink rendered for display, including an alias when the path "
+                "includes folder prefixes."
+            ),
+        ),
+    ]
+
+    @computed_field
+    @property
+    def filename(self) -> str:
+        """Note filename including the ``.md`` extension."""
+        return self.path.name
 
 
 def note_filename(title: str) -> str:

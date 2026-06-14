@@ -28,3 +28,13 @@ class VaultEntityKind(enum.StrEnum):
     PERSON = enum.auto()
     PROJECT = enum.auto()
     RESOURCE = enum.auto()
+
+    @property
+    def vault_dir(self) -> anyio.Path:
+        """Return the vault subdirectory for this entity kind."""
+        return {
+            VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,
+            VaultEntityKind.PERSON: VAULT_PATHS.people_dir,
+            VaultEntityKind.PROJECT: VAULT_PATHS.projects_dir,
+            VaultEntityKind.RESOURCE: VAULT_PATHS.resources_dir,
+        }[self]

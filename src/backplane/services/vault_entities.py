@@ -132,7 +132,6 @@ class VaultEntityService:
 
     @staticmethod
     @overload
-    @staticmethod
     async def resolve_entity_path(
         kind: VaultEntityKind,
         name: str,

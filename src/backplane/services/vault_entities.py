@@ -28,13 +28,6 @@ if TYPE_CHECKING:
     from backplane.utils.helpers.obsidian import VaultNoteMetadata
     from backplane.utils.markdown import MarkdownSection
 
-_ENTITY_DIRECTORIES: Final = {
-    VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,
-    VaultEntityKind.PERSON: VAULT_PATHS.people_dir,
-    VaultEntityKind.PROJECT: VAULT_PATHS.projects_dir,
-    VaultEntityKind.RESOURCE: VAULT_PATHS.resources_dir,
-}
-
 _ENTITY_TEMPLATES: Final = {
     VaultEntityKind.DOMAIN: VAULT_PATHS.templates_dir / "Domain.md",
     VaultEntityKind.PERSON: VAULT_PATHS.templates_dir / "Person.md",
@@ -75,12 +68,6 @@ def note_title_from_markdown(text: str) -> str | None:
     return None
 
 
-def vault_relative_path(path: anyio.Path) -> anyio.Path:
-    """Return a vault-relative path for an absolute entity note path."""
-    vault_root = SETTINGS.obsidian_vault_path
-    return path.relative_to(vault_root)
-
-
 def _section_entries(
     sections: list[MarkdownSection],
     *,
@@ -104,11 +91,6 @@ def _section_entries(
 @final
 class VaultEntityService:
     """Service for listing, reading, creating, and updating vault entity notes."""
-
-    @staticmethod
-    def directory_for(kind: VaultEntityKind) -> anyio.Path:
-        """Return the vault subdirectory for an entity kind."""
-        return _ENTITY_DIRECTORIES[kind]
 
     @staticmethod
     def template_path_for(kind: VaultEntityKind) -> anyio.Path:

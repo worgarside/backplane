@@ -13,25 +13,29 @@ from backplane.utils.async_path import AsyncPath
 
 def test__async_path_validates_from_string() -> None:
     """AsyncPath fields accept vault-relative path strings."""
-    metadata = SampleMetadata(path="Tasks/Tasks/Foo.md")  # pyright: ignore[reportArgumentType]
+    metadata = SampleMetadata.model_validate({"path": "Tasks/Tasks/Foo.md"})
     assert metadata.path == AsyncPath("Tasks/Tasks/Foo.md")
 
 
 def test__async_path_validates_from_anyio_path() -> None:
     """AsyncPath fields accept plain anyio.Path instances."""
-    metadata = SampleMetadata(path=anyio.Path("Domains/Home - Property.md"))  # pyright: ignore[reportArgumentType]
+    metadata = SampleMetadata.model_validate(
+        {"path": anyio.Path("Domains/Home - Property.md")},
+    )
     assert metadata.path == AsyncPath("Domains/Home - Property.md")
 
 
 def test__async_path_rejects_invalid_type() -> None:
     """AsyncPath fields reject non-path values."""
     with pytest.raises(TypeError, match="Expected path"):
-        _ = SampleMetadata(path=123)  # pyright: ignore[reportArgumentType]
+        _ = SampleMetadata.model_validate({"path": 123})
 
 
 def test__async_path_validates_from_pure_path() -> None:
     """AsyncPath fields accept pathlib.PurePath values."""
-    metadata = SampleMetadata(path=pathlib.PurePath("Daily Notes/2026-05-20.md"))  # pyright: ignore[reportArgumentType]
+    metadata = SampleMetadata.model_validate(
+        {"path": pathlib.PurePath("Daily Notes/2026-05-20.md")},
+    )
     assert metadata.path == AsyncPath("Daily Notes/2026-05-20.md")
 
 

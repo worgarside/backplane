@@ -95,6 +95,28 @@ def _vault_relative_path(path: AsyncPath) -> pathlib.PurePath:
     return pathlib.PurePath(path_resolved.relative_to(root_resolved).as_posix())
 
 
+def _entity_section_path(
+    body: list[MarkdownSection],
+    heading_path: list[str],
+) -> tuple[str, ...]:
+    """Resolve a section path using the document's actual level-1 root heading.
+
+    Returns:
+        Absolute section path including the note's H1 when present.
+
+    Raises:
+        ValueError: If ``heading_path`` is empty.
+    """
+    if not heading_path:
+        msg = "heading_path must not be empty."
+        raise ValueError(msg)
+
+    if len(body) == 1 and body[0].level == 1:
+        return (body[0].heading, *heading_path)
+
+    return tuple(heading_path)
+
+
 @final
 class VaultEntityService:
     """Service for listing, reading, creating, and updating vault entity notes."""
@@ -331,13 +353,21 @@ class VaultEntityService:
         await atomic_write_text(target, content)
 
         if kind == VaultEntityKind.PROJECT:
-            board_path = await resolve_under_root(VAULT_PATHS.project_board_path)
-            await append_board_card(board_path, rel_path)
+            try:
+                board_path = await resolve_under_root(VAULT_PATHS.project_board_path)
+                await append_board_card(board_path, rel_path)
+            except (FileNotFoundError, exc.SectionNotFoundError, OSError) as err:
+                logger.warning(
+                    "Project note created but Kanban board update failed for {}: {}",
+                    rel_path,
+                    err,
+                )
 
         if provenance_note:
             async with MarkdownDocument(vault_path=rel_path, read_only=False) as document:
+                notes_path = _entity_section_path(document.body, ["Notes"])
                 section = document.get_section(
-                    (name, "Notes"),
+                    notes_path,
                     create_if_not_exists=True,
                 )
                 section.append_content(provenance_note)

@@ -76,6 +76,22 @@ async def test__create_entity_does_not_add_non_projects_to_board(
     assert board_after == board_before
 
 
+async def test__create_entity_project_succeeds_when_board_is_missing(
+    obsidian_vault: AsyncPath,
+) -> None:
+    """Project creation succeeds even when the Kanban board cannot be updated."""
+    board = obsidian_vault / VAULT_PATHS.project_board_path
+    await board.unlink()
+
+    metadata = await VaultEntityService.create_entity(
+        VaultEntityKind.PROJECT,
+        "Orphan Project",
+    )
+
+    assert metadata.path == AsyncPath("Projects/Orphan Project.md")
+    assert await (obsidian_vault / metadata.path).is_file()
+
+
 async def test__create_entity_raises_conflict_for_duplicate(
     obsidian_vault: AsyncPath,
 ) -> None:

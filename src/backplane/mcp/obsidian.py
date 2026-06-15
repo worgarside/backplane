@@ -6,7 +6,7 @@ import datetime as dt  # used at runtime by FastMCP schema introspection
 from typing import TYPE_CHECKING, Annotated, Literal
 
 from loguru import logger
-from pydantic import Field, PastDate
+from pydantic import Field
 
 from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
 from backplane.services.obsidian import ObsidianService
@@ -86,7 +86,7 @@ async def add_to_daily_note(
         ),
     ] = False,
     date: Annotated[
-        PastDate | None,
+        dt.date | None,
         Field(
             description="Daily note date in YYYY-MM-DD. Defaults to today's local date.",
         ),
@@ -152,7 +152,7 @@ async def add_to_daily_note(
 
 async def get_daily_note(
     date: Annotated[
-        PastDate | None,
+        dt.date | None,
         Field(
             description="Daily note date in YYYY-MM-DD. Defaults to today's local date.",
         ),

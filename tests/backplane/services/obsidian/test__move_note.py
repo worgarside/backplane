@@ -119,7 +119,7 @@ async def test__move_note__rejects_unsafe_path(obsidian_vault: AsyncPath) -> Non
     """Traversal paths are rejected by resolve_under_root."""
     await atomic_write_text(obsidian_vault / "Safe/note.md", "# Safe\n")
 
-    with pytest.raises(ValueError, match="Unsafe path"):
+    with pytest.raises(exc.UserError, match="Unsafe path"):
         _ = await ObsidianService.move_note(
             AsyncPath("../outside.md"),
             AsyncPath("New/note.md"),

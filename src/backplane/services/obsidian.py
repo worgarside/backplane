@@ -173,14 +173,18 @@ class ObsidianService:
             Vault-relative path to the moved note.
 
         Raises:
+            UserError: If either path is invalid or escapes the vault.
             NotFoundError: If the source note does not exist.
             ConflictError: If the destination note already exists.
         """
         source_rel = ObsidianService._validate_vault_note_path(source_path)
         destination_rel = ObsidianService._validate_vault_note_path(destination_path)
 
-        source_abs = await resolve_under_root(source_rel)
-        destination_abs = await resolve_under_root(destination_rel)
+        try:
+            source_abs = await resolve_under_root(source_rel)
+            destination_abs = await resolve_under_root(destination_rel)
+        except ValueError as err:
+            raise exc.UserError(message=str(err)) from err
 
         if not await source_abs.is_file():
             msg = f"Note not found: {source_rel!s}"

@@ -25,7 +25,7 @@ async def test__list_vault_entities__returns_json_names(mocker: MockerFixture) -
     result = await vault_entities.list_vault_entities(kind="domain")
 
     assert result == ["Home Assistant", "Obsidian"]
-    _ = mock_list.assert_awaited_once()
+    _ = mock_list.assert_awaited_once_with(VaultEntityKind.DOMAIN)
 
 
 async def test__list_vault_entity_sections__returns_json_sections(
@@ -49,7 +49,7 @@ async def test__list_vault_entity_sections__returns_json_sections(
     assert result == [
         {"heading": "Overview", "path": ["Overview"], "level": 2},
     ]
-    _ = mock_list_sections.assert_awaited_once()
+    _ = mock_list_sections.assert_awaited_once_with(VaultEntityKind.RESOURCE, "MQTT")
 
 
 async def test__get_vault_entity__delegates_to_service(mocker: MockerFixture) -> None:
@@ -62,7 +62,7 @@ async def test__get_vault_entity__delegates_to_service(mocker: MockerFixture) ->
     result = await vault_entities.get_vault_entity(kind="domain", name="Home Assistant")
 
     assert result == "# Home Assistant\n"
-    _ = mock_get.assert_awaited_once()
+    _ = mock_get.assert_awaited_once_with(VaultEntityKind.DOMAIN, "Home Assistant")
 
 
 async def test__get_vault_entity_section__delegates_to_service(
@@ -81,7 +81,11 @@ async def test__get_vault_entity_section__delegates_to_service(
     )
 
     assert result == "## Overview\n\nAutomation platform.\n"
-    _ = mock_get_section.assert_awaited_once()
+    _ = mock_get_section.assert_awaited_once_with(
+        VaultEntityKind.DOMAIN,
+        "Home Assistant",
+        heading_path=["Overview"],
+    )
 
 
 async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture) -> None:
@@ -123,7 +127,14 @@ async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture)
     )
 
     assert "Updated." in result
-    _ = mock_update.assert_awaited_once()
+    _ = mock_update.assert_awaited_once_with(
+        VaultEntityKind.RESOURCE,
+        "MQTT",
+        heading_path=["Overview"],
+        content="Updated.",
+        mode="append",
+        create_section_if_not_exists=False,
+    )
 
 
 async def test__list_vault_entities__integration(obsidian_vault: AsyncPath) -> None:

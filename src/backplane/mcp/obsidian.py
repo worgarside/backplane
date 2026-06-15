@@ -20,13 +20,8 @@ _ADD_DESCRIPTION = """Add content to a section of the user's Obsidian daily note
 
 Use when the user wants to capture something "today", "in my daily note", or into a daily-note section.
 
-Preferred daily-note section paths:
-- `["Summary"]`
-- `["Tasks", "Work"]`
-- `["Tasks", "Personal"]`
-- `["Journal"]`
-- `["Links"]`
-- `["Tomorrow"]`
+When the target section is unknown or ambiguous, call `get_daily_note` first to inspect the note's
+headings. If a section lookup fails, the error includes available sections at that level.
 
 If the user explicitly asks for another section, create it with `create_section_if_not_exists=true`.
 If a section is missing and the tool returns available sections, retry with the closest

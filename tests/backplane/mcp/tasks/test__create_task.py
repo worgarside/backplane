@@ -8,39 +8,14 @@ import pytest
 
 from backplane.mcp import tasks
 from backplane.services.tasks import CaptureCandidate, CreateTaskResult
-from backplane.utils import VAULT_PATHS, build_vault_note_metadata, enums
+from backplane.utils import enums
 
 _CANDIDATE_SNIPPET_MAX_LEN = 80
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pytest_mock import MockerFixture
-
-
-def _task_result(
-    *,
-    title: str,
-    slug: str,
-    matched_capture_id: str | None = None,
-    candidate_captures: list[CaptureCandidate] | None = None,
-) -> CreateTaskResult:
-    """Build a sample create-task result for MCP tool tests."""
-    note_path = VAULT_PATHS.task_notes_dir / f"{title}.md"
-    return CreateTaskResult(
-        title=title,
-        slug=slug,
-        path=note_path,
-        metadata=build_vault_note_metadata(
-            kind="task",
-            title=title,
-            path=note_path,
-        ),
-        matched_capture_id=matched_capture_id,
-        candidate_captures=candidate_captures or [],
-        domains_created=[],
-        resources_created=[],
-        projects_created=[],
-        people_created=[],
-    )
 
 
 @pytest.mark.parametrize(
@@ -73,6 +48,7 @@ def _task_result(
 )
 async def test__create_task__forwards_fields_to_task_service(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
     description: str,
     title: str | None,
     due: str | None,
@@ -82,7 +58,7 @@ async def test__create_task__forwards_fields_to_task_service(
 ) -> None:
     """Task fields are forwarded while omitted optional values default to None."""
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(title=returned_title, slug=returned_slug),
+        return_value=make_create_task_result(title=returned_title, slug=returned_slug),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -110,10 +86,11 @@ async def test__create_task__forwards_fields_to_task_service(
 
 async def test__create_task__matched_capture_is_included_in_confirmation(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
 ) -> None:
     """A matched inbox capture should be mentioned in the confirmation."""
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(
+        return_value=make_create_task_result(
             title="Review backup logs",
             slug="review-backup-logs",
             matched_capture_id="2026-05-25T21:15",
@@ -132,11 +109,15 @@ async def test__create_task__matched_capture_is_included_in_confirmation(
 
 async def test__create_task__logs_success_response(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
 ) -> None:
     """Successful task creation logs the service result and response string."""
     mock_info = mocker.patch("backplane.mcp.tasks.logger.info")
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(title="Review backup logs", slug="review-backup-logs"),
+        return_value=make_create_task_result(
+            title="Review backup logs",
+            slug="review-backup-logs",
+        ),
     )
     mock_task_service = mocker.patch("backplane.mcp.tasks.TaskService")
     mock_task_service.return_value.create_task = mock_create_task  # pyright: ignore[reportAny]
@@ -151,10 +132,11 @@ async def test__create_task__logs_success_response(
 
 async def test__create_task__candidate_capture_is_included_in_confirmation(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
 ) -> None:
     """Near matches are offered without failing task creation."""
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(
+        return_value=make_create_task_result(
             title="Update rain alert notification",
             slug="update-rain-alert-notification",
             candidate_captures=[
@@ -185,6 +167,7 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
 
 async def test__create_task__long_candidate_snippet_is_truncated(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
 ) -> None:
     """Long candidate snippets are truncated in the confirmation."""
     long_text = (
@@ -192,7 +175,7 @@ async def test__create_task__long_candidate_snippet_is_truncated(
         "the notifications have been failing intermittently for the past week"
     )
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(
+        return_value=make_create_task_result(
             title="Fix backup notifications",
             slug="fix-backup-notifications",
             candidate_captures=[
@@ -213,10 +196,11 @@ async def test__create_task__long_candidate_snippet_is_truncated(
 
 async def test__create_task__forwards_link_capture_id(
     mocker: MockerFixture,
+    make_create_task_result: Callable[..., CreateTaskResult],
 ) -> None:
     """An explicit capture link is forwarded to the task service."""
     mock_create_task = mocker.AsyncMock(
-        return_value=_task_result(
+        return_value=make_create_task_result(
             title="Review backup logs",
             slug="review-backup-logs",
             matched_capture_id="2026-05-25T21:15",

@@ -13,10 +13,8 @@ from backplane.utils.settings import SETTINGS, VAULT_PATHS
 DOMAIN_TEMPLATE = """---
 type: domain
 status: active
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
-updated:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
 tags:
   - domain
 ---
@@ -42,10 +40,8 @@ tags:
 PERSON_TEMPLATE = """---
 type: person
 status: active
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
-updated:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
 tags:
   - person
 ---
@@ -65,10 +61,8 @@ tags:
 RESOURCE_TEMPLATE = """---
 type: resource
 status: active
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
-updated:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
 domains: []
 url:
 tags:
@@ -105,10 +99,8 @@ kanban-plugin: board
 PROJECT_TEMPLATE = """---
 type: project
 status: planning
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
-updated:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
 domains: []
 resources: []
 people: []

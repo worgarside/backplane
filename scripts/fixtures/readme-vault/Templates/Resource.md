@@ -1,10 +1,8 @@
 ---
 type: resource
 status: active
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
-updated:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
 domains: []
 url:
 tags:

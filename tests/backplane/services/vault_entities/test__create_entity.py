@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 import pytest
 
 from backplane.services.vault_entities import VaultEntityService
-from backplane.utils import VAULT_PATHS, exc
+from backplane.utils import VAULT_PATHS, MarkdownDocument, exc
 from backplane.utils.async_path import AsyncPath
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.files import atomic_write_text
@@ -31,6 +31,10 @@ async def test__create_entity_uses_template_shape(obsidian_vault: AsyncPath) -> 
     assert "## Notes" in text
     assert "{{title}}" not in text
     assert "{ date:YYYY-MM-DDTHH:mm:ss }" not in text
+
+    async with MarkdownDocument(vault_path=metadata.path, read_only=True) as document:
+        assert isinstance(document.frontmatter["created"], str)
+        assert isinstance(document.frontmatter["updated"], str)
 
 
 async def test__create_entity_supports_projects(obsidian_vault: AsyncPath) -> None:

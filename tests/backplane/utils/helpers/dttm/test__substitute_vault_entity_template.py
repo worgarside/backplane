@@ -23,14 +23,35 @@ def test__substitute_vault_entity_template_expands_title() -> None:
 
 
 def test__substitute_vault_entity_template_expands_core_datetime() -> None:
-    """Obsidian core ``{ date:... }`` placeholders expand to formatted datetimes."""
-    template = 'created:\n  "{ date:YYYY-MM-DDTHH:mm:ss }":'
+    """Obsidian core ``{ date:... }`` placeholders expand to scalar timestamps."""
+    template = 'created: "{ date:YYYY-MM-DDTHH:mm:ss }"'
     result = substitute_vault_entity_template(
         template,
         title="Example",
         now=_SAMPLE_DATETIME,
     )
-    assert '"2026-06-06T14:30:45":' in result
+    assert result == 'created: "2026-06-06T14:30:45"'
+
+
+def test__substitute_vault_entity_template_expands_domain_template_snippet() -> None:
+    """A realistic domain template snippet expands title and datetime placeholders."""
+    template = """---
+type: domain
+created: "{ date:YYYY-MM-DDTHH:mm:ss }"
+updated: "{ date:YYYY-MM-DDTHH:mm:ss }"
+---
+# {{title}}
+
+## Overview
+"""
+    result = substitute_vault_entity_template(
+        template,
+        title="Home Assistant",
+        now=_SAMPLE_DATETIME,
+    )
+    assert "# Home Assistant" in result
+    assert 'created: "2026-06-06T14:30:45"' in result
+    assert 'updated: "2026-06-06T14:30:45"' in result
 
 
 @pytest.mark.parametrize(
@@ -43,23 +64,3 @@ def test__substitute_vault_entity_template_expands_core_datetime() -> None:
 def test__format_obsidian_datetime(fmt: str, expected: str) -> None:
     """Datetime tokens are formatted using Obsidian core template syntax."""
     assert format_obsidian_datetime(_SAMPLE_DATETIME, fmt) == expected
-
-
-def test__substitute_vault_entity_template_expands_domain_template_snippet() -> None:
-    """A realistic domain template snippet expands title and datetime placeholders."""
-    template = """---
-type: domain
-created:
-  "{ date:YYYY-MM-DDTHH:mm:ss }":
----
-# {{title}}
-
-## Overview
-"""
-    result = substitute_vault_entity_template(
-        template,
-        title="Home Assistant",
-        now=_SAMPLE_DATETIME,
-    )
-    assert "# Home Assistant" in result
-    assert r'"2026-06-06T14:30:45":' in result

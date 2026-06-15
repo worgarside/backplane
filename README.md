@@ -228,13 +228,13 @@ Read a vault entity note as rendered markdown. Use when the user asks about a do
 
 #### `get_vault_entity_section`
 
-Read a single section of a vault entity note as rendered markdown. Use when the user needs specific context from a domain, person, project, or resource note without loading the whole note.
+Read a single section of a vault entity note as rendered markdown. Use when the user needs specific context from a domain, person, project, or resource note without loading the whole note. Pass the exact `path` returned by `list_vault_entity_sections`.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
+| `heading_path` | `string`[] | yes | — | Section path relative to the note title, e.g. ['Overview']. Pass the exact path returned by list_vault_entity_sections. |
 | `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
-| `section` | `string` | yes | — | Top-level section heading to read, e.g. 'Overview'. |
 
 #### `link_task_to_capture`
 
@@ -340,10 +340,10 @@ If the section is missing, set `create_section_if_not_exists=true` to create it.
 | --- | --- | --- | --- | --- |
 | `content` | `string` | yes | — | Markdown content to add or replace in the section. |
 | `create_section_if_not_exists` | `boolean` | no | `false` | Create the section when missing. Use true when the user explicitly asks for a new section or after a missing-section error. |
+| `heading_path` | `string`[] | yes | — | Section path relative to the note title, e.g. ['Overview'] or ['Tasks', 'Subtask']. Pass the exact path returned by list_vault_entity_sections. |
 | `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: domain, person, project, or resource. |
 | `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine content with existing section text. append is usually best. |
 | `name` | `string` | yes | — | Human-readable entity name, e.g. 'Home Assistant'. |
-| `section` | `string` | yes | — | Top-level section heading to update, e.g. 'Overview' or 'Notes'. |
 
 ### Resources
 

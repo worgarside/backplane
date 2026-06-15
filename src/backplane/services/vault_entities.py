@@ -288,14 +288,14 @@ class VaultEntityService:
         kind: VaultEntityKind,
         name: str,
         *,
-        section: str,
+        heading_path: list[str],
     ) -> str:
         """Read a section of an entity note as rendered markdown.
 
         Args:
             kind: Entity kind determining the search directory.
             name: Human-readable entity name.
-            section: Top-level section heading to read (e.g. ``Overview``).
+            heading_path: Section path relative to the note title, e.g. ``["Overview"]``.
 
         Returns:
             The requested section rendered as markdown.
@@ -309,8 +309,9 @@ class VaultEntityService:
             vault_path=_vault_relative_path(path),
             read_only=True,
         ) as document:
+            section_path = _entity_section_path(document.body, heading_path)
             try:
-                target_section = document.get_section((name, section))
+                target_section = document.get_section(section_path)
             except exc.SectionNotFoundError as err:
                 raise exc.InformationRequiredError(
                     message=f"{err} Retry with an existing section.",
@@ -384,7 +385,7 @@ class VaultEntityService:
         kind: VaultEntityKind,
         name: str,
         *,
-        section: str,
+        heading_path: list[str],
         content: str,
         mode: UpdateMode = "append",
         create_section_if_not_exists: bool = False,
@@ -394,7 +395,7 @@ class VaultEntityService:
         Args:
             kind: Entity kind determining the search directory.
             name: Human-readable entity name.
-            section: Top-level section heading to update (e.g. ``Overview``).
+            heading_path: Section path relative to the note title, e.g. ``["Overview"]``.
             content: Markdown content to combine with the section.
             mode: How to combine ``content`` with existing section text.
             create_section_if_not_exists: Create the section when missing.
@@ -414,9 +415,10 @@ class VaultEntityService:
             vault_path=_vault_relative_path(path),
             read_only=False,
         ) as document:
+            section_path = _entity_section_path(document.body, heading_path)
             try:
                 target_section = document.get_section(
-                    (name, section),
+                    section_path,
                     create_if_not_exists=create_section_if_not_exists,
                 )
             except exc.SectionNotFoundError as err:

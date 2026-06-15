@@ -121,7 +121,7 @@ async def test__get_vault_entity_section__delegates_to_service(
     result = await vault_entities.get_vault_entity_section(
         kind="domain",
         name="Home Assistant",
-        section="Overview",
+        heading_path=["Overview"],
     )
 
     assert result == "## Overview\n\nAutomation platform.\n"
@@ -161,7 +161,7 @@ async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture)
     result = await vault_entities.update_vault_entity(
         kind="resource",
         name="MQTT",
-        section="Overview",
+        heading_path=["Overview"],
         content="Updated.",
         mode="append",
     )

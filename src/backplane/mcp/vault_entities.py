@@ -101,7 +101,8 @@ _GET_DESCRIPTION = (
 _GET_SECTION_DESCRIPTION = (
     "Read a single section of a vault entity note as rendered markdown. Use when "
     "the user needs specific context from a domain, person, project, or resource note "
-    "without loading the whole note."
+    "without loading the whole note. Pass the exact `path` returned by "
+    "`list_vault_entity_sections`."
 )
 _CREATE_DESCRIPTION = (
     "Create a new vault entity note from the vault template.\n\n"
@@ -198,9 +199,15 @@ async def get_vault_entity_section(
         str,
         Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
     ],
-    section: Annotated[
-        str,
-        Field(description="Top-level section heading to read, e.g. 'Overview'."),
+    heading_path: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Section path relative to the note title, e.g. ['Overview']. Pass the "
+                "exact path returned by list_vault_entity_sections."
+            ),
+            min_length=1,
+        ),
     ],
 ) -> str:
     """Read one section of a vault entity note.
@@ -208,21 +215,21 @@ async def get_vault_entity_section(
     Args:
         kind: Entity kind.
         name: Human-readable entity name.
-        section: Top-level section heading to read.
+        heading_path: Section path relative to the note title.
 
     Returns:
         The requested section rendered as markdown.
     """
     logger.info(
-        "get_vault_entity_section: kind={} name={!r} section={!r}",
+        "get_vault_entity_section: kind={} name={!r} heading_path={!r}",
         kind,
         name,
-        section,
+        heading_path,
     )
     return await VaultEntityService.get_entity_section(
         VaultEntityKind(kind),
         name,
-        section=section,
+        heading_path=heading_path,
     )
 
 
@@ -259,10 +266,15 @@ async def update_vault_entity(
         str,
         Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
     ],
-    section: Annotated[
-        str,
+    heading_path: Annotated[
+        list[str],
         Field(
-            description="Top-level section heading to update, e.g. 'Overview' or 'Notes'.",
+            description=(
+                "Section path relative to the note title, e.g. ['Overview'] or "
+                "['Tasks', 'Subtask']. Pass the exact path returned by "
+                "list_vault_entity_sections."
+            ),
+            min_length=1,
         ),
     ],
     content: Annotated[
@@ -292,7 +304,7 @@ async def update_vault_entity(
     Args:
         kind: Entity kind.
         name: Human-readable entity name.
-        section: Top-level section heading to update.
+        heading_path: Section path relative to the note title.
         content: Markdown content to combine with the section.
         mode: How to combine content with existing section text.
         create_section_if_not_exists: Create the section when missing.
@@ -301,16 +313,16 @@ async def update_vault_entity(
         The updated section rendered as markdown.
     """
     logger.info(
-        "update_vault_entity: kind={} name={!r} section={!r} mode={}",
+        "update_vault_entity: kind={} name={!r} heading_path={!r} mode={}",
         kind,
         name,
-        section,
+        heading_path,
         mode,
     )
     return await VaultEntityService.update_entity(
         VaultEntityKind(kind),
         name,
-        section=section,
+        heading_path=heading_path,
         content=content,
         mode=mode,
         create_section_if_not_exists=create_section_if_not_exists,

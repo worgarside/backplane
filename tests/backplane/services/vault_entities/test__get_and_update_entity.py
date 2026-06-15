@@ -9,6 +9,7 @@ import pytest
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import AsyncPath, exc
 from backplane.utils.enums import VaultEntityKind
+from backplane.utils.helpers.files import atomic_write_text
 from backplane.utils.settings import SETTINGS
 
 pytestmark = pytest.mark.usefixtures("obsidian_vault")
@@ -83,7 +84,7 @@ async def test__get_entity_section_returns_rendered_section() -> None:
     _ = await VaultEntityService.update_entity(
         VaultEntityKind.DOMAIN,
         "Networking",
-        section="Overview",
+        heading_path=["Overview"],
         content="Network architecture and operations.",
         mode="append",
     )
@@ -91,10 +92,38 @@ async def test__get_entity_section_returns_rendered_section() -> None:
     rendered = await VaultEntityService.get_entity_section(
         VaultEntityKind.DOMAIN,
         "Networking",
-        section="Overview",
+        heading_path=["Overview"],
     )
 
     assert rendered == "## Overview\n\nNetwork architecture and operations."
+
+
+async def test__get_entity_section_uses_document_h1_not_caller_name(
+    obsidian_vault: AsyncPath,
+) -> None:
+    """Section reads use the note H1 even when the entity is resolved by filename."""
+    domains = obsidian_vault / "Domains"
+    await domains.mkdir(parents=True)
+    await atomic_write_text(
+        domains / "home-assistant.md",
+        """---
+type: domain
+---
+# Home Assistant Platform
+
+## Overview
+
+Platform notes.
+""",
+    )
+
+    rendered = await VaultEntityService.get_entity_section(
+        VaultEntityKind.DOMAIN,
+        "home-assistant",
+        heading_path=["Overview"],
+    )
+
+    assert "Platform notes." in rendered
 
 
 async def test__get_entity_section_wraps_missing_section() -> None:
@@ -105,7 +134,7 @@ async def test__get_entity_section_wraps_missing_section() -> None:
         _ = await VaultEntityService.get_entity_section(
             VaultEntityKind.RESOURCE,
             "OpenWrt",
-            section="Missing Section",
+            heading_path=["Missing Section"],
         )
 
     assert "Retry with an existing section" in str(exc_info.value)
@@ -119,7 +148,7 @@ async def test__update_entity_appends_to_section(obsidian_vault: AsyncPath) -> N
     rendered = await VaultEntityService.update_entity(
         VaultEntityKind.DOMAIN,
         "Home Assistant",
-        section="Overview",
+        heading_path=["Overview"],
         content="Primary automation platform.",
         mode="append",
     )
@@ -140,7 +169,7 @@ async def test__update_entity_bumps_updated_frontmatter(
     _ = await VaultEntityService.update_entity(
         VaultEntityKind.PERSON,
         "Alice",
-        section="Notes",
+        heading_path=["Notes"],
         content="Prefers concise updates.",
     )
 
@@ -157,7 +186,7 @@ async def test__update_entity_wraps_missing_section() -> None:
         _ = await VaultEntityService.update_entity(
             VaultEntityKind.RESOURCE,
             "MQTT",
-            section="Missing Section",
+            heading_path=["Missing Section"],
             content="content",
             create_section_if_not_exists=False,
         )

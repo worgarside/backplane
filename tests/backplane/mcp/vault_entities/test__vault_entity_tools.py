@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from backplane.mcp import vault_entities
 from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import build_vault_note_metadata
@@ -15,48 +13,6 @@ from backplane.utils.helpers.files import atomic_write_text
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
-
-
-def test__format_template_heading_tree_lists_subheadings() -> None:
-    """Template headings below H1 are rendered as an indented bullet tree."""
-    template = """# Title
-
-## Overview
-
-## Tasks
-
-### Subtask
-
-```
-## Ignored in code fence
-```
-
-## Notes
-"""
-    result = vault_entities._format_template_heading_tree(template)
-
-    assert "- Overview" in result
-    assert "- Tasks" in result
-    assert "  - Subtask" in result
-    assert "Ignored" not in result
-
-
-def test__format_template_heading_tree_falls_back_without_sections() -> None:
-    """Templates with only an H1 return the fallback message."""
-    assert (
-        vault_entities._format_template_heading_tree("# Only Title\n")
-        == "(template has no sub-sections)"
-    )
-
-
-@pytest.mark.usefixtures("obsidian_vault")
-def test__load_section_trees_reads_templates_from_vault() -> None:
-    """Section trees are built from on-disk entity templates at registration time."""
-    trees = vault_entities._load_section_trees()
-
-    for kind in VaultEntityKind:
-        assert kind in trees
-        assert "- Overview" in trees[kind]
 
 
 async def test__list_vault_entities__returns_json_names(mocker: MockerFixture) -> None:

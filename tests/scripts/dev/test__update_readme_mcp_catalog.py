@@ -8,9 +8,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from backplane.utils.async_path import AsyncPath
-from backplane.utils.settings import SETTINGS
-
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
@@ -20,26 +17,12 @@ FIXTURE_VAULT = (
 
 
 def test__readme_fixture_vault__daily_notes_config_is_present() -> None:
-    """The README fixture vault config must exist so CI can render template structure."""
+    """The README fixture vault must include daily-note config for catalog introspection."""
     config = FIXTURE_VAULT / ".obsidian" / "daily-notes.json"
     template = FIXTURE_VAULT / "Templates" / "Daily Note.md"
 
     assert config.is_file()
     assert template.is_file()
-
-
-def test__load_template_heading_tree__reads_fixture_vault(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Template heading trees resolve from the committed README fixture vault."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", AsyncPath(FIXTURE_VAULT))
-
-    from backplane.mcp.obsidian import _load_template_heading_tree  # noqa: PLC0415
-
-    tree = _load_template_heading_tree()
-
-    assert "- Summary" in tree
-    assert "template structure unavailable" not in tree
 
 
 def test__main__returns_one_when_readme_changed(mocker: MockerFixture) -> None:

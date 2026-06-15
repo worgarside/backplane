@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pathlib
-import re
 from typing import TYPE_CHECKING, Annotated, Literal
 
 from loguru import logger
@@ -17,115 +15,70 @@ from backplane.services.vault_entities import (
 )
 from backplane.utils.enums import VaultEntityKind
 from backplane.utils.helpers.obsidian import VaultNoteMetadata  # noqa: TC001
-from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
-_HEADING_LINE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-_CODE_FENCE = re.compile(r"^\s*```")
 VaultEntityKindParam = Literal["domain", "person", "project", "resource"]
 
+_LIST_DESCRIPTION = """List display names of vault entity notes for a given kind.
 
-def _format_template_heading_tree(template_text: str) -> str:
-    """Parse template markdown for headings and return an indented bullet tree.
+Use when the user asks what Domains, Projects, Resources, or People exist, or when
+choosing from existing entities."""
 
-    Returns:
-        Indented bullet list of headings, or a fallback message.
-    """
-    in_code = False
-    lines: list[str] = []
-    for line in template_text.splitlines():
-        if _CODE_FENCE.match(line):
-            in_code = not in_code
-            continue
-        if in_code:
-            continue
-        match = _HEADING_LINE.match(line)
-        if match is None:
-            continue
-        level = len(match.group(1))
-        if level == 1:
-            continue
-        indent = "  " * (level - 2)
-        lines.append(f"{indent}- {match.group(2)}")
+_LIST_SECTIONS_DESCRIPTION = """List sections in a Domain, Project, Resource, or Person note.
 
-    return "\n".join(lines) if lines else "(template has no sub-sections)"
+Use before reading or updating a specific section when the available headings are unknown.
+Returned paths are relative to the note title."""
 
+_GET_DESCRIPTION = """Read a Domain, Project, Resource, or Person note as rendered markdown.
 
-def _build_update_description(section_trees: dict[VaultEntityKind, str]) -> str:
-    """Build the update tool description with per-kind section structures.
+Use when the user asks about an entity note's contents."""
 
-    Returns:
-        Tool description text for ``update_vault_entity``.
-    """
-    lines = [
-        "Update a section of a vault entity note (Domain, Person, Project, or Resource).",
-        "",
-        "Use append for most captures; replace only when the user asks to overwrite.",
-        "",
-        "Section structures by kind (prefer these names verbatim):",
-    ]
-    for kind in VaultEntityKind:
-        lines.extend(
-            (
-                "",
-                f"{kind.value.title()} sections:",
-                section_trees[kind],
-            ),
-        )
-    lines.extend(
-        (
-            "",
-            "If the section is missing, set `create_section_if_not_exists=true` to create it.",
-        ),
-    )
-    return "\n".join(lines)
+_GET_SECTION_DESCRIPTION = """Read one section of a Domain, Project, Resource, or Person note as rendered markdown.
 
+Use when only a specific section is needed. Pass the exact section path returned by
+`list_vault_entity_sections`."""
 
-_LIST_DESCRIPTION = (
-    "List display names of vault entity notes for a given kind.\n\n"
-    "Domains are platforms or broad areas. Resources are specific integrations, "
-    "APIs, vendors, or services. Projects are scoped outcomes or ongoing efforts. "
-    "People are collaborators or contacts referenced in related work."
-)
-_LIST_SECTIONS_DESCRIPTION = (
-    "List sections in a vault entity note. Use before reading or updating a "
-    "specific section when you need to know the available headings. Returns "
-    "section metadata in document order, with paths relative to the note title."
-)
-_GET_DESCRIPTION = (
-    "Read a vault entity note as rendered markdown. Use when the user asks about "
-    "a domain, person, project, or resource note's contents."
-)
-_GET_SECTION_DESCRIPTION = (
-    "Read a single section of a vault entity note as rendered markdown. Use when "
-    "the user needs specific context from a domain, person, project, or resource note "
-    "without loading the whole note. Pass the exact `path` returned by "
-    "`list_vault_entity_sections`."
-)
-_CREATE_DESCRIPTION = (
-    "Create a new vault entity note from the vault template.\n\n"
-    "Backplane uses human-readable Obsidian filenames for entities and tasks "
-    "(e.g. `Projects/Rented Home Formal Complaint.md`). Kebab-case slugs are "
-    "internal IDs only. Daily notes remain date-based; inbox/log notes may "
-    "remain timestamp or slug-based.\n\n"
-    "Domains are platforms or broad areas. Resources are specific integrations, "
-    "APIs, vendors, or services — never duplicate the same name as a domain. "
-    "Projects are scoped outcomes or ongoing efforts with related work. "
-    "People are individuals referenced in related work.\n\n"
-    "Use `canonical_link` from the response when linking notes in markdown. "
-    "Links use the full vault path with a display alias, e.g. "
-    "`[[Projects/Rented Home Formal Complaint|Rented Home Formal Complaint]]`. "
-    "Do not infer note links from slugs when `canonical_link` is available.\n\n"
-    "Fails if a note with the same name already exists."
-)
+_CREATE_DESCRIPTION = """Create a new Domain, Project, Resource, or Person note from the vault template.
+
+Use for new durable entities:
+- Domains: broad areas or platforms.
+- Resources: specific integrations, APIs, vendors, services, or references.
+- Projects: scoped outcomes or ongoing efforts.
+- People: individuals referenced in related work.
+
+Do not create duplicate Domain/Resource notes with the same meaning.
+Fails if a note with the same name already exists."""
+
+_UPDATE_DESCRIPTION = """Update a section of a Domain, Project, Resource, or Person note.
+
+Use `append` for most captures. Use `replace` only when the user explicitly asks to overwrite.
+
+Common entity sections include:
+- Overview
+- Notes
+- Related Tasks
+
+Some entity kinds may also have more specific sections, such as Goals, Links, Context,
+Key Resources, or Active Projects.
+
+When the target section is obvious, use the most appropriate existing/common section, usually
+`["Overview"]`, `["Notes"]`, or `["Related Tasks"]`.
+
+When the available headings are unknown or the target section is ambiguous, call
+`list_vault_entity_sections` first and pass an exact returned path.
+
+Only set `create_section_if_not_exists=true` when the user explicitly asks for a new section,
+or when no existing section is appropriate."""
 
 
 async def list_vault_entities(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind to list: domain, person, project, or resource."),
+        Field(
+            description="Entity kind to list: `domain`, `person`, `project`, or `resource`.",
+        ),
     ],
 ) -> list[str]:
     """List display names of vault entity notes.
@@ -143,11 +96,11 @@ async def list_vault_entities(
 async def list_vault_entity_sections(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, project, or resource."),
+        Field(description="Entity kind: `domain`, `person`, `project`, or `resource`."),
     ],
     name: Annotated[
         str,
-        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+        Field(description="Human-readable entity name."),
     ],
 ) -> list[VaultEntitySection]:
     """List sections in a vault entity note.
@@ -169,11 +122,11 @@ async def list_vault_entity_sections(
 async def get_vault_entity(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, project, or resource."),
+        Field(description="Entity kind: `domain`, `person`, `project`, or `resource`."),
     ],
     name: Annotated[
         str,
-        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+        Field(description="Human-readable entity name."),
     ],
 ) -> str:
     """Read a vault entity note.
@@ -193,19 +146,16 @@ async def get_vault_entity_section(
     *,
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, project, or resource."),
+        Field(description="Entity kind: `domain`, `person`, `project`, or `resource`."),
     ],
     name: Annotated[
         str,
-        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+        Field(description="Human-readable entity name."),
     ],
     heading_path: Annotated[
         list[str],
         Field(
-            description=(
-                "Section path relative to the note title, e.g. ['Overview']. Pass the "
-                "exact path returned by list_vault_entity_sections."
-            ),
+            description=("Section path relative to the note title, e.g. `['Overview']`."),
             min_length=1,
         ),
     ],
@@ -236,11 +186,11 @@ async def get_vault_entity_section(
 async def create_vault_entity(
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, project, or resource."),
+        Field(description="Entity kind: `domain`, `person`, `project`, or `resource`."),
     ],
     name: Annotated[
         str,
-        Field(description="Human-readable entity name used as the note title."),
+        Field(description="Human-readable note title."),
     ],
 ) -> VaultNoteMetadata:
     """Create a new vault entity note from the vault template.
@@ -260,32 +210,32 @@ async def update_vault_entity(
     *,
     kind: Annotated[
         VaultEntityKindParam,
-        Field(description="Entity kind: domain, person, project, or resource."),
+        Field(description="Entity kind: `domain`, `person`, `project`, or `resource`."),
     ],
     name: Annotated[
         str,
-        Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
+        Field(description="Human-readable entity name."),
     ],
     heading_path: Annotated[
         list[str],
         Field(
             description=(
-                "Section path relative to the note title, e.g. ['Overview'] or "
-                "['Tasks', 'Subtask']. Pass the exact path returned by "
-                "list_vault_entity_sections."
+                "Section path relative to the note title. Prefer exact paths from "
+                "`list_vault_entity_sections` when available."
             ),
             min_length=1,
         ),
     ],
     content: Annotated[
         str,
-        Field(description="Markdown content to add or replace in the section."),
+        Field(description="Markdown content to add or replace."),
     ],
     mode: Annotated[
         UpdateMode,
         Field(
             description=(
-                "How to combine content with existing section text. append is usually best."
+                "How to combine content with existing section text. Prefer `append`; "
+                "use `replace` only when explicitly requested."
             ),
         ),
     ] = "append",
@@ -293,8 +243,7 @@ async def update_vault_entity(
         bool,
         Field(
             description=(
-                "Create the section when missing. Use true when the user explicitly asks "
-                "for a new section or after a missing-section error."
+                "Create the requested section and any missing ancestors if they do not exist."
             ),
         ),
     ] = False,
@@ -329,23 +278,6 @@ async def update_vault_entity(
     )
 
 
-def _load_section_trees() -> dict[VaultEntityKind, str]:
-    """Return per-kind section trees loaded synchronously at registration time."""
-    trees: dict[VaultEntityKind, str] = {}
-    for kind in VaultEntityKind:
-        template_rel = VaultEntityService.template_path_for(kind)
-        template_path = (
-            pathlib.Path(SETTINGS.obsidian_vault_path.as_posix()) / template_rel
-        )
-        try:
-            template_text = template_path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            trees[kind] = "(template structure unavailable)"
-            continue
-        trees[kind] = _format_template_heading_tree(template_text)
-    return trees
-
-
 def register_vault_entity_tools(
     mcp: FastMCP[None],
     *,
@@ -356,8 +288,6 @@ def register_vault_entity_tools(
     if require_oauth:
         auth_kwargs = oauth_tool_registration_kwargs()
 
-    update_description = _build_update_description(_load_section_trees())
-
     _ = mcp.tool(description=_LIST_DESCRIPTION, **auth_kwargs)(list_vault_entities)
     _ = mcp.tool(description=_LIST_SECTIONS_DESCRIPTION, **auth_kwargs)(
         list_vault_entity_sections,
@@ -367,4 +297,4 @@ def register_vault_entity_tools(
         get_vault_entity_section,
     )
     _ = mcp.tool(description=_CREATE_DESCRIPTION, **auth_kwargs)(create_vault_entity)
-    _ = mcp.tool(description=update_description, **auth_kwargs)(update_vault_entity)
+    _ = mcp.tool(description=_UPDATE_DESCRIPTION, **auth_kwargs)(update_vault_entity)

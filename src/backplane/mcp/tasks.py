@@ -16,35 +16,27 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
 
 _CANDIDATE_SNIPPET_MAX_LEN = 80
-_CREATE_TASK_DESCRIPTION = (
-    "Create a structured task note for something actionable.\n\n"
-    "Backplane uses human-readable Obsidian filenames for tasks "
-    "(e.g. `Tasks/Build Master Complaint Table.md`). Kebab-case slugs are "
-    "internal IDs only. Use `canonical_link` from the response when linking "
-    "notes in markdown. Links use the full vault path with a display alias.\n\n"
-    "Entity associations (domains, resources, projects, people) are stored as "
-    "Obsidian wikilinks in task frontmatter, not plain display names.\n\n"
-    "Use this when the user mentions something they need to do, want to remember "
-    "to act on, or asks you to 'make a task', 'add to my list', 'remind me to', "
-    "'I should...', 'I need to...', etc.\n\n"
-    "This tool always creates the task. Matching against prior inbox captures is "
-    "best-effort only: high-confidence matches are linked automatically, uncertain "
-    "matches are returned as candidates to offer back to the user, and unmatched "
-    "tasks are created normally.\n\n"
-    "When the user confirms a specific prior capture, pass its ID as "
-    "link_capture_id. For an already-created task, use link_task_to_capture.\n\n"
-    "Do not use this for loose, non-committal ideas unless the user asks to turn "
-    "one into a task. Use record_idea for speculative captures like 'maybe', "
-    "'I could', 'I wonder if', or 'worth investigating'.\n\n"
-    "Ask for a due date before calling if the request sounds time-sensitive "
-    "(e.g. 'before the weekend', 'by Friday', 'i need to...')."
-)
-_LINK_TASK_TO_CAPTURE_DESCRIPTION = (
-    "Link an existing task note to a confirmed prior inbox capture.\n\n"
-    "Use this after create_task offered candidate captures and the user confirms "
-    "which capture should be connected. Provide the task title, filename stem, or "
-    "internal slug from the creation response and the capture ID from the candidate list."
-)
+_CREATE_TASK_DESCRIPTION = """Create a structured Obsidian task note for an actionable item.
+
+Use when the user says they need to do something, wants something on their list, asks to make a
+task, or uses phrasing like "I should…", "I need to…", "remind me to…", or "add this to my list".
+
+Do not use for speculative ideas. Use `record_idea` for loose "maybe / could / worth
+investigating" captures unless the user explicitly wants to turn the idea into a task.
+
+Task creation always succeeds even without a prior inbox match. Confirmed prior captures can
+be linked with `link_capture_id`; uncertain matches may be returned as candidates and linked
+later with `link_task_to_capture`.
+
+Only set:
+- `due` when the user gives an explicit date or deadline.
+- `priority` when urgency/importance is explicit.
+- `title` when the user gives a clear title.
+
+If timing is implied but not explicit, leave `due=null` and keep the timing words in `description`."""
+_LINK_TASK_TO_CAPTURE_DESCRIPTION = """Link an existing task note to a confirmed prior inbox capture.
+
+Use after `create_task` returned candidate captures and the user confirms which capture belongs to the task."""
 
 
 class CreateTaskToolResponse(BaseModel, frozen=True):
@@ -86,48 +78,32 @@ async def create_task(
         str,
         Field(
             description=(
-                "Natural-language task or action description. This is fuzzy-matched "
-                "against existing inbox captures, so include distinctive nouns, "
-                "names, and phrases from any linked inbox entry when available. "
-                "Exact wording is helpful but not required; keep extra context "
-                "that may help extract task metadata."
+                "Natural-language task description. Include distinctive names, nouns, "
+                "and context that may help matching and metadata extraction."
             ),
         ),
     ],
     title: Annotated[
         str | None,
         Field(
-            description=(
-                "Optional task title override. Omit unless the user supplied a clear "
-                "title; otherwise inferred from the description or linked inbox entry."
-            ),
+            description="Optional title override. Omit unless the user supplied a clear title.",
         ),
     ] = None,
     due: Annotated[
         str | None,
-        Field(
-            description=(
-                "Optional due date in YYYY-MM-DD format. Ask before setting if timing "
-                "is implied but not explicit."
-            ),
-        ),
+        Field(description="Optional due date in YYYY-MM-DD. Only set when explicit."),
     ] = None,
     priority: Annotated[
         enums.Priority | None,
         Field(
-            description=(
-                "Optional priority override: 'low', 'medium', or 'high'. Omit unless "
-                "the user explicitly indicates urgency or importance."
-            ),
+            description="Optional priority override. Only set when explicit.",
         ),
     ] = None,
     link_capture_id: Annotated[
         str | None,
         Field(
             description=(
-                "Optional confirmed inbox capture ID to link, e.g. "
-                "'2026-05-25T21:15'. Omit unless the user explicitly confirmed "
-                "which candidate capture to attach."
+                "Confirmed inbox capture ID to link. Omit unless the user confirmed the capture."
             ),
         ),
     ] = None,
@@ -189,13 +165,13 @@ async def link_task_to_capture(
         str,
         Field(
             description=(
-                "Task note title, human-readable filename stem, or internal slug."
+                "Task title, filename stem, or internal slug from the task creation response."
             ),
         ),
     ],
     capture_id: Annotated[
         str,
-        Field(description="Inbox capture ID, e.g. '2026-05-25T21:15'."),
+        Field(description="Inbox capture ID, e.g. `2026-05-25T21:15`."),
     ],
 ) -> str:
     """Link an existing task note to a confirmed inbox capture.

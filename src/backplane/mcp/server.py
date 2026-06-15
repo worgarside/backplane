@@ -8,6 +8,7 @@ from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan
 
 from backplane import __version__
+from backplane.mcp.instructions import BACKPLANE_MCP_INSTRUCTIONS
 from backplane.mcp.obsidian import register_obsidian_tools
 from backplane.mcp.tasks import register_task_tools
 from backplane.mcp.vault_entities import register_vault_entity_tools
@@ -17,12 +18,6 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
     from fastmcp.server.auth import AuthProvider
-
-_INSTRUCTIONS = (
-    "Backplane exposes tools for interacting with the user's personal homelab "
-    "services — currently their Obsidian vault, with more integrations to follow.\n\n"
-    "Keep tool outputs concise — a short confirmation is usually enough."
-)
 
 
 @lifespan
@@ -60,7 +55,7 @@ def create_mcp_server(
     """
     mcp: FastMCP[None] = FastMCP(
         "Backplane",
-        instructions=_INSTRUCTIONS,
+        instructions=BACKPLANE_MCP_INSTRUCTIONS,
         version=__version__,
         auth=auth,
         lifespan=_home_assistant_lifespan if notify_home_assistant else None,

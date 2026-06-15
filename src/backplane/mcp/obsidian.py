@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt  # used at runtime by FastMCP schema introspection
-import json
-import pathlib
-import re
-from typing import TYPE_CHECKING, Annotated, Literal, cast
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from loguru import logger
 from pydantic import Field, PastDate
@@ -19,130 +16,48 @@ from backplane.utils.settings import SETTINGS
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
-_HEADING_LINE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-_CODE_FENCE = re.compile(r"^\s*```")
+_ADD_DESCRIPTION = """Add content to a section of the user's Obsidian daily note.
 
+Use when the user wants to capture something "today", "in my daily note", or into a daily-note section.
 
-def _read_template_text() -> str | None:
-    """Resolve and read the daily-note template configured for the vault.
+Preferred daily-note section paths:
+- `["Summary"]`
+- `["Tasks", "Work"]`
+- `["Tasks", "Personal"]`
+- `["Journal"]`
+- `["Links"]`
+- `["Tomorrow"]`
 
-    Returns:
-        Raw template text, or ``None`` if the config or template file is missing
-        or malformed.
-    """
-    # This is a sync function, so use pathlib.Path for the vault path
-    vault = pathlib.Path(SETTINGS.obsidian_vault_path.as_posix())
+If the user explicitly asks for another section, create it with `create_section_if_not_exists=true`.
+If a section is missing and the tool returns available sections, retry with the closest
+matching path or create the requested section when appropriate."""
 
-    config_path = vault / ".obsidian" / "daily-notes.json"
-    try:
-        raw = config_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return None
+_GET_DAILY_NOTE_DESCRIPTION = """Read the user's Obsidian daily note.
 
-    try:
-        parsed = json.loads(raw)  # pyright: ignore[reportAny]
-    except json.JSONDecodeError:
-        return None
+Use when the user asks what is in the daily note, wants to review captured tasks/ideas/notes,
+or needs daily-note context for a follow-up."""
 
-    if not isinstance(parsed, dict):
-        return None
-
-    rel = cast("dict[str, object]", parsed).get("template")
-    if not isinstance(rel, str) or not rel:
-        return None
-
-    template_path = vault / (rel if rel.endswith(".md") else f"{rel}.md")
-    try:
-        return template_path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return None
-
-
-def _format_template_heading_tree(template_text: str) -> str:
-    """Parse template markdown for headings and return an indented bullet tree.
-
-    The level-1 heading (the date heading) is dropped — it is added
-    automatically by the tool and is not user-facing as a section name.
-
-    Args:
-        template_text: Raw markdown of the daily-note template.
-
-    Returns:
-        Indented bullet list of headings, or a fallback message if the template
-        has no sub-sections.
-    """
-    in_code = False
-    lines: list[str] = []
-    for line in template_text.splitlines():
-        if _CODE_FENCE.match(line):
-            in_code = not in_code
-            continue
-        if in_code:
-            continue
-        match = _HEADING_LINE.match(line)
-        if match is None:
-            continue
-        level = len(match.group(1))
-        if level == 1:
-            continue
-        indent = "  " * (level - 2)
-        lines.append(f"{indent}- {match.group(2)}")
-
-    return "\n".join(lines) if lines else "(template has no sub-sections)"
-
-
-def _load_template_heading_tree() -> str:
-    """Return a formatted tree of the daily-note template's headings."""
-    template_text = _read_template_text()
-    if template_text is None:
-        return "(template structure unavailable)"
-    return _format_template_heading_tree(template_text)
-
-
-_TEMPLATE_TREE = _load_template_heading_tree()
-
-_ADD_DESCRIPTION = (
-    "Add content to a section of the user's Obsidian daily note. Use this when "
-    "the user wants to capture something into their daily note.\n\n"
-    "The user's daily-note template defines this section structure (prefer these "
-    "names verbatim):\n"
-    f"{_TEMPLATE_TREE}\n\n"
-    "If the user explicitly asks for a section not listed above, set "
-    "`create_section_if_not_exists=true` — this creates the section and is the "
-    "correct and supported action in that case. Do not decline or ask for "
-    "clarification; just call the tool with that flag set.\n\n"
-    "If the section is missing and `create_section_if_not_exists=false` (the "
-    "default), the call returns the actual sections in today's note so you can "
-    "either match an existing one or retry with the flag set to true."
-)
-_GET_DAILY_NOTE_DESCRIPTION = (
-    "Read the user's Obsidian daily note. Use this when the user asks what's in "
-    "their daily note, wants to review tasks/ideas/notes they've captured, or "
-    "needs context about their day to answer a follow-up question."
-)
 _RECORD_IDEA_DESCRIPTION = """Record a loose, non-actionable idea in the Obsidian idea inbox.
 
-Use this for speculative captures such as:
-- "maybe..."
-- "I could..."
-- "I wonder if..."
-- "worth investigating..."
-- a possible automation, improvement, or future project that the user has not committed to doing
+Use for speculative captures such as:
+- "maybe…"
+- "I could…"
+- "I wonder if…"
+- "worth investigating…"
+- possible automations, improvements, or future projects the user has not committed to doing
 
-Do not use this for tasks or action items. If the user says they need to do something,
-should do something, want to remember to act on something, or asks for a task/reminder/list item,
-use create_task instead.
+Do not use this for tasks or action items. If the user says they need to do something, should do
+something, wants to remember to act on something, or asks for a task/reminder/list item,
+use `create_task`.
 
-Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
-as possible."""
-_MOVE_NOTE_DESCRIPTION = (
-    "Move an Obsidian markdown note to a new vault-relative path. Use this when "
-    "the user wants to relocate, reorganise, or rename a note.\n\n"
-    "Both paths are relative to the vault root, e.g. 'Tasks/review-logs.md' or "
-    "'Projects/Home/Plan.md'. You do not need to create destination folders first — "
-    "missing parent directories are created automatically.\n\n"
-    "The source note must exist. The destination must not already exist."
-)
+Convert spoken phrasing to a written sentence while preserving the user's wording as closely as possible."""
+
+_MOVE_NOTE_DESCRIPTION = """Move or rename an Obsidian markdown note.
+
+Use when the user wants to relocate, reorganise, or rename a note.
+
+Paths are vault-relative. Missing destination parent folders are created automatically.
+The source note must exist. The destination must not already exist."""
 
 
 async def add_to_daily_note(
@@ -151,22 +66,19 @@ async def add_to_daily_note(
         tuple[str, ...],
         Field(
             description=(
-                "The headings to traverse to the section to update. Pick based on "
-                "the content and the section structure provided in the tool "
-                "description. The top-level date heading is added automatically — "
-                "do not include it."
+                "Section path relative to the daily note body. Do not include the "
+                "top-level date heading."
             ),
             min_length=1,
         ),
     ],
-    content: Annotated[str, Field(description="The text to add to the section.")],
+    content: Annotated[str, Field(description="Text to add to the section.")],
     mode: Annotated[
         Literal["append", "prepend", "replace"],
         Field(
             description=(
-                "How to combine `content` with any existing section text. `append` "
-                "is almost always the right choice; use `replace` "
-                "only when the user explicitly asks to overwrite."
+                "How to combine content with the existing section. Prefer `append`; "
+                "use `replace` only when explicitly requested."
             ),
         ),
     ] = "append",
@@ -174,17 +86,15 @@ async def add_to_daily_note(
         bool,
         Field(
             description=(
-                "Set to true to create the section (and any missing ancestors) when "
-                "it doesn't exist. Set to false (default) to fail with a list of "
-                "available sections so you can pick the right one. Use true when the "
-                "user explicitly asks for a new section, or when retrying after a "
-                "missing-section error and creation is the right resolution."
+                "Create the requested section and any missing ancestors if they do not exist."
             ),
         ),
     ] = False,
     date: Annotated[
         PastDate | None,
-        Field(description="The date of the daily note. Defaults to today's local date."),
+        Field(
+            description="Daily note date in YYYY-MM-DD. Defaults to today's local date.",
+        ),
     ] = None,
 ) -> str:
     """Add content to a section of the user's Obsidian daily note.
@@ -248,7 +158,9 @@ async def add_to_daily_note(
 async def get_daily_note(
     date: Annotated[
         PastDate | None,
-        Field(description="The date of the daily note. Defaults to today's local date."),
+        Field(
+            description="Daily note date in YYYY-MM-DD. Defaults to today's local date.",
+        ),
     ] = None,
 ) -> str:
     """Read the user's Obsidian daily note.
@@ -270,8 +182,8 @@ async def record_idea(
         str,
         Field(
             description=(
-                "The loose, non-actionable idea to record. Preserve the user's "
-                "wording as closely as possible."
+                "The loose, non-actionable idea to record. Preserve the user's wording as "
+                "closely as possible."
             ),
         ),
     ],
@@ -298,20 +210,11 @@ async def record_idea(
 async def move_note(
     source_path: Annotated[
         AsyncPath,
-        Field(
-            description=(
-                "Vault-relative path to the note to move, e.g. 'Tasks/old-name.md'."
-            ),
-        ),
+        Field(description="Existing vault-relative note path."),
     ],
     destination_path: Annotated[
         AsyncPath,
-        Field(
-            description=(
-                "Vault-relative destination path; parent directories are created if "
-                "needed, e.g. 'Projects/New Folder/new-name.md'."
-            ),
-        ),
+        Field(description="New vault-relative note path."),
     ],
 ) -> str:
     """Move a vault note to a new vault-relative path.
@@ -342,7 +245,12 @@ async def daily_note_today_resource() -> str:
         return daily_note.render()
 
 
-async def daily_note_by_date_resource(date: dt.date) -> str:
+async def daily_note_by_date_resource(
+    date: Annotated[
+        dt.date,
+        Field(description="Daily note date in YYYY-MM-DD."),
+    ],
+) -> str:
     """Return the daily note for the given ISO date as rendered markdown.
 
     Args:
@@ -368,17 +276,14 @@ def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) 
     _ = mcp.resource(
         uri="obsidian://daily-note/today",
         name="Today's Daily Note",
-        description="The user's Obsidian daily note for today's date.",
+        description="The user's Obsidian daily note for today's local date.",
         mime_type="text/markdown",
         **auth_kwargs,
     )(daily_note_today_resource)
     _ = mcp.resource(
         uri="obsidian://daily-note/{date}",
         name="Daily Note by Date",
-        description=(
-            "The user's Obsidian daily note for a given ISO date (YYYY-MM-DD), e.g. "
-            "obsidian://daily-note/2026-05-16."
-        ),
+        description="The user's Obsidian daily note for a given ISO date.",
         mime_type="text/markdown",
         **auth_kwargs,
     )(daily_note_by_date_resource)

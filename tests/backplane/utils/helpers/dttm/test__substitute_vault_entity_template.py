@@ -65,6 +65,14 @@ def test__substitute_vault_entity_template_expands_double_brace_date() -> None:
     assert result == "due: 2026-06-06"
 
 
+def test__substitute_vault_entity_template_expands_title_with_backslashes() -> None:
+    """Title values with backslash-digit sequences are substituted literally."""
+    assert (
+        substitute_vault_entity_template("# {{title}}\n", title=r"C:\temp\1")
+        == r"# C:\temp\1" + "\n"
+    )
+
+
 @pytest.mark.parametrize(
     ("fmt", "expected"),
     [

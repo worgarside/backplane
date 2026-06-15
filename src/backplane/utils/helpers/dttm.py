@@ -187,7 +187,7 @@ def substitute_vault_entity_template(
         Template text with placeholders expanded.
     """
     timestamp = now or dt.datetime.now(tz=SETTINGS.local_timezone)
-    text = _TITLE_TEMPLATE.sub(title, template)
+    text = _TITLE_TEMPLATE.sub(lambda _match: title, template)
     text = substitute_obsidian_core_date_variables(text, timestamp.date())
 
     def _replace_datetime(match: re.Match[str]) -> str:

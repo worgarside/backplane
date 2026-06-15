@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
 import pytest
@@ -96,10 +95,9 @@ async def test__create_task__forwards_fields_to_task_service(
         link_capture_id=None,
     )
 
-    payload = json.loads(result)
-    assert payload["title"] == returned_title
-    assert payload["slug"] == returned_slug
-    assert "_message" not in payload
+    assert result.metadata.title == returned_title
+    assert result.slug == returned_slug
+    assert result.messages == []
     mock_task_service.assert_called_once_with()
     mock_create_task.assert_awaited_once_with(
         description,
@@ -128,8 +126,8 @@ async def test__create_task__matched_capture_is_included_in_confirmation(
         description="backup logs",
     )
 
-    payload = json.loads(result)
-    assert payload["_message"] == "Matched inbox capture from 2026-05-25T21:15."
+    assert result.matched_capture_id == "2026-05-25T21:15"
+    assert result.messages == ["Matched inbox capture from 2026-05-25T21:15."]
 
 
 async def test__create_task__logs_success_response(
@@ -172,11 +170,16 @@ async def test__create_task__candidate_capture_is_included_in_confirmation(
 
     result = await tasks.create_task(description="Update rain alert notification")
 
-    payload = json.loads(result)
-    assert "2026-05-17T01:44" in payload["_message"]
+    assert result.candidate_captures == [
+        CaptureCandidate(
+            id="2026-05-17T01:44",
+            text="I need to create reminder notifications for the mood tracker",
+        ),
+    ]
+    assert "2026-05-17T01:44" in result.messages[0]
     assert (
         "I need to create reminder notifications for the mood tracker"
-        in payload["_message"]
+        in result.messages[0]
     )
 
 
@@ -202,7 +205,7 @@ async def test__create_task__long_candidate_snippet_is_truncated(
 
     result = await tasks.create_task(description="Fix backup notifications")
 
-    message = json.loads(result)["_message"]
+    message = result.messages[0]
     snippet = message.split("'")[1]
     assert snippet.endswith("...")
     assert len(snippet) == _CANDIDATE_SNIPPET_MAX_LEN

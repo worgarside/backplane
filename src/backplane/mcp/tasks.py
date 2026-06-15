@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING, Annotated
 
 from loguru import logger
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
-from backplane.services.tasks import TaskService
+from backplane.services.tasks import CaptureCandidate, CreateTaskResult, TaskService
 from backplane.utils import enums  # noqa: TC001
+from backplane.utils.helpers.obsidian import VaultNoteMetadata
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
@@ -45,6 +45,39 @@ _LINK_TASK_TO_CAPTURE_DESCRIPTION = (
     "which capture should be connected. Provide the task title, filename stem, or "
     "internal slug from the creation response and the capture ID from the candidate list."
 )
+
+
+class CreateTaskToolResponse(BaseModel, frozen=True):
+    """Structured MCP response for task creation."""
+
+    metadata: VaultNoteMetadata
+    slug: str
+    matched_capture_id: str | None = None
+    candidate_captures: list[CaptureCandidate] = Field(default_factory=list)
+    domains_created: list[str] = Field(default_factory=list)
+    resources_created: list[str] = Field(default_factory=list)
+    projects_created: list[str] = Field(default_factory=list)
+    people_created: list[str] = Field(default_factory=list)
+    messages: list[str] = Field(default_factory=list)
+
+
+def _build_create_task_messages(task: CreateTaskResult) -> list[str]:
+    """Return human-readable follow-up notes for task creation."""
+    messages: list[str] = []
+    if task.matched_capture_id:
+        messages.append(f"Matched inbox capture from {task.matched_capture_id}.")
+    elif task.candidate_captures:
+        candidate = task.candidate_captures[0]
+        snippet = " ".join(candidate.text.split())
+        if len(snippet) > _CANDIDATE_SNIPPET_MAX_LEN:
+            snippet = f"{snippet[: _CANDIDATE_SNIPPET_MAX_LEN - 3]}..."
+        messages.append(
+            (
+                f"This looked similar to {candidate.id} ({snippet!r}); "
+                f"say 'link it to {candidate.id}' to connect that capture."
+            ),
+        )
+    return messages
 
 
 async def create_task(
@@ -98,7 +131,7 @@ async def create_task(
             ),
         ),
     ] = None,
-) -> str:
+) -> CreateTaskToolResponse:
     """Create a structured task note from a description.
 
     Args:
@@ -109,8 +142,7 @@ async def create_task(
         link_capture_id: Explicit confirmed inbox entry ID to link.
 
     Returns:
-        JSON metadata for the created task, including `canonical_link`, plus any
-        inbox linking notes in `_message`.
+        Structured task metadata plus inbox-linking fields for follow-up tool calls.
     """
     logger.info(
         (
@@ -132,31 +164,21 @@ async def create_task(
         link_capture_id=link_capture_id,
     )
 
-    parts: list[str] = []
-    if task.matched_capture_id:
-        parts.append(f"Matched inbox capture from {task.matched_capture_id}.")
-    elif task.candidate_captures:
-        candidate = task.candidate_captures[0]
-        snippet = " ".join(candidate.text.split())
-        if len(snippet) > _CANDIDATE_SNIPPET_MAX_LEN:
-            snippet = f"{snippet[: _CANDIDATE_SNIPPET_MAX_LEN - 3]}..."
-        parts.append(
-            (
-                f"This looked similar to {candidate.id} ({snippet!r}); "
-                f"say 'link it to {candidate.id}' to connect that capture."
-            ),
-        )
-
-    payload = task.metadata.model_dump(mode="json")
-    if parts:
-        payload["_message"] = " ".join(parts)
-
-    response = json.dumps(payload)
+    response = CreateTaskToolResponse(
+        metadata=task.metadata,
+        slug=task.slug,
+        matched_capture_id=task.matched_capture_id,
+        candidate_captures=task.candidate_captures,
+        domains_created=task.domains_created,
+        resources_created=task.resources_created,
+        projects_created=task.projects_created,
+        people_created=task.people_created,
+        messages=_build_create_task_messages(task),
+    )
     logger.info(
-        "create_task succeeded: slug={} matched_capture_id={} response={!r}",
+        "create_task succeeded: slug={} matched_capture_id={}",
         task.slug,
         task.matched_capture_id,
-        response,
     )
     return response
 

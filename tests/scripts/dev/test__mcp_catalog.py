@@ -29,7 +29,7 @@ from scripts.dev.mcp_catalog import (
 )
 
 _FIXTURE_VAULT = (
-    Path(__file__).resolve().parents[4] / "scripts" / "fixtures" / "readme-vault"
+    Path(__file__).resolve().parents[3] / "scripts" / "fixtures" / "readme-vault"
 )
 
 

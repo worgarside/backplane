@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 FIXTURE_VAULT = (
-    Path(__file__).resolve().parents[4] / "scripts" / "fixtures" / "readme-vault"
+    Path(__file__).resolve().parents[3] / "scripts" / "fixtures" / "readme-vault"
 )
 
 

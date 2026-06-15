@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt  # noqa: TC003
 import json
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Final, cast, final
+from typing import TYPE_CHECKING, ClassVar, Final, cast, final
 
 from loguru import logger
 
@@ -29,6 +30,8 @@ _OBSIDIAN_CONFIG_DIR: Final = ".obsidian"
 @final
 class ObsidianService:
     """Service for interacting with the Obsidian vault."""
+
+    _move_note_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     IDEA_INBOX_PATH: Final = VAULT_PATHS.inbox_dir / "Ideas.md"
 
@@ -183,15 +186,16 @@ class ObsidianService:
             msg = f"Note not found: {source_rel!s}"
             raise exc.NotFoundError(message=msg)
 
-        if await destination_abs.exists():
-            msg = f"Destination already exists: {destination_rel!s}"
-            raise exc.ConflictError(message=msg)
-
         source_parent = source_abs.parent
         vault_root = await SETTINGS.obsidian_vault_path.resolve()
 
-        await destination_abs.parent.mkdir(parents=True, exist_ok=True)
-        _ = await source_abs.rename(destination_abs)
+        async with ObsidianService._move_note_lock:
+            if await destination_abs.exists():
+                msg = f"Destination already exists: {destination_rel!s}"
+                raise exc.ConflictError(message=msg)
+
+            await destination_abs.parent.mkdir(parents=True, exist_ok=True)
+            _ = await source_abs.rename(destination_abs)
 
         if source_parent != vault_root and await source_parent.is_dir():
             empty = True

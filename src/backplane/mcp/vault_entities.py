@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import pathlib
 import re
 from typing import TYPE_CHECKING, Annotated, Literal
@@ -11,8 +10,13 @@ from loguru import logger
 from pydantic import Field
 
 from backplane.mcp.auth import OAuthToolRegistrationKwargs, oauth_tool_registration_kwargs
-from backplane.services.vault_entities import UpdateMode, VaultEntityService
+from backplane.services.vault_entities import (
+    UpdateMode,
+    VaultEntitySection,
+    VaultEntityService,
+)
 from backplane.utils.enums import VaultEntityKind
+from backplane.utils.helpers.obsidian import VaultNoteMetadata  # noqa: TC001
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
@@ -87,7 +91,7 @@ _LIST_DESCRIPTION = (
 )
 _LIST_SECTIONS_DESCRIPTION = (
     "List sections in a vault entity note. Use before reading or updating a "
-    "specific section when you need to know the available headings. Returns JSON "
+    "specific section when you need to know the available headings. Returns "
     "section metadata in document order, with paths relative to the note title."
 )
 _GET_DESCRIPTION = (
@@ -122,18 +126,17 @@ async def list_vault_entities(
         VaultEntityKindParam,
         Field(description="Entity kind to list: domain, person, project, or resource."),
     ],
-) -> str:
+) -> list[str]:
     """List display names of vault entity notes.
 
     Args:
         kind: Entity kind to list.
 
     Returns:
-        JSON array of display names sorted alphabetically.
+        Display names sorted alphabetically.
     """
     logger.info("list_vault_entities: kind={}", kind)
-    names = await VaultEntityService.list_entities(VaultEntityKind(kind))
-    return json.dumps(names)
+    return await VaultEntityService.list_entities(VaultEntityKind(kind))
 
 
 async def list_vault_entity_sections(
@@ -145,7 +148,7 @@ async def list_vault_entity_sections(
         str,
         Field(description="Human-readable entity name, e.g. 'Home Assistant'."),
     ],
-) -> str:
+) -> list[VaultEntitySection]:
     """List sections in a vault entity note.
 
     Args:
@@ -153,14 +156,13 @@ async def list_vault_entity_sections(
         name: Human-readable entity name.
 
     Returns:
-        JSON array of section metadata in document order.
+        Section metadata in document order.
     """
     logger.info("list_vault_entity_sections: kind={} name={!r}", kind, name)
-    sections = await VaultEntityService.list_entity_sections(
+    return await VaultEntityService.list_entity_sections(
         VaultEntityKind(kind),
         name,
     )
-    return json.dumps(sections)
 
 
 async def get_vault_entity(
@@ -233,7 +235,7 @@ async def create_vault_entity(
         str,
         Field(description="Human-readable entity name used as the note title."),
     ],
-) -> str:
+) -> VaultNoteMetadata:
     """Create a new vault entity note from the vault template.
 
     Args:
@@ -241,11 +243,10 @@ async def create_vault_entity(
         name: Human-readable entity name.
 
     Returns:
-        JSON metadata for the created note, including `canonical_link`.
+        Metadata for the created note, including `canonical_link`.
     """
     logger.info("create_vault_entity: kind={} name={!r}", kind, name)
-    metadata = await VaultEntityService.create_entity(VaultEntityKind(kind), name)
-    return metadata.model_dump_json()
+    return await VaultEntityService.create_entity(VaultEntityKind(kind), name)
 
 
 async def update_vault_entity(

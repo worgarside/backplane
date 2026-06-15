@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
 import pytest
@@ -69,7 +68,7 @@ async def test__list_vault_entities__returns_json_names(mocker: MockerFixture) -
 
     result = await vault_entities.list_vault_entities(kind="domain")
 
-    assert json.loads(result) == ["Home Assistant", "Obsidian"]
+    assert result == ["Home Assistant", "Obsidian"]
     _ = mock_list.assert_awaited_once()
 
 
@@ -91,7 +90,7 @@ async def test__list_vault_entity_sections__returns_json_sections(
         name="MQTT",
     )
 
-    assert json.loads(result) == [
+    assert result == [
         {"heading": "Overview", "path": ["Overview"], "level": 2},
     ]
     _ = mock_list_sections.assert_awaited_once()
@@ -147,9 +146,8 @@ async def test__create_vault_entity__returns_confirmation(mocker: MockerFixture)
         name="Garage Migration",
     )
 
-    payload = json.loads(result)
-    assert payload["path"] == "Projects/Garage Migration.md"
-    assert payload["canonical_link"] == "[[Projects/Garage Migration|Garage Migration]]"
+    assert result.path == AsyncPath("Projects/Garage Migration.md")
+    assert result.canonical_link == "[[Projects/Garage Migration|Garage Migration]]"
     _ = mock_create.assert_awaited_once_with(VaultEntityKind.PROJECT, "Garage Migration")
 
 
@@ -180,6 +178,6 @@ async def test__list_vault_entities__integration(obsidian_vault: AsyncPath) -> N
 
     result = await vault_entities.list_vault_entities(kind="domain")
 
-    assert json.loads(result) == await VaultEntityService.list_entities(
+    assert result == await VaultEntityService.list_entities(
         VaultEntityKind.DOMAIN,
     )

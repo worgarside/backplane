@@ -2,6 +2,73 @@
 
 <!-- version list -->
 
+## v0.5.0 (2026-06-16)
+
+### Chores
+
+- **deps**: Bump aiohttp from 3.13.5 to 3.14.0
+  ([#37](https://github.com/worgarside/backplane/pull/37),
+  [`812e58f`](https://github.com/worgarside/backplane/commit/812e58f321c3033da60328c17144c487195ac3ae))
+
+- **deps**: Bump aiohttp from 3.14.0 to 3.14.1
+  ([#53](https://github.com/worgarside/backplane/pull/53),
+  [`7013dd4`](https://github.com/worgarside/backplane/commit/7013dd43beb3e3e5ac83ff8ab37f5b46cb00ef6e))
+
+- **deps**: Bump cryptography from 48.0.0 to 48.0.1
+  ([#51](https://github.com/worgarside/backplane/pull/51),
+  [`8a4a1e6`](https://github.com/worgarside/backplane/commit/8a4a1e6ff604645de7502b789d70f5855fa30bfc))
+
+- **deps**: Bump pyjwt from 2.12.1 to 2.13.0
+  ([#47](https://github.com/worgarside/backplane/pull/47),
+  [`dc6e9b7`](https://github.com/worgarside/backplane/commit/dc6e9b7552a5b06a4f32eb9285869fa1e48626ae))
+
+- **deps**: Bump python-multipart from 0.0.28 to 0.0.31
+  ([#52](https://github.com/worgarside/backplane/pull/52),
+  [`6fe5c67`](https://github.com/worgarside/backplane/commit/6fe5c67047d66edef1517e694cb811cd8bd12763))
+
+- **deps**: Bump starlette from 1.0.0 to 1.0.1
+  ([#38](https://github.com/worgarside/backplane/pull/38),
+  [`cbfc46f`](https://github.com/worgarside/backplane/commit/cbfc46f0de89e8d10ebfbc8959005c13e1b38e86))
+
+- **deps**: Bump starlette from 1.0.1 to 1.3.1
+  ([#54](https://github.com/worgarside/backplane/pull/54),
+  [`aa37097`](https://github.com/worgarside/backplane/commit/aa37097f63424e637a236818af50dd09261f0256))
+
+### Continuous Integration
+
+- Enforce coverage checks at 90% ([#41](https://github.com/worgarside/backplane/pull/41),
+  [`3b1d3b5`](https://github.com/worgarside/backplane/commit/3b1d3b5cf11a1a49e86c05ee4b0db37cae392a3c))
+
+- Prek autoupdate ([#45](https://github.com/worgarside/backplane/pull/45),
+  [`34313b3`](https://github.com/worgarside/backplane/commit/34313b3f0cbecadfe68aca3da145455eae7f2079))
+
+- Prek autoupdate ([#42](https://github.com/worgarside/backplane/pull/42),
+  [`4efbeba`](https://github.com/worgarside/backplane/commit/4efbeba1abc258771b2bf3a7af6b2efafd10aa77))
+
+- Prek autoupdate ([#39](https://github.com/worgarside/backplane/pull/39),
+  [`3af1be7`](https://github.com/worgarside/backplane/commit/3af1be794f158e220bf0f4f2c9815e8f80ca63f5))
+
+- Prek autoupdate ([#36](https://github.com/worgarside/backplane/pull/36),
+  [`0e494c8`](https://github.com/worgarside/backplane/commit/0e494c8012a39106b92910b423b12fdf8898f893))
+
+### Features
+
+- Add public ChatGPT MCP server with Authentik OAuth
+  ([#35](https://github.com/worgarside/backplane/pull/35),
+  [`0d06652`](https://github.com/worgarside/backplane/commit/0d06652a9bc2ac97d73dbdbfe875ac2f14ff6c8a))
+
+- Auto-generate README MCP catalog section ([#44](https://github.com/worgarside/backplane/pull/44),
+  [`2e79faf`](https://github.com/worgarside/backplane/commit/2e79faf117abeff7524e977ad6ec3659d6abe0ba))
+
+- Integrate vault entity management tools ([#43](https://github.com/worgarside/backplane/pull/43),
+  [`a07e53d`](https://github.com/worgarside/backplane/commit/a07e53df8641a0fbcee219bae64607359f6feaa9))
+
+### Refactoring
+
+- Move scripts to deploy folder ([#46](https://github.com/worgarside/backplane/pull/46),
+  [`f2fea9a`](https://github.com/worgarside/backplane/commit/f2fea9a0c7ebd9d2c2f4f3aeacc9faadf9808dad))
+
+
 ## v0.4.3 (2026-05-30)
 
 ### Bug Fixes

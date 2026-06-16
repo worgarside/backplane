@@ -51,7 +51,7 @@ def rain_alert_unrelated_captures() -> list[Capture]:
             time="14:29",
             text=(
                 "Update the Open Banking integration in Home Assistant to include "
-                "Vic's Amex card and send her notifications of how much she's spent."
+                "Alice's bank card and send her notifications of how much she's spent."
             ),
             path=path,
         ),

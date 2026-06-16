@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import anyio
 import pytest
 
-from backplane.docs.mcp_catalog import (
+from backplane.utils.async_path import AsyncPath
+from backplane.utils.settings import SETTINGS
+from scripts.dev.mcp_catalog import (
     README_CATALOG_END,
     README_CATALOG_INSERTION_ANCHOR,
     README_CATALOG_START,
@@ -26,7 +27,6 @@ from backplane.docs.mcp_catalog import (
     render_readme_catalog_section,
     update_readme_catalog,
 )
-from backplane.utils.settings import SETTINGS
 
 _FIXTURE_VAULT = (
     Path(__file__).resolve().parents[3] / "scripts" / "fixtures" / "readme-vault"
@@ -237,7 +237,7 @@ async def test__collect_mcp_catalog__introspects_registered_server(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Catalog collection reads tools and resources from the MCP server."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", anyio.Path(_FIXTURE_VAULT))
+    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", AsyncPath(_FIXTURE_VAULT))
 
     catalog = await collect_mcp_catalog()
 
@@ -355,7 +355,7 @@ def test__generate_readme_catalog_markdown__uses_live_server_metadata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Generated README sections include marked content from the MCP server."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", anyio.Path(_FIXTURE_VAULT))
+    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", AsyncPath(_FIXTURE_VAULT))
 
     section = generate_readme_catalog_markdown()
 
@@ -369,7 +369,7 @@ def test__refresh_readme_catalog__writes_live_server_metadata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Refresh writes a marked README section from the live MCP server."""
-    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", anyio.Path(_FIXTURE_VAULT))
+    monkeypatch.setattr(SETTINGS, "obsidian_vault_path", AsyncPath(_FIXTURE_VAULT))
     readme = tmp_path / "README.md"
     readme.write_text(
         "# Example\n\n"

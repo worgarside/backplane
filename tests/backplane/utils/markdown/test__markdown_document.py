@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
+import pathlib
 
 from backplane.utils.markdown import MarkdownDocument
 
-if TYPE_CHECKING:
-    import anyio
-
 
 async def test__markdown_document__creates_missing_file_on_enter(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """A missing note is created with atomic_write_text during __aenter__."""
     rel = pathlib.PurePath("Daily/2026-05-20.md")
@@ -32,7 +33,7 @@ async def test__markdown_document__creates_missing_file_on_enter(
 
 
 async def test__markdown_document__creates_empty_file_without_initial_content(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """create_if_not_exists with no initial_content writes an empty file."""
     rel = pathlib.PurePath("empty.md")
@@ -50,7 +51,7 @@ async def test__markdown_document__creates_empty_file_without_initial_content(
 
 
 async def test__markdown_document__persists_edits_on_exit(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Successful edits are flushed with atomic_write_text on __aexit__."""
     rel = pathlib.PurePath("note.md")

@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from backplane.utils.async_path import AsyncPath
+
 import datetime as dt
 import pathlib
-from typing import TYPE_CHECKING
 
 import pytest
 
 from backplane.mcp.obsidian import add_to_daily_note
 from backplane.utils import exc, format_human_date
 
-if TYPE_CHECKING:
-    import anyio
-
 
 async def test__add_to_daily_note__wraps_missing_section_as_information_required(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Missing sections surface retry guidance instead of a raw not-found error."""
     date = dt.date(2026, 5, 20)
@@ -45,7 +46,7 @@ async def test__add_to_daily_note__wraps_missing_section_as_information_required
 
 
 async def test__add_to_daily_note__appends_to_existing_section(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
 ) -> None:
     """Content is appended when the target section already exists."""
     date = dt.date(2026, 5, 20)

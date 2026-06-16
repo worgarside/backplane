@@ -107,7 +107,7 @@ checkout branch="main":
     git fetch origin
     git checkout {{ branch }}
     git pull
-    uv sync
+    uv sync --no-dev
     just _mcp-restart
     if systemctl is-enabled backplane-public.service &>/dev/null; then just _mcp-public-restart; fi
 

@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, ClassVar, Self, cast
 
-import anyio
 import mdformat
 from loguru import logger
 from markdown_it import MarkdownIt
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, computed_field
 
+from .async_path import AsyncPath
 from .exceptions import SectionNotFoundError, UserError
 from .helpers.files import atomic_write_text
 from .settings import SETTINGS
@@ -130,15 +130,14 @@ def _extract_headings(
 
 
 def _render_text(text: str) -> str:
-    """Normalize a raw markdown string through the mdformat pipeline.
+    """Normalize raw markdown into a canonical form.
 
-    Parses frontmatter separately (to preserve ruamel.yaml formatting) then
-    runs the body through ``mdformat``. Used to produce a canonical form of the
-    on-disk content so that two snapshots of the same logical document compare
-    equal regardless of trivial whitespace differences.
+    Preserves the formatting of YAML frontmatter while standardizing body formatting,
+    enabling equivalent documents to compare equal regardless of whitespace
+    differences.
 
     Args:
-        text: Raw markdown source (may include YAML frontmatter).
+        text: Raw markdown source, optionally including YAML frontmatter.
 
     Returns:
         The normalized markdown string.
@@ -146,7 +145,7 @@ def _render_text(text: str) -> str:
     fm, body_text = _parse_frontmatter(text)
     body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
         body_text,
-        extensions={"gfm"},
+        extensions={"gfm", "wikilink"},
     ).lstrip()
     if not fm:
         return body
@@ -240,7 +239,7 @@ class MarkdownDocument(BaseModel):
     _loaded_rendered: Annotated[str, PrivateAttr()] = ""
 
     vault_path: Annotated[
-        anyio.Path | pathlib.PurePath,
+        AsyncPath | pathlib.PurePath,
         Field(description="The path within the vault to the markdown file."),
     ]
 
@@ -284,12 +283,20 @@ class MarkdownDocument(BaseModel):
     @computed_field
     @property
     def body(self) -> list[MarkdownSection]:
-        """Return the document body."""
+        """The top-level sections of the parsed document.
+
+        Returns:
+            list[MarkdownSection]: The document's root-level sections.
+        """
         return self._body
 
     @property
-    def _async_file_path(self) -> anyio.Path:
-        """Async-capable path wrapper for disk I/O."""
+    def _async_file_path(self) -> AsyncPath:
+        """Compute the full absolute path to the markdown file in the vault.
+
+        Returns:
+                The full path obtained by joining the vault root path with the relative vault path.
+        """
         return SETTINGS.obsidian_vault_path / self.vault_path
 
     async def __aenter__(self) -> Self:
@@ -468,20 +475,14 @@ class MarkdownDocument(BaseModel):
             yield from section.iter_sections()
 
     def render(self) -> str:
-        """Render the document to markdown.
-
-        The body is normalised by ``mdformat`` (canonical spacing, list markers,
-        and table alignment). The frontmatter is rendered separately through
-        ``YAML_LOADER`` to preserve quoting styles, key order, types, and comments
-        that ``mdformat-frontmatter`` would otherwise flatten by re-parsing through
-        PyYAML.
+        """Render the document as a normalized markdown string.
 
         Returns:
             The full markdown document including frontmatter (if any) and body.
         """
         body = mdformat.text(  # pyright: ignore[reportUnknownMemberType]
             "\n\n".join(section.render() for section in self.body),
-            extensions={"gfm"},  # GitHub-flavored markdown extensions
+            extensions={"gfm", "wikilink"},
         ).lstrip()
 
         if not self.frontmatter:

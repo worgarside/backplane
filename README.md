@@ -135,117 +135,257 @@ This section is generated automatically from the registered MCP surface. Run `pr
 
 ### Server instructions
 
-Backplane exposes tools for interacting with the user's personal homelab services — currently their Obsidian vault, with more integrations to follow.
+Backplane manages the user's Obsidian vault.
 
-The user is typically speaking through a voice assistant, so keep tool outputs concise — a short confirmation is usually enough.
+Tool routing:
+- Use `add_to_daily_note` when the user wants to capture something in today's note or a daily-note section.
+- Use `create_task` for actionable things the user needs, wants, or intends to do.
+- Use `record_idea` for loose, speculative, non-committal ideas.
+- Use `get_daily_note` when the user asks what is in today's note or a specific daily note,
+  or before `add_to_daily_note` when the available sections are unknown.
+- Use `create_vault_entity` to create a Domain, Project, Resource, or Person note.
+- Use `get_vault_entity` to read a whole entity note.
+- Use `list_vault_entity_sections` before reading or updating a specific entity section
+  if the available headings are unknown.
+- Use `get_vault_entity_section` to read one known entity section.
+- Use `update_vault_entity` to append/prepend/replace content in an entity section.
+- Use `link_task_to_capture` after the user confirms which prior capture belongs to an existing task.
+- Use `move_note` to rename, move, or reorganise an Obsidian note.
+
+General rules:
+- Prefer human-readable Obsidian names and paths. Kebab-case slugs are internal IDs only.
+- When a tool response includes `canonical_link`, use that exact value for markdown links.
+- Entity associations are stored as Obsidian wikilinks, not plain names.
+- Prefer `append` for captures. Use `replace` only when the user explicitly asks to overwrite.
+- Do not ask for confirmation when the user's intent is clear.
+- Daily note date headings are handled automatically; never include the top-level date
+  heading in `heading_path`.
+
+Keep tool outputs concise — a short confirmation is usually enough.
 
 ### Tools
 
 #### `add_to_daily_note`
 
-Add content to a section of the user's Obsidian daily note. Use this when the user wants to capture something into their daily note.
+Add content to a section of the user's Obsidian daily note.
 
-The user's daily-note template defines this section structure (prefer these names verbatim):
-- Summary
-- Tasks
-  - Work
-  - Personal
-- Journal
-- Links
-- Tomorrow
+Use when the user wants to capture something "today", "in my daily note", or into a daily-note section.
 
-If the user explicitly asks for a section not listed above, set `create_section_if_not_exists=true` — this creates the section and is the correct and supported action in that case. Do not decline or ask for clarification; just call the tool with that flag set.
+When the target section is unknown or ambiguous, call `get_daily_note` first to inspect the note's
+headings. If a section lookup fails, the error includes available sections at that level.
 
-If the section is missing and `create_section_if_not_exists=false` (the default), the call returns the actual sections in today's note so you can either match an existing one or retry with the flag set to true.
+If the user explicitly asks for another section, create it with `create_section_if_not_exists=true`.
+If a section is missing and the tool returns available sections, retry with the closest
+matching path or create the requested section when appropriate.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `content` | `string` | yes | — | The text to add to the section. |
-| `create_section_if_not_exists` | `boolean` | no | `false` | Set to true to create the section (and any missing ancestors) when it doesn't exist. Set to false (default) to fail with a list of available sections so you can pick the right one. Use true when the user explicitly asks for a new section, or when retrying after a missing-section error and creation is the right resolution. |
-| `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
-| `heading_path` | `string`[] | yes | — | The headings to traverse to the section to update. Pick based on the content and the section structure provided in the tool description. The top-level date heading is added automatically — do not include it. |
-| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine `content` with any existing section text. `append` is almost always the right choice for voice capture; use `replace` only when the user explicitly asks to overwrite. |
+| `content` | `string` | yes | — | Text to add to the section. |
+| `create_section_if_not_exists` | `boolean` | no | `false` | Create the requested section and any missing ancestors if they do not exist. |
+| `date` | `date` (YYYY-MM-DD)? | no | `null` | Daily note date in YYYY-MM-DD. Defaults to today's local date. |
+| `heading_path` | `string`[] | yes | — | Section path relative to the daily note body. Do not include the top-level date heading. |
+| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine content with the existing section. Prefer `append`; use `replace` only when explicitly requested. |
 
 #### `create_task`
 
-Create a structured task note for something actionable.
+Create a structured Obsidian task note for an actionable item.
 
-Use this when the user mentions something they need to do, want to remember to act on, or asks you to 'make a task', 'add to my list', 'remind me to', 'I should...', 'I need to...', etc.
+Use when the user says they need to do something, wants something on their list, asks to make a
+task, or uses phrasing like "I should…", "I need to…", "remind me to…", or "add this to my list".
 
-This tool always creates the task. Matching against prior inbox captures is best-effort only: high-confidence matches are linked automatically, uncertain matches are returned as candidates to offer back to the user, and unmatched tasks are created normally.
+Do not use for speculative ideas. Use `record_idea` for loose "maybe / could / worth
+investigating" captures unless the user explicitly wants to turn the idea into a task.
 
-When the user confirms a specific prior capture, pass its ID as link_capture_id. For an already-created task, use link_task_to_capture.
+Task creation always succeeds even without a prior inbox match. Confirmed prior captures can
+be linked with `link_capture_id`; uncertain matches may be returned as candidates and linked
+later with `link_task_to_capture`.
 
-Do not use this for loose, non-committal ideas unless the user asks to turn one into a task. Use record_idea for speculative captures like 'maybe', 'I could', 'I wonder if', or 'worth investigating'.
+Only set:
+- `due` when the user gives an explicit date or deadline.
+- `priority` when urgency/importance is explicit.
+- `title` when the user gives a clear title.
 
-Ask for a due date before calling if the request sounds time-sensitive (e.g. 'before the weekend', 'by Friday', 'i need to...').
+If timing is implied but not explicit, leave `due=null` and keep the timing words in `description`.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `description` | `string` | yes | — | Natural-language task or action description. This is fuzzy-matched against existing inbox captures, so include distinctive nouns, names, and phrases from the original capture when available. Exact wording is helpful but not required; keep extra context that may help extract task metadata. |
-| `due` | `string`? | no | `null` | Optional due date in YYYY-MM-DD format. Ask before setting if timing is implied but not explicit. |
-| `link_capture_id` | `string`? | no | `null` | Optional confirmed inbox capture ID to link, e.g. '2026-05-25T21:15'. Omit unless the user explicitly confirmed which candidate capture to attach. |
-| `priority` | `low` \| `medium` \| `high`? | no | `null` | Optional priority override: 'low', 'medium', or 'high'. Omit unless the user explicitly indicates urgency or importance. |
-| `title` | `string`? | no | `null` | Optional task title override. Omit unless the user supplied a clear title; otherwise inferred from the matched capture or description. |
+| `description` | `string` | yes | — | Natural-language task description. Include distinctive names, nouns, and context that may help matching and metadata extraction. |
+| `due` | `string`? | no | `null` | Optional due date in YYYY-MM-DD. Only set when explicit. |
+| `link_capture_id` | `string`? | no | `null` | Confirmed inbox capture ID to link. Omit unless the user confirmed the capture. |
+| `priority` | `low` \| `medium` \| `high`? | no | `null` | Optional priority override. Only set when explicit. |
+| `title` | `string`? | no | `null` | Optional title override. Omit unless the user supplied a clear title. |
+
+#### `create_vault_entity`
+
+Create a new Domain, Project, Resource, or Person note from the vault template.
+
+Use for new durable entities:
+- Domains: broad areas or platforms.
+- Resources: specific integrations, APIs, vendors, services, or references.
+- Projects: scoped outcomes or ongoing efforts.
+- People: individuals referenced in related work.
+
+Do not create duplicate Domain/Resource notes with the same meaning.
+Fails if a note with the same name already exists.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
+| `name` | `string` | yes | — | Human-readable note title. |
 
 #### `get_daily_note`
 
-Read the user's Obsidian daily note. Use this when the user asks what's in their daily note, wants to review tasks/ideas/notes they've captured, or needs context about their day to answer a follow-up question.
+Read the user's Obsidian daily note.
+
+Use when the user asks what is in the daily note, wants to review captured tasks/ideas/notes,
+or needs daily-note context for a follow-up.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `date` | `date` (YYYY-MM-DD)? | no | `null` | The date of the daily note. Defaults to today's local date. |
+| `date` | `date` (YYYY-MM-DD)? | no | `null` | Daily note date in YYYY-MM-DD. Defaults to today's local date. |
+
+#### `get_vault_entity`
+
+Read a Domain, Project, Resource, or Person note as rendered markdown.
+
+Use when the user asks about an entity note's contents.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
+| `name` | `string` | yes | — | Human-readable entity name. |
+
+#### `get_vault_entity_section`
+
+Read one section of a Domain, Project, Resource, or Person note as rendered markdown.
+
+Use when only a specific section is needed. Pass the exact section path returned by
+`list_vault_entity_sections`.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `heading_path` | `string`[] | yes | — | Section path relative to the note title, e.g. `['Overview']`. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
+| `name` | `string` | yes | — | Human-readable entity name. |
 
 #### `link_task_to_capture`
 
 Link an existing task note to a confirmed prior inbox capture.
 
-Use this after create_task offered candidate captures and the user confirms which capture should be connected. Provide the task slug from the creation confirmation and the capture ID from the candidate list.
+Use after `create_task` returned candidate captures and the user confirms which capture belongs to the task.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `capture_id` | `string` | yes | — | Inbox capture ID, e.g. '2026-05-25T21:15'. |
-| `task_slug` | `string` | yes | — | Task note slug, e.g. 'review-backup-logs'. |
+| `capture_id` | `string` | yes | — | Inbox capture ID, e.g. `2026-05-25T21:15`. |
+| `task_slug` | `string` | yes | — | Task title, filename stem, or internal slug from the task creation response. |
+
+#### `list_vault_entities`
+
+List display names of vault entity notes for a given kind.
+
+Use when the user asks what Domains, Projects, Resources, or People exist, or when
+choosing from existing entities.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind to list: `domain`, `person`, `project`, or `resource`. |
+
+#### `list_vault_entity_sections`
+
+List sections in a Domain, Project, Resource, or Person note.
+
+Use before reading or updating a specific section when the available headings are unknown.
+Returned paths are relative to the note title.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
+| `name` | `string` | yes | — | Human-readable entity name. |
+
+#### `move_note`
+
+Move or rename an Obsidian markdown note.
+
+Use when the user wants to relocate, reorganise, or rename a note.
+
+Paths are vault-relative. Missing destination parent folders are created automatically.
+The source note must exist. The destination must not already exist.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `destination_path` | `string` | yes | — | New vault-relative note path. |
+| `source_path` | `string` | yes | — | Existing vault-relative note path. |
 
 #### `record_idea`
 
 Record a loose, non-actionable idea in the Obsidian idea inbox.
 
-Use this for speculative captures such as:
-- "maybe..."
-- "I could..."
-- "I wonder if..."
-- "worth investigating..."
-- a possible automation, improvement, or future project that the user has not committed to doing
+Use for speculative captures such as:
+- "maybe…"
+- "I could…"
+- "I wonder if…"
+- "worth investigating…"
+- possible automations, improvements, or future projects the user has not committed to doing
 
-Do not use this for tasks or action items. If the user says they need to do something,
-should do something, want to remember to act on something, or asks for a task/reminder/list item,
-use create_task instead.
+Do not use this for tasks or action items. If the user says they need to do something, should do
+something, wants to remember to act on something, or asks for a task/reminder/list item,
+use `create_task`.
 
-Convert spoken phrasing to a written sentence, while preserving the user's original wording as closely
-as possible.
+Convert spoken phrasing to a written sentence while preserving the user's wording as closely as possible.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `idea` | `string` | yes | — | The loose, non-actionable idea to record. Preserve the user's wording as closely as possible. |
+
+#### `update_vault_entity`
+
+Update a section of a Domain, Project, Resource, or Person note.
+
+Use `append` for most captures. Use `replace` only when the user explicitly asks to overwrite.
+
+Common entity sections include:
+- Overview
+- Notes
+- Related Tasks
+
+Some entity kinds may also have more specific sections, such as Goals, Links, Context,
+Key Resources, or Active Projects.
+
+When the target section is obvious, use the most appropriate existing/common section, usually
+`["Overview"]`, `["Notes"]`, or `["Related Tasks"]`.
+
+When the available headings are unknown or the target section is ambiguous, call
+`list_vault_entity_sections` first and pass an exact returned path.
+
+Only set `create_section_if_not_exists=true` when the user explicitly asks for a new section,
+or when no existing section is appropriate.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `content` | `string` | yes | — | Markdown content to add or replace. |
+| `create_section_if_not_exists` | `boolean` | no | `false` | Create the requested section and any missing ancestors if they do not exist. |
+| `heading_path` | `string`[] | yes | — | Section path relative to the note title. Prefer exact paths from `list_vault_entity_sections` when available. |
+| `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
+| `mode` | `append` \| `prepend` \| `replace` | no | `append` | How to combine content with existing section text. Prefer `append`; use `replace` only when explicitly requested. |
+| `name` | `string` | yes | — | Human-readable entity name. |
 
 ### Resources
 
 #### `Today's Daily Note`
 
 - **URI:** `obsidian://daily-note/today` (`text/markdown`)
-- **Description:** The user's Obsidian daily note for today's date.
+- **Description:** The user's Obsidian daily note for today's local date.
 
 ### Resource templates
 
 #### `Daily Note by Date`
 
 - **URI template:** `obsidian://daily-note/{date}` (`text/markdown`)
-- **Description:** The user's Obsidian daily note for a given ISO date (YYYY-MM-DD), e.g. obsidian://daily-note/2026-05-16.
+- **Description:** The user's Obsidian daily note for a given ISO date.
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `date` | `date` (YYYY-MM-DD) | yes | — |  |
+| `date` | `date` (YYYY-MM-DD) | yes | — | Daily note date in YYYY-MM-DD. |
 <!-- backplane:mcp-catalog:end -->
 
 ### Public MCP (ChatGPT)

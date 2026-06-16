@@ -1,4 +1,4 @@
-"""Task creation service for structured task management from voice captures."""
+"""Task creation service for structured task note management."""
 
 from __future__ import annotations
 
@@ -10,20 +10,27 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Annotated, Final, Literal, cast, final
 
-import anyio
 from loguru import logger
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, AgentRunResult
 from rapidfuzz import fuzz
 
 from backplane.services import ObsidianService
+from backplane.services.vault_entities import VaultEntityService, note_title_from_markdown
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
     YAML_LOADER,
+    AsyncPath,
     MarkdownDocument,
+    VaultNoteMetadata,
     atomic_write_text,
+    build_entity_wikilink,
+    build_obsidian_link,
+    build_vault_note_metadata,
     enums,
+    note_filename,
+    obsidian_link_target_from_path,
     resolve_under_root,
     safe_slug,
     today,
@@ -40,17 +47,18 @@ _SCORE_CANDIDATE: Final = 60.0
 _MIN_AUTO_GAP: Final = 10.0
 _LOG_TEXT_MAX_LEN: Final = 80
 _MATCH_TOP_CANDIDATES: Final = 3
+_STUB_NOTE_TYPES: Final = frozenset({"domain", "person", "project", "resource"})
 
 
 @dataclass(frozen=True, slots=True)
 class Capture:
-    """A single timestamped entry from the voice capture inbox."""
+    """A single timestamped entry from the idea inbox."""
 
     id: str
     date: str
     time: str
     text: str
-    path: anyio.Path
+    path: AsyncPath
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,12 +80,14 @@ class CreateTaskResult(BaseModel, frozen=True, arbitrary_types_allowed=True):
     """Outcome of creating a task note from a description or capture."""
 
     slug: str
-    path: anyio.Path
+    path: AsyncPath
     title: str
+    metadata: VaultNoteMetadata
     matched_capture_id: str | None
     candidate_captures: list[CaptureCandidate]
     domains_created: list[str]
     resources_created: list[str]
+    projects_created: list[str]
     people_created: list[str]
 
 
@@ -104,6 +114,17 @@ class TaskMetadata(BaseModel):
             description=(
                 "Specific integrations, APIs, vendors, or services to touch "
                 "(e.g. a named API or device integration), not parent platforms."
+            ),
+        ),
+    ]
+
+    projects: Annotated[
+        list[str],
+        Field(
+            default_factory=list,
+            description=(
+                "Scoped outcomes, initiatives, or ongoing efforts the task contributes "
+                "to, not platforms, integrations, or people."
             ),
         ),
     ]
@@ -138,21 +159,102 @@ class TaskMetadata(BaseModel):
 class TaskFrontmatter(BaseModel, frozen=True):
     """YAML frontmatter contract for task notes."""
 
-    id: str
-    type: Literal["task"] = "task"
-    status: Literal["backlog"] = "backlog"
-    created: str
-    updated: str
-    source: Literal["voice-capture"] = "voice-capture"
-    source_capture: str | None
-    domains: list[str]
-    resources: list[str]
-    people: list[str]
-    priority: enums.Priority
-    effort: enums.Effort
-    due: str | None
-    completed: str | None = None
-    tags: list[str] = Field(default_factory=lambda: ["task"])
+    id: Annotated[
+        str,
+        Field(description="Stable task identifier, e.g. task-20260525-211500."),
+    ]
+    type: Annotated[
+        Literal["task"],
+        Field(description="Note kind; always `task` for structured task notes."),
+    ] = "task"
+    status: Annotated[
+        Literal["backlog"],
+        Field(description="Workflow status; newly created tasks start in `backlog`."),
+    ] = "backlog"
+    created: Annotated[
+        str,
+        Field(description="ISO 8601 local timestamp when the note was first created."),
+    ]
+    updated: Annotated[
+        str,
+        Field(description="ISO 8601 local timestamp of the last frontmatter update."),
+    ]
+    source_capture: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Inbox capture ID used as provenance, e.g. 2026-05-25T21:15, "
+                "or null when created from free-text description."
+            ),
+        ),
+    ] = None
+    domains: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to domain notes (platforms or broad knowledge areas), "
+                "e.g. [[Domains/Home - Property|Home / Property]]."
+            ),
+        ),
+    ]
+    resources: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to resource notes (integrations, APIs, vendors, or "
+                "services), e.g. [[Resources/Frigate|Frigate]]."
+            ),
+        ),
+    ]
+    projects: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to project notes (scoped outcomes or ongoing "
+                "initiatives), e.g. [[Projects/Rented Home Formal Complaint|Rented Home "
+                "Formal Complaint]]."
+            ),
+        ),
+    ]
+    people: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Obsidian wikilinks to person notes for people involved or referenced, "
+                "e.g. [[People/Will|Will]]."
+            ),
+        ),
+    ]
+    priority: Annotated[
+        enums.Priority,
+        Field(description="Relative urgency: `low`, `medium`, or `high`."),
+    ]
+    effort: Annotated[
+        enums.Effort,
+        Field(
+            description=(
+                "Estimated effort: `small` (under 1 hour), `medium` (1-4 hours), or "
+                "`large` (over 4 hours)."
+            ),
+        ),
+    ]
+    due: Annotated[
+        str | None,
+        Field(description="Optional due date as YYYY-MM-DD, or null when unset."),
+    ]
+    completed: Annotated[
+        str | None,
+        Field(
+            description=(
+                "ISO 8601 local timestamp when the task was marked done, or null while "
+                "open."
+            ),
+        ),
+    ] = None
+    tags: list[str] = Field(
+        default_factory=lambda: ["task"],
+        description="Obsidian tags for filtering; new tasks include `task`.",
+    )
 
     def model_dump_yaml(self) -> str:
         """Serialize the frontmatter as YAML.
@@ -167,7 +269,11 @@ class TaskFrontmatter(BaseModel, frozen=True):
 
 @cache
 def _metadata_agent() -> Agent[None, TaskMetadata]:
-    """Return the pydantic-ai agent used for task metadata extraction."""
+    """Provide a configured agent for extracting structured task metadata.
+
+    Returns:
+        Agent configured to produce ``TaskMetadata`` from task descriptions.
+    """
     return Agent(
         SETTINGS.task_metadata_model,
         output_type=TaskMetadata,
@@ -178,6 +284,8 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
             "(e.g. 'Home Assistant', 'Inventory'). "
             "Resources are specific integrations, APIs, vendors, or services you will "
             "configure or call (e.g. 'Acme API', 'MQTT'). "
+            "Projects are scoped outcomes or ongoing efforts the task contributes to "
+            "(e.g. 'Garage Migration', 'Kitchen Dashboard'). "
             "Never put the same name in both domains and resources. "
             "If a task mentions adding or updating an integration inside a platform, "
             "put the platform in domains and the integration in resources only — "
@@ -186,9 +294,9 @@ def _metadata_agent() -> Agent[None, TaskMetadata]:
             "For people: every person named or clearly implied in the task (e.g. 'Jordan' from "
             "\"Jordan's laptop\", or the person behind 'their' when a name appears in the same "
             "sentence). "
-            "When the user message lists existing domains, resources, or people, prefer those "
-            "exact spellings when they clearly apply; add new names when the task mentions someone "
-            "not in the list. "
+            "When the user message lists existing domains, resources, projects, or people, "
+            "prefer those exact spellings when they clearly apply; add new names when the "
+            "task mentions someone or something not in the list. "
             "For title: a concise imperative phrase under 60 characters. "
             "For next_action: one concrete first step as an imperative sentence. "
             "For effort: 'small' under 1 hour, 'medium' 1-4 hours, 'large' over 4 hours."
@@ -335,15 +443,16 @@ def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
 
 
 def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
-    """Return a best-effort inbox capture match.
+    """Find the best matching inbox capture for a task description.
 
     Args:
         description: Task description to match against.
         captures: Candidate captures to score.
 
     Returns:
-        A match outcome. Borderline candidates are surfaced but never block
-        task creation.
+        A match outcome containing the best-matched capture if it exceeds a high
+        threshold, borderline candidates if they meet a lower threshold, or
+        neither. Task creation always proceeds regardless of match strength.
     """
     if not captures:
         logger.debug("Fuzzy match skipped: no inbox captures in lookback window")
@@ -390,33 +499,11 @@ def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
     return MatchOutcome(matched=None, candidates=[])
 
 
-def _note_title_from_markdown(text: str) -> str | None:
-    """Return the first level-1 heading text, skipping YAML frontmatter."""
-    in_frontmatter = False
-    frontmatter_closed = False
-    for line in text.splitlines():
-        stripped = line.strip()
-
-        if not frontmatter_closed and stripped == "---":
-            in_frontmatter = not in_frontmatter
-            if not in_frontmatter:
-                frontmatter_closed = True
-            continue
-
-        if in_frontmatter:
-            continue
-
-        if line.startswith("# ") and not line.startswith("## "):
-            return line.removeprefix("# ").strip()
-
-    return None
-
-
 async def _load_recent_captures() -> list[Capture]:
-    """Load recent inbox captures.
+    """Parse captures from the inbox within a default lookback window.
 
     Returns:
-        Recent inbox captures, or an empty list when the inbox is absent.
+        List of parsed captures; an empty list if the inbox file is absent.
     """
     try:
         async with ObsidianService().idea_inbox(read_only=True) as inbox:
@@ -456,43 +543,26 @@ def _find_capture_by_id(captures: list[Capture], capture_id: str) -> Capture | N
 
 
 def _capture_payload(capture: Capture) -> CaptureCandidate:
-    """Return the public payload used to offer optional capture linking."""
+    """Convert a capture to a public payload for optional linking.
+
+    Returns:
+        CaptureCandidate: A public representation of the capture containing its id and text.
+    """
     return CaptureCandidate(id=capture.id, text=capture.text)
 
 
-async def _list_vault_entity_names(directory: anyio.Path) -> list[str]:
-    """List display names of notes in a vault subdirectory (from their H1 heading).
-
-    Returns:
-        Sorted unique note titles, or an empty list if the directory is missing.
-    """
-    dir_path = await resolve_under_root(directory)
-    if not await dir_path.is_dir():
-        return []
-
-    names: list[str] = []
-    async for entry in dir_path.iterdir():
-        if entry.suffix != ".md" or not await entry.is_file():
-            continue
-
-        text = await entry.read_text(encoding="utf-8")
-
-        if title := _note_title_from_markdown(text):
-            names.append(title)
-
-    return sorted({name.casefold(): name for name in names}.values(), key=str.casefold)
-
-
 async def _metadata_catalog_prompt() -> str:
-    """Build a user-prompt section listing existing vault entity names.
+    """Build a prompt section listing existing vault entity names.
 
     Returns:
-        Catalog lines for the metadata agent user prompt, or an empty string.
+        A newline-separated string of existing domains, resources, projects, and
+        people, or an empty string if no entities exist.
     """
-    domains, resources, people = await asyncio.gather(
-        _list_vault_entity_names(VAULT_PATHS.domains_dir),
-        _list_vault_entity_names(VAULT_PATHS.resources_dir),
-        _list_vault_entity_names(VAULT_PATHS.people_dir),
+    domains, resources, projects, people = await asyncio.gather(
+        VaultEntityService.list_entities(enums.VaultEntityKind.DOMAIN),
+        VaultEntityService.list_entities(enums.VaultEntityKind.RESOURCE),
+        VaultEntityService.list_entities(enums.VaultEntityKind.PROJECT),
+        VaultEntityService.list_entities(enums.VaultEntityKind.PERSON),
     )
 
     lines: list[str] = []
@@ -508,6 +578,12 @@ async def _metadata_catalog_prompt() -> str:
             + ", ".join(resources),
         )
 
+    if projects:
+        lines.append(
+            "Existing projects (prefer exact spelling when applicable): "
+            + ", ".join(projects),
+        )
+
     if people:
         lines.append(
             "Existing people (prefer exact spelling when applicable): "
@@ -515,13 +591,14 @@ async def _metadata_catalog_prompt() -> str:
         )
 
     if not lines:
-        logger.debug("Metadata catalog empty (no domain/resource/person notes)")
+        logger.debug("Metadata catalog empty (no domain/resource/project/person notes)")
         return ""
 
     logger.debug(
-        "Metadata catalog: domains={} resources={} people={}",
+        "Metadata catalog: domains={} resources={} projects={} people={}",
         len(domains),
         len(resources),
+        len(projects),
         len(people),
     )
     return "\n".join(lines)
@@ -546,13 +623,14 @@ def _dedupe_entity_names(names: list[str]) -> list[str]:
 def _normalize_domains_and_resources(
     domains: list[str],
     resources: list[str],
-) -> tuple[list[str], list[str]]:
+) -> None:
     """Dedupe lists and resolve cross-list duplicates in favour of resources.
 
     Integrations/APIs should not also appear as domains when the model assigns both.
 
-    Returns:
-        Normalized domain and resource name lists.
+    Args:
+        domains: Domain names to normalize in place.
+        resources: Resource names to normalize in place.
     """
     normalized_resources = _dedupe_entity_names(resources)
     resource_keys = {name.casefold() for name in normalized_resources}
@@ -568,20 +646,22 @@ def _normalize_domains_and_resources(
             "Metadata normalization removed domains also listed as resources: {}",
             removed_domains,
         )
-    return normalized_domains, normalized_resources
+    resources[:] = normalized_resources
+    domains[:] = normalized_domains
 
 
 def _log_task_metadata(metadata: TaskMetadata, *, context: str) -> None:
     """Log extracted task metadata fields at INFO."""
     logger.info(
         (
-            "Task metadata {}: title={!r} domains={} resources={} people={} "
+            "Task metadata {}: title={!r} domains={} resources={} projects={} people={} "
             "priority={} effort={} next_action_len={}"
         ),
         context,
         metadata.title,
         metadata.domains,
         metadata.resources,
+        metadata.projects,
         metadata.people,
         metadata.priority,
         metadata.effort,
@@ -594,15 +674,15 @@ async def _extract_metadata(
     title: str | None,
     priority: enums.Priority | None,
 ) -> TaskMetadata:
-    """Extract structured task metadata using PydanticAI.
+    """Extract structured metadata fields from a task description, with optional title and priority overrides.
 
     Args:
         description: Raw task description text.
-        title: Pre-supplied title (skips extraction if provided).
-        priority: Pre-supplied priority (skips extraction if provided).
+        title: Pre-supplied title to use unchanged; if provided, skips title extraction.
+        priority: Pre-supplied priority to use unchanged; if provided, skips priority extraction.
 
     Returns:
-        Extracted (or fallback) TaskMetadata.
+        TaskMetadata with extracted fields, or fallback defaults if extraction fails.
     """
     prompt_parts = [f"Task description: {description}"]
     catalog = await _metadata_catalog_prompt()
@@ -620,6 +700,7 @@ async def _extract_metadata(
         logger.debug("Metadata extraction priority override supplied: {}", priority)
 
     prompt = "\n".join(prompt_parts)
+
     logger.debug(
         "Metadata extraction prompt: description_len={} catalog_present={} prompt_len={}",
         len(description),
@@ -638,23 +719,36 @@ async def _extract_metadata(
             title=title or description[:60],
             domains=[],
             resources=[],
+            projects=[],
             people=[],
         )
         _log_task_metadata(fallback, context="fallback")
         return fallback
 
-    domains, resources = _normalize_domains_and_resources(
-        metadata.domains,
-        metadata.resources,
-    )
-    metadata = metadata.model_copy(update={"domains": domains, "resources": resources})
+    _normalize_domains_and_resources(metadata.domains, metadata.resources)
 
     if title:
-        metadata = metadata.model_copy(update={"title": title})
+        metadata.title = title
+
     if priority:
-        metadata = metadata.model_copy(update={"priority": priority})
+        metadata.priority = priority
+
     _log_task_metadata(metadata, context="final")
+
     return metadata
+
+
+def _entity_wikilinks(kind: enums.VaultEntityKind, names: list[str]) -> list[str]:
+    """Convert entity display names to Obsidian wikilinks for task frontmatter.
+
+    Args:
+        kind: Entity kind determining the vault subdirectory for each link.
+        names: Human-readable display names to convert.
+
+    Returns:
+        Wikilink strings in the same order as ``names``.
+    """
+    return [build_entity_wikilink(kind, name) for name in names]
 
 
 def _build_task_note(
@@ -672,8 +766,8 @@ def _build_task_note(
         title: Task title.
         now: Creation timestamp (local time).
         metadata: Extracted task metadata.
-        capture: Matched inbox capture, or None if unmatched.
-        description: Original description (used when no capture matched).
+        capture: Linked inbox entry, or None if the task was created directly.
+        description: Task description (used when no inbox entry is linked).
         due: Optional due date string (YYYY-MM-DD).
 
     Returns:
@@ -685,83 +779,78 @@ def _build_task_note(
         created=timestamp,
         updated=timestamp,
         source_capture=capture.id if capture else None,
-        domains=metadata.domains,
-        resources=metadata.resources,
-        people=metadata.people,
+        domains=_entity_wikilinks(enums.VaultEntityKind.DOMAIN, metadata.domains),
+        resources=_entity_wikilinks(enums.VaultEntityKind.RESOURCE, metadata.resources),
+        projects=_entity_wikilinks(enums.VaultEntityKind.PROJECT, metadata.projects),
+        people=_entity_wikilinks(enums.VaultEntityKind.PERSON, metadata.people),
         priority=metadata.priority,
         effort=metadata.effort,
         due=due,
     )
 
-    original = (capture.text if capture else description).strip()
+    description_text = (capture.text if capture else description).strip()
     blockquote = "\n".join(
-        f"> {line}" if line.strip() else ">" for line in (original.splitlines() or [""])
+        f"> {line}" if line.strip() else ">"
+        for line in (description_text.splitlines() or [""])
     )
 
     body = (
         f"# {title}\n\n"
-        f"## Original Capture\n\n{blockquote}\n\n"
+        f"## Description\n\n{blockquote}\n\n"
         f"## Next Action\n\n{metadata.next_action.strip()}\n\n"
         "## Notes\n\n"
-        "## Related\n\n"
-        f"## Activity Log\n\n### {now.strftime('%Y-%m-%d %H:%M')}\n\nTask created from voice capture.\n"
     )
-    return f"{fm.model_dump_yaml()}---\n{body}"
+    return f"---\n{fm.model_dump_yaml()}---\n{body}"
 
 
 async def _ensure_stub(
-    directory: anyio.Path,
     name: str,
-    note_type: str,
-    source_task_slug: str,
-    source_task_title: str,
+    note_type: Literal["domain", "person", "project", "resource"],
+    source_task_link: str,
 ) -> bool:
-    """Create a minimal stub note if it does not already exist.
+    """Create a vault entity note from template if it does not already exist.
 
     Args:
-        directory: Relative vault path for the note directory.
-        name: Human-readable name (used as heading and for slug generation).
+        name: Human-readable name (used as heading and for filename generation).
         note_type: Value for the ``type`` frontmatter field.
-        source_task_slug: Slug of the task that caused this stub to be created.
-        source_task_title: Human-readable title of the source task.
+        source_task_link: Canonical wikilink to the task that caused this stub.
 
     Returns:
         True if the note was created, False if it already existed.
-    """
-    slug = safe_slug(name)
-    path = await resolve_under_root(directory / f"{slug}.md")
 
-    if await path.exists():
-        logger.debug("Stub note already exists: {}/{}.md", directory, slug)
+    Raises:
+        ValueError: If ``note_type`` is not a supported stub type.
+    """
+    if note_type not in _STUB_NOTE_TYPES:
+        msg = f"Unsupported stub note type: {note_type!r}"
+        raise ValueError(msg)
+
+    kind = enums.VaultEntityKind(note_type)
+    if await VaultEntityService.resolve_entity_path(kind, name) is not None:
+        logger.debug("Stub note already exists: {} {}", note_type, name)
         return False
 
-    content = (
-        f"---\ntype: {note_type}\nstatus: active\n---\n\n"
-        f"# {name}\n\n## Notes\n\n"
-        "Created automatically from task intake for "
-        f"[[{source_task_slug}|{source_task_title}]].\n"
+    provenance_note = f"Created automatically from task intake for {source_task_link}."
+    _ = await VaultEntityService.create_entity(
+        kind,
+        name,
+        provenance_note=provenance_note,
     )
-    await atomic_write_text(path, content)
-
-    logger.info("Created stub note: {}/{}.md", directory, slug)
+    logger.info("Created stub note for {}: {}", note_type, name)
     return True
 
 
 async def _create_stubs(
     names: list[str],
-    directory: anyio.Path,
-    note_type: str,
-    source_task_slug: str,
-    source_task_title: str,
+    note_type: Literal["domain", "person", "project", "resource"],
+    source_task_link: str,
 ) -> list[str]:
     """Create stub notes for each name that doesn't exist.
 
     Args:
         names: Human-readable names to stub out.
-        directory: Relative vault path for the note directory.
         note_type: Value for the ``type`` frontmatter field.
-        source_task_slug: Slug of the task that caused these stubs to be created.
-        source_task_title: Human-readable title of the source task.
+        source_task_link: Canonical wikilink to the task that caused these stubs.
 
     Returns:
         Names of notes that were newly created.
@@ -772,11 +861,9 @@ async def _create_stubs(
     stubs_created = await asyncio.gather(
         *(
             _ensure_stub(
-                directory,
                 name,
                 note_type,
-                source_task_slug,
-                source_task_title,
+                source_task_link,
             )
             for name in names
         ),
@@ -797,18 +884,18 @@ async def _create_stubs(
     return created
 
 
-async def _annotate_capture(match: Capture, slug: str) -> None:
+async def _annotate_capture(match: Capture, task_link: str) -> None:
     """Best-effort: append a task back-link to the matched inbox capture.
 
     Args:
         match: The inbox capture to annotate.
-        slug: Task slug to link back to.
+        task_link: Canonical wikilink to the task note.
     """
     try:
         async with ObsidianService().idea_inbox() as inbox:
             section = inbox.get_section((match.date, match.time))
-            section.append_content(f"\n↗ [[{slug}]]")
-        logger.debug("Annotated inbox capture {} with task [[{}]]", match.id, slug)
+            section.append_content(f"\n↗ {task_link}")
+        logger.debug("Annotated inbox capture {} with task {}", match.id, task_link)
     except (ValueError, FileNotFoundError) as exc:
         logger.warning("Could not annotate inbox capture: {}", exc)
 
@@ -840,7 +927,11 @@ async def _select_task_capture(
 
 
 def _metadata_source(description: str, capture: Capture | None) -> str:
-    """Return the text used for metadata extraction and log the source choice."""
+    """Selects the text source for metadata extraction and logs the source choice.
+
+    Returns:
+        The selected text (from capture if available, otherwise from description).
+    """
     if capture is not None:
         logger.info(
             "Task metadata source: capture {} (description_len={} capture_len={})",
@@ -857,31 +948,77 @@ def _metadata_source(description: str, capture: Capture | None) -> str:
     return description
 
 
-async def _unique_task_slug(title: str) -> str:
-    """Return a task slug that does not collide with an existing task note."""
-    slug = base_slug = safe_slug(title)
+async def _unique_task_filename(title: str) -> tuple[str, str]:
+    """Generate a unique task filename stem and corresponding slug.
+
+    Returns:
+        A tuple of (stem, slug) where stem does not collide with existing task note files.
+    """
+    base_stem = note_filename(title)
+    slug = safe_slug(title)
+    stem = base_stem
     counter = 2
     while await (
-        await resolve_under_root(VAULT_PATHS.task_notes_dir / f"{slug}.md")
+        await resolve_under_root(VAULT_PATHS.task_notes_dir / f"{stem}.md")
     ).exists():
         logger.debug(
-            "Task slug collision: {} already exists, trying {}",
-            slug,
-            f"{base_slug}-{counter}",
+            "Task filename collision: {} already exists, trying {}",
+            stem,
+            f"{base_stem} {counter}",
         )
-        slug = f"{base_slug}-{counter}"
+        stem = f"{base_stem} {counter}"
         counter += 1
-    return slug
+    return stem, slug
+
+
+async def _resolve_task_reference(
+    task_ref: str,
+) -> tuple[AsyncPath, str] | None:
+    """Find a task note matching a reference, filename, or title.
+
+    Returns:
+        A tuple containing the vault-relative task note path and filename stem,
+        or ``None`` if no matching task is found.
+    """
+    tasks_dir = await resolve_under_root(VAULT_PATHS.task_notes_dir)
+
+    candidates = [
+        tasks_dir / f"{note_filename(task_ref)}.md",
+        tasks_dir / f"{safe_slug(task_ref)}.md",
+    ]
+    for candidate in candidates:
+        if await candidate.exists():
+            rel_path = VAULT_PATHS.task_notes_dir / candidate.name
+            return rel_path, candidate.stem
+
+    if not await tasks_dir.is_dir():
+        return None
+
+    target = task_ref.casefold()
+    async for entry in tasks_dir.iterdir():
+        if entry.suffix != ".md" or not await entry.is_file():
+            continue
+        if entry.stem.casefold() == target:
+            rel_path = VAULT_PATHS.task_notes_dir / entry.name
+            return rel_path, entry.stem
+
+        text = await entry.read_text(encoding="utf-8")
+        title = note_title_from_markdown(text)
+        if title is not None and title.casefold() == target:
+            rel_path = VAULT_PATHS.task_notes_dir / entry.name
+            return rel_path, entry.stem
+
+    return None
 
 
 async def _create_task_note(
     *,
-    slug: str,
+    filename_stem: str,
     metadata: TaskMetadata,
     capture: Capture | None,
     description: str,
     due: str | None,
-) -> anyio.Path:
+) -> AsyncPath:
     """Create the markdown task note for a new task.
 
     Returns:
@@ -896,7 +1033,7 @@ async def _create_task_note(
         due=due,
     )
 
-    path_in_vault = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+    path_in_vault = VAULT_PATHS.task_notes_dir / f"{filename_stem}.md"
     task_path = await resolve_under_root(path_in_vault)
 
     await atomic_write_text(task_path, note_content)
@@ -907,41 +1044,40 @@ async def _create_task_note(
 
 async def _create_linked_stubs(
     metadata: TaskMetadata,
-    slug: str,
-) -> tuple[list[str], list[str], list[str]]:
-    """Create domain, resource, and people stub notes for task metadata.
+    source_task_link: str,
+) -> tuple[list[str], list[str], list[str], list[str]]:
+    """Creates stub notes for domains, resources, projects, and people from task metadata.
 
     Returns:
-        Created domain, resource, and people names.
+        A tuple of four lists containing newly created domain, resource, project, and people names, respectively.
     """
     return await asyncio.gather(
         _create_stubs(
             metadata.domains,
-            VAULT_PATHS.domains_dir,
             "domain",
-            slug,
-            metadata.title,
+            source_task_link,
         ),
         _create_stubs(
             metadata.resources,
-            VAULT_PATHS.resources_dir,
             "resource",
-            slug,
-            metadata.title,
+            source_task_link,
+        ),
+        _create_stubs(
+            metadata.projects,
+            "project",
+            source_task_link,
         ),
         _create_stubs(
             metadata.people,
-            VAULT_PATHS.people_dir,
             "person",
-            slug,
-            metadata.title,
+            source_task_link,
         ),
     )
 
 
 @final
 class TaskService:
-    """Service for creating structured task notes from voice captures."""
+    """Service for creating structured task notes."""
 
     @staticmethod
     async def create_task(
@@ -951,18 +1087,22 @@ class TaskService:
         priority: enums.Priority | None = None,
         link_capture_id: str | None = None,
     ) -> CreateTaskResult:
-        """Create a task note, update the Kanban board, and stub missing domain/resource notes.
+        """Create a task note from a description and return its vault details.
 
-        Args:
-            description: Natural-language task description.
-            title: Task title. Inferred via LLM if omitted.
-            due: Due date in YYYY-MM-DD format.
-            priority: Priority override: 'low', 'medium', or 'high'.
-            link_capture_id: Explicit capture ID to link when the user has
-                confirmed a prior inbox capture.
+        Also returns linked capture information and any created entity stubs.
+
+        Parameters:
+            description (str): Natural-language task description.
+            title (str | None): Task title. Inferred via LLM if omitted.
+            due (str | None): Due date in YYYY-MM-DD format.
+            priority (enums.Priority | None): Priority override (low, medium, or high).
+            link_capture_id (str | None): Exact capture ID to link when a specific inbox entry has been confirmed.
 
         Returns:
-            Structured outcome including slug, paths, capture matching, and stubs created.
+            CreateTaskResult: Task metadata and vault details including the note path,
+                slug, title, vault note metadata, optional linked capture ID,
+                candidate captures for manual linking, and lists of newly created
+                domain, resource, project, and person entity stubs.
         """
         capture_selection = await _select_task_capture(description, link_capture_id)
         metadata = await _extract_metadata(
@@ -970,35 +1110,47 @@ class TaskService:
             title,
             priority,
         )
-        slug = await _unique_task_slug(metadata.title)
+        filename_stem, slug = await _unique_task_filename(metadata.title)
 
         note_path = await _create_task_note(
-            slug=slug,
+            filename_stem=filename_stem,
             metadata=metadata,
             capture=capture_selection.matched,
             description=description,
             due=due,
         )
-        board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
-        await append_board_card(board_path, slug)
-
-        domains_created, resources_created, people_created = await _create_linked_stubs(
-            metadata,
-            slug,
+        note_metadata = build_vault_note_metadata(
+            kind="task",
+            title=metadata.title,
+            path=note_path,
         )
+        board_path = await resolve_under_root(VAULT_PATHS.task_board_path)
+        await append_board_card(board_path, note_path)
+
+        (
+            domains_created,
+            resources_created,
+            projects_created,
+            people_created,
+        ) = await _create_linked_stubs(metadata, note_metadata.canonical_link)
 
         if capture_selection.matched is not None:
-            await _annotate_capture(capture_selection.matched, slug)
+            await _annotate_capture(
+                capture_selection.matched,
+                note_metadata.canonical_link,
+            )
 
         logger.info(
             (
                 "Task intake complete: slug={} matched_capture_id={} "
-                "domains_created={} resources_created={} people_created={}"
+                "domains_created={} resources_created={} projects_created={} "
+                "people_created={}"
             ),
             slug,
             capture_selection.matched.id if capture_selection.matched else None,
             domains_created,
             resources_created,
+            projects_created,
             people_created,
         )
 
@@ -1006,6 +1158,7 @@ class TaskService:
             slug=slug,
             path=note_path,
             title=metadata.title,
+            metadata=note_metadata,
             matched_capture_id=(
                 capture_selection.matched.id if capture_selection.matched else None
             ),
@@ -1014,6 +1167,7 @@ class TaskService:
             ],
             domains_created=domains_created,
             resources_created=resources_created,
+            projects_created=projects_created,
             people_created=people_created,
         )
 
@@ -1040,15 +1194,27 @@ class TaskService:
                 f"Capture {capture_id} was not found; task {task_slug} was not changed."
             )
 
-        slug = safe_slug(task_slug)
-        task_path = VAULT_PATHS.task_notes_dir / f"{slug}.md"
+        resolved = await _resolve_task_reference(task_slug)
+        if resolved is None:
+            logger.warning(
+                "Task {} not found while linking capture {}",
+                task_slug,
+                capture_id,
+            )
+            return f"Task {task_slug} was not found; capture {capture_id} was not linked."
+
+        task_path, _link_target = resolved
         try:
             async with MarkdownDocument(vault_path=task_path) as task:
                 task.frontmatter["source_capture"] = capture.id
         except FileNotFoundError:
-            logger.warning("Task {} not found while linking capture {}", slug, capture_id)
-            return f"Task {slug} was not found; capture {capture_id} was not linked."
+            logger.warning(
+                "Task {} not found while linking capture {}",
+                task_path,
+                capture_id,
+            )
+            return f"Task {task_path} was not found; capture {capture_id} was not linked."
 
-        await _annotate_capture(capture, slug)
-        logger.info("Linked task {} to capture {}", slug, capture_id)
-        return f"Task {slug} linked to capture {capture_id}."
+        await _annotate_capture(capture, build_obsidian_link(task_path))
+        logger.info("Linked task {} to capture {}", task_path, capture_id)
+        return f"Task {obsidian_link_target_from_path(str(task_path))} linked to capture {capture_id}."

@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt  # noqa: TC003
 import json
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Final, cast, final
+from typing import TYPE_CHECKING, ClassVar, Final, cast, final
+
+from loguru import logger
 
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
+    AsyncPath,
     MarkdownDocument,
+    exc,
+    resolve_under_root,
     substitute_obsidian_core_date_variables,
     today,
 )
@@ -18,10 +24,14 @@ from backplane.utils import (
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
+_OBSIDIAN_CONFIG_DIR: Final = ".obsidian"
+
 
 @final
 class ObsidianService:
     """Service for interacting with the Obsidian vault."""
+
+    _move_note_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     IDEA_INBOX_PATH: Final = VAULT_PATHS.inbox_dir / "Ideas.md"
 
@@ -104,16 +114,101 @@ class ObsidianService:
         *,
         read_only: bool = False,
     ) -> AsyncGenerator[MarkdownDocument]:
-        """Open the idea inbox for editing, flushing on successful exit.
+        """Provide access to the idea inbox document for reading or editing.
 
-        Args:
-            read_only: When true, require file content unchanged on exit.
+        Parameters:
+            read_only: If `True`, open the document in read-only mode.
 
         Yields:
-            Loaded markdown document for the idea inbox.
+            The loaded markdown document for the idea inbox.
         """
         async with MarkdownDocument(
             vault_path=self.IDEA_INBOX_PATH,
             read_only=read_only,
         ) as idea_inbox:
             yield idea_inbox
+
+    @staticmethod
+    def _validate_vault_note_path(path: AsyncPath) -> AsyncPath:
+        """Validate a vault-relative markdown note path.
+
+        Args:
+            path: Path relative to the vault root.
+
+        Returns:
+            The validated path.
+
+        Raises:
+            UserError: If the path is empty, not a markdown file, or under `.obsidian/`.
+        """
+        if not path.parts:
+            msg = "Note path must not be empty."
+            raise exc.UserError(message=msg)
+
+        if path.suffix != ".md":
+            msg = f"Note path must be a markdown file ending in .md: {path!s}"
+            raise exc.UserError(message=msg)
+
+        if path.parts[0] == _OBSIDIAN_CONFIG_DIR:
+            msg = f"Paths under .obsidian/ are not allowed: {path!s}"
+            raise exc.UserError(message=msg)
+
+        return path
+
+    @staticmethod
+    async def move_note(
+        source_path: AsyncPath,
+        destination_path: AsyncPath,
+    ) -> AsyncPath:
+        """Move a vault note to a new vault-relative path.
+
+        Creates missing destination parent directories. Removes the source note's
+        immediate parent directory when it becomes empty after the move.
+
+        Args:
+            source_path: Vault-relative path to the note to move.
+            destination_path: Vault-relative destination path for the note.
+
+        Returns:
+            Vault-relative path to the moved note.
+
+        Raises:
+            UserError: If either path is invalid or escapes the vault.
+            NotFoundError: If the source note does not exist.
+            ConflictError: If the destination note already exists.
+        """
+        source_rel = ObsidianService._validate_vault_note_path(source_path)
+        destination_rel = ObsidianService._validate_vault_note_path(destination_path)
+
+        try:
+            source_abs = await resolve_under_root(source_rel)
+            destination_abs = await resolve_under_root(destination_rel)
+        except ValueError as err:
+            raise exc.UserError(message=str(err)) from err
+
+        if not await source_abs.is_file():
+            msg = f"Note not found: {source_rel!s}"
+            raise exc.NotFoundError(message=msg)
+
+        source_parent = source_abs.parent
+        vault_root = await SETTINGS.obsidian_vault_path.resolve()
+
+        async with ObsidianService._move_note_lock:
+            if await destination_abs.exists():
+                msg = f"Destination already exists: {destination_rel!s}"
+                raise exc.ConflictError(message=msg)
+
+            await destination_abs.parent.mkdir(parents=True, exist_ok=True)
+            _ = await source_abs.rename(destination_abs)
+
+        if source_parent != vault_root and await source_parent.is_dir():
+            empty = True
+            async for _ in source_parent.iterdir():
+                empty = False
+                break
+            if empty:
+                await source_parent.rmdir()
+                logger.debug("Removed empty directory after move: {}", source_parent)
+
+        logger.info("Moved note from {} to {}", source_rel, destination_rel)
+        return AsyncPath(*destination_rel.parts)

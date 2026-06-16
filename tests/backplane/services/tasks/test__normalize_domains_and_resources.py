@@ -12,20 +12,18 @@ if TYPE_CHECKING:
 
 def test__normalize_domains_and_resources_dedupes_within_lists() -> None:
     """Duplicate names in one list are collapsed case-insensitively."""
-    domains, resources = _normalize_domains_and_resources(
-        ["Automation", "automation"],
-        ["MQTT", "mqtt"],
-    )
+    domains = ["Automation", "automation"]
+    resources = ["MQTT", "mqtt"]
+    _normalize_domains_and_resources(domains, resources)
     assert domains == ["Automation"]
     assert resources == ["MQTT"]
 
 
 def test__normalize_domains_and_resources_prefers_resources_on_overlap() -> None:
     """The same name cannot appear as both domain and resource."""
-    domains, resources = _normalize_domains_and_resources(
-        ["Acme API", "Home Assistant"],
-        ["Acme API"],
-    )
+    domains = ["Acme API", "Home Assistant"]
+    resources = ["Acme API"]
+    _normalize_domains_and_resources(domains, resources)
     assert domains == ["Home Assistant"]
     assert resources == ["Acme API"]
 

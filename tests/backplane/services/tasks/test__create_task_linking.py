@@ -13,12 +13,13 @@ from backplane.services.tasks import (
 from backplane.utils import VAULT_PATHS, enums, today
 
 if TYPE_CHECKING:
-    import anyio
     from pytest_mock import MockerFixture
+
+    from backplane.utils.async_path import AsyncPath
 
 
 async def test__create_task_uses_explicit_capture_link(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """An explicit capture ID links the task without fuzzy matching."""
@@ -42,6 +43,7 @@ async def test__create_task_uses_explicit_capture_link(
         title="Review backup logs",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -60,12 +62,12 @@ async def test__create_task_uses_explicit_capture_link(
 
     assert result.matched_capture_id == f"{capture_date}T09:15"
     assert result.candidate_captures == []
-    mock_extract.assert_awaited_once_with(capture_text, None, None)
+    _ = mock_extract.assert_awaited_once_with(capture_text, None, None)
     mock_find_match.assert_not_called()
 
 
 async def test__create_task_unknown_explicit_capture_link_creates_unlinked_task(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """An unknown explicit capture ID does not block task creation."""
@@ -87,6 +89,7 @@ Rotate the hallway camera battery.
         title="Review backup logs",
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -107,7 +110,7 @@ Rotate the hallway camera battery.
 
 
 async def test__create_task_returns_candidates_without_blocking(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """Borderline capture matches are returned while the task is still created."""
@@ -134,6 +137,7 @@ Track LLM usage and cost in Home Assistant.
         title="Update rain alert notification",
         domains=["Home Assistant"],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,

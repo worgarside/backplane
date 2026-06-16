@@ -25,10 +25,12 @@ dependencies = [
     "rapidfuzz>=3.0",
     "uvicorn>=0.46.0",
     "uvloop>=0.22.1",
+    "mdformat-wikilink>=0.3.0",
 ]
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.39.7",
     "diff-cover>=10.2.0",
     "pytest>=8.0",
     "pytest-asyncio>=0.25",
@@ -100,7 +102,7 @@ max-branches = 15
 max-public-methods = 150
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108", "S104", "TC002"]
+"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108", "S104", "TC002", "SLF001"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 import datetime as dt
 
 from backplane.services.tasks import (
@@ -14,7 +15,7 @@ from backplane.utils import VAULT_PATHS, enums
 
 
 def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
-    """Priority and effort enums are rendered as plain YAML scalars."""
+    """Verify that enum frontmatter fields and wiki link references render correctly in task notes."""
     capture = Capture(
         id="2026-05-25T21:15",
         date="2026-05-25",
@@ -26,6 +27,7 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
         title="Review backup logs",
         domains=["Infrastructure"],
         resources=["Backups"],
+        projects=["Backup Hardening"],
         people=[],
         priority=enums.Priority.HIGH,
         effort=enums.Effort.SMALL,
@@ -43,6 +45,9 @@ def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
 
     assert "priority: high\n" in note
     assert "effort: small\n" in note
+    assert "- '[[Domains/Infrastructure|Infrastructure]]'\n" in note
+    assert "- '[[Resources/Backups|Backups]]'\n" in note
+    assert "- '[[Projects/Backup Hardening|Backup Hardening]]'\n" in note
     assert "source_capture: 2026-05-25T21:15\n" in note
     assert "> Review backup logs\n" in note
 
@@ -56,6 +61,7 @@ def test__task_frontmatter_defaults_fixed_task_fields() -> None:
         source_capture=None,
         domains=[],
         resources=[],
+        projects=[],
         people=[],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.SMALL,
@@ -68,10 +74,10 @@ def test__task_frontmatter_defaults_fixed_task_fields() -> None:
         "status": "backlog",
         "created": "2026-05-25T21:30:00",
         "updated": "2026-05-25T21:30:00",
-        "source": "voice-capture",
         "source_capture": None,
         "domains": [],
         "resources": [],
+        "projects": [],
         "people": [],
         "priority": enums.Priority.MEDIUM,
         "effort": enums.Effort.SMALL,

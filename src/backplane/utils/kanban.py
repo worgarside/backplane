@@ -11,21 +11,31 @@ from loguru import logger
 
 from .exceptions import SectionNotFoundError
 from .helpers.files import atomic_write_text
+from .helpers.obsidian import build_obsidian_link
 from .settings import SETTINGS
 
 if TYPE_CHECKING:
-    import anyio
+    from .async_path import AsyncPath
 
 _NEXT_SECTION_RE: Final = re.compile(r"^## ", re.MULTILINE)
 
 
-def _format_card_line(slug: str, *, due: dt.date | dt.datetime | None = None) -> str:
-    """Build a single Obsidian Kanban task line for ``slug``.
+def _format_card_line(
+    note_path: AsyncPath,
+    *,
+    due: dt.date | dt.datetime | None = None,
+) -> str:
+    """Build a markdown Kanban task line with a wiki link and optional due metadata.
+
+    Parameters:
+        due (date | datetime | None): Optional due date or datetime.
+            Timezone-aware datetimes are converted to local time. Dates format as
+            `@{YYYY-MM-DD}`; datetimes add time as `@@{HH:MM}`.
 
     Returns:
-        A markdown task line, optionally including ``@{…}`` due metadata.
+        str: A markdown checkbox line with the note link and optional due metadata.
     """
-    line = f"- [ ] [[{slug}]]"
+    line = f"- [ ] {build_obsidian_link(note_path)}"
     if due is None:
         return line
 
@@ -46,7 +56,7 @@ def _section_heading_re(section: str) -> re.Pattern[str]:
 
 def add_card_to_list(
     text: str,
-    slug: str,
+    note_path: AsyncPath,
     section: str,
     *,
     due: dt.date | dt.datetime | None = None,
@@ -55,7 +65,7 @@ def add_card_to_list(
 
     Args:
         text: Full board markdown contents.
-        slug: Task slug used as the wiki-link target.
+        note_path: Vault-relative path to the note (e.g. ``Projects/Foo.md``).
         section: Heading text after ``##`` (e.g. ``Backlog``, ``Todo``).
         due: Optional due date or datetime rendered as Obsidian Kanban ``@{…}`` metadata.
 
@@ -68,7 +78,7 @@ def add_card_to_list(
     if (match := _section_heading_re(section).search(text)) is None:
         raise SectionNotFoundError(section)
 
-    card_line = _format_card_line(slug, due=due)
+    card_line = _format_card_line(note_path, due=due)
     after_header = text[match.end() :]
 
     if (next_section := _NEXT_SECTION_RE.search(after_header)) is None:
@@ -82,8 +92,8 @@ def add_card_to_list(
 
 
 async def append_board_card(
-    board_path: anyio.Path,
-    slug: str,
+    board_path: AsyncPath,
+    note_path: AsyncPath,
     *,
     section: str = "Backlog",
     due: dt.date | dt.datetime | None = None,
@@ -91,17 +101,17 @@ async def append_board_card(
     """Append a Kanban card at the end of a board column section.
 
     Args:
-        board_path: Absolute path to Tasks/Board.md.
-        slug: Task slug used as the wiki-link target.
+        board_path: Absolute path to a vault Kanban board markdown file.
+        note_path: Vault-relative path to the note (e.g. ``Projects/Foo.md``).
         section: Heading text after ``##`` (e.g. ``Backlog``, ``Todo``).
         due: Optional due date or datetime rendered as Obsidian Kanban ``@{…}`` metadata.
     """
     text = await board_path.read_text(encoding="utf-8")
-    new_text = add_card_to_list(text, slug, section, due=due)
+    new_text = add_card_to_list(text, note_path, section, due=due)
     await atomic_write_text(board_path, new_text)
     logger.info(
-        "Appended Kanban card: board={} section={} slug={}",
+        "Appended Kanban card: board={} section={} note_path={}",
         board_path,
         section,
-        slug,
+        note_path,
     )

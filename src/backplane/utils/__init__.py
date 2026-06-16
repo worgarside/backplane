@@ -3,12 +3,20 @@
 from __future__ import annotations
 
 from . import exceptions as exc
+from .async_path import AsyncPath
 from .helpers import (
+    VaultNoteMetadata,
     atomic_write_text,
+    build_entity_wikilink,
+    build_obsidian_link,
+    build_vault_note_metadata,
     format_human_date,
+    note_filename,
+    obsidian_link_target_from_path,
     resolve_under_root,
     safe_slug,
     substitute_obsidian_core_date_variables,
+    substitute_vault_entity_template,
     today,
 )
 from .kanban import append_board_card
@@ -20,13 +28,21 @@ __all__ = [
     "SETTINGS",
     "VAULT_PATHS",
     "YAML_LOADER",
+    "AsyncPath",
     "MarkdownDocument",
+    "VaultNoteMetadata",
     "append_board_card",
     "atomic_write_text",
+    "build_entity_wikilink",
+    "build_obsidian_link",
+    "build_vault_note_metadata",
     "exc",
     "format_human_date",
+    "note_filename",
+    "obsidian_link_target_from_path",
     "resolve_under_root",
     "safe_slug",
     "substitute_obsidian_core_date_variables",
+    "substitute_vault_entity_template",
     "today",
 ]

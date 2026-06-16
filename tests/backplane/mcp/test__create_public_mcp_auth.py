@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import anyio
 import pytest
 
 from backplane.mcp.auth import (
@@ -14,10 +13,13 @@ from backplane.mcp.auth import (
     oauth_tool_meta,
     oauth_tool_registration_kwargs,
 )
+from backplane.utils.async_path import AsyncPath
 from backplane.utils.exceptions import UserError
 from backplane.utils.settings import Settings
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pytest_mock import MockerFixture
 
 _TEST_OAUTH_CREDENTIAL = "test-oauth-credential"
@@ -25,9 +27,10 @@ _TEST_OAUTH_CREDENTIAL = "test-oauth-credential"
 
 def test__create_public_mcp_auth__raises_when_oauth_is_not_configured(
     mocker: MockerFixture,
+    tmp_path: Path,
 ) -> None:
     """The public MCP auth factory refuses to start without OAuth env vars."""
-    settings = Settings(obsidian_vault_path=anyio.Path("/tmp/vault"))
+    settings = Settings(obsidian_vault_path=AsyncPath(tmp_path))
     mocker.patch("backplane.mcp.auth.SETTINGS", settings)
 
     with pytest.raises(UserError, match="Public MCP requires OAuth"):

@@ -5,11 +5,11 @@ from __future__ import annotations
 import zoneinfo
 from typing import Annotated, Final, final
 
-import anyio
 import yarl
 from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
 
+from .async_path import AsyncPath
 from .exceptions import UserError
 
 
@@ -98,16 +98,21 @@ class Settings(BaseSettings):
     # Obsidian
 
     obsidian_vault_path: Annotated[
-        anyio.Path,
+        AsyncPath,
         Field(description="Absolute path to the Obsidian vault directory."),
     ]
 
     @field_validator("obsidian_vault_path", mode="before")
     @classmethod
-    def _parse_obsidian_vault_path(cls, v: anyio.Path | str) -> anyio.Path:
-        if isinstance(v, anyio.Path):
+    def _parse_obsidian_vault_path(cls, v: AsyncPath | str) -> AsyncPath:
+        """Coerce a value to an AsyncPath.
+
+        Returns:
+                AsyncPath: The value as an AsyncPath.
+        """
+        if isinstance(v, AsyncPath):
             return v
-        return anyio.Path(v)
+        return AsyncPath(v)
 
     # ========================================================================
     # Public MCP OAuth (Authentik via FastMCP OIDCProxy)
@@ -202,14 +207,24 @@ class Settings(BaseSettings):
 class VaultPaths:
     """Stable relative paths within the Obsidian vault."""
 
-    daily_notes_dir: Final = anyio.Path("Daily Notes")
-    domains_dir: Final = anyio.Path("Domains")
-    inbox_dir: Final = anyio.Path("Inbox")
-    people_dir: Final = anyio.Path("People")
-    resources_dir: Final = anyio.Path("Resources")
-    tasks_dir: Final = anyio.Path("Tasks")
-    task_notes_dir: Final = anyio.Path("Tasks") / "Tasks"
-    task_board_path: Final = anyio.Path("Tasks") / "Board.md"
+    daily_notes_dir: Final = AsyncPath("Daily Notes")
+
+    domains_dir: Final = AsyncPath("Domains")
+
+    inbox_dir: Final = AsyncPath("Inbox")
+
+    people_dir: Final = AsyncPath("People")
+
+    projects_dir: Final = AsyncPath("Projects")
+    project_board_path: Final = projects_dir / "Projects Board.md"
+
+    resources_dir: Final = AsyncPath("Resources")
+
+    templates_dir: Final = AsyncPath("Templates")
+
+    tasks_dir: Final = AsyncPath("Tasks")
+    task_notes_dir: Final = tasks_dir / "Tasks"
+    task_board_path: Final = tasks_dir / "Tasks Board.md"
 
 
 SETTINGS: Final = Settings()  # pyright: ignore[reportCallIssue]

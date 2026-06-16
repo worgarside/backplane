@@ -11,13 +11,14 @@ from backplane.services.tasks import TaskMetadata, TaskService
 from backplane.utils import VAULT_PATHS, enums, today
 
 if TYPE_CHECKING:
-    import anyio
     from pytest_mock import MockerFixture
+
+    from backplane.utils.async_path import AsyncPath
 
 
 @pytest.mark.anyio
 async def test__create_task_uses_matched_capture_text_for_metadata(
-    obsidian_vault: anyio.Path,
+    obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
     """Metadata extraction should use the inbox capture text, not the short query."""
@@ -45,6 +46,7 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
         title="Stub",
         domains=[],
         resources=[],
+        projects=[],
         people=["Jordan"],
         priority=enums.Priority.MEDIUM,
         effort=enums.Effort.MEDIUM,
@@ -57,4 +59,4 @@ async def test__create_task_uses_matched_capture_text_for_metadata(
 
     _ = await TaskService.create_task("calendar dashboard")
 
-    extract.assert_awaited_once_with(capture_text, None, None)
+    _ = extract.assert_awaited_once_with(capture_text, None, None)

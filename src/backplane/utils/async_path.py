@@ -23,32 +23,30 @@ class AsyncPath(anyio.Path):
         source_type: object,
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
-        """
-        Register Pydantic validation and serialization for ``AsyncPath``.
-        
+        """Register Pydantic validation and serialization for ``AsyncPath``.
+
         Accepts ``AsyncPath``, ``anyio.Path``, ``pathlib.Path``, ``pathlib.PurePath``,
         or strings. Serializes to a posix string for JSON and ``model_dump()``.
-        
+
         Args:
             source_type: Annotated or generic source type Pydantic is resolving.
             handler: Callback to delegate schema generation for nested types.
-        
+
         Returns:
             Core schema validating path-like inputs and dumping posix strings.
         """
 
         def validate(value: object) -> AsyncPath:
-            """
-            Convert the given value to an AsyncPath instance.
-            
+            """Convert the given value to an AsyncPath instance.
+
             Parameters:
-            	value: A path value to convert (AsyncPath, anyio.Path, str, or pathlib.PurePath).
-            
+                value: A path value to convert (AsyncPath, anyio.Path, str, or pathlib.PurePath).
+
             Returns:
-            	An AsyncPath instance.
-            
+                An AsyncPath instance.
+
             Raises:
-            	TypeError: If value is not a supported path type.
+                TypeError: If value is not a supported path type.
             """
             if isinstance(value, cls):
                 return value
@@ -63,9 +61,8 @@ class AsyncPath(anyio.Path):
             raise TypeError(msg)
 
         def serialize_path(path: AsyncPath) -> str:
-            """
-            Serialize an AsyncPath to a POSIX-formatted string.
-            
+            """Serialize an AsyncPath to a POSIX-formatted string.
+
             Returns:
                 The path as a POSIX string.
             """
@@ -91,12 +88,11 @@ class AsyncPath(anyio.Path):
 
     @override
     def __truediv__(self, other: str | PathLike[str]) -> AsyncPath:
-        """
-        Join this path with another path component.
-        
+        """Join this path with another path component.
+
         Parameters:
             other: The path or string to append.
-        
+
         Returns:
             The joined path.
         """
@@ -104,9 +100,8 @@ class AsyncPath(anyio.Path):
 
     @override
     def __rtruediv__(self, other: str | PathLike[str]) -> AsyncPath:
-        """
-        Enables reversed path joining using the `/` operator.
-        
+        """Enables reversed path joining using the `/` operator.
+
         Returns:
             AsyncPath: The joined path.
         """

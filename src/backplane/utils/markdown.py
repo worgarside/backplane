@@ -130,16 +130,15 @@ def _extract_headings(
 
 
 def _render_text(text: str) -> str:
-    """
-    Normalize raw markdown into a canonical form.
-    
+    """Normalize raw markdown into a canonical form.
+
     Preserves the formatting of YAML frontmatter while standardizing body formatting,
     enabling equivalent documents to compare equal regardless of whitespace
     differences.
-    
+
     Args:
         text: Raw markdown source, optionally including YAML frontmatter.
-    
+
     Returns:
         The normalized markdown string.
     """
@@ -284,9 +283,8 @@ class MarkdownDocument(BaseModel):
     @computed_field
     @property
     def body(self) -> list[MarkdownSection]:
-        """
-        The top-level sections of the parsed document.
-        
+        """The top-level sections of the parsed document.
+
         Returns:
             list[MarkdownSection]: The document's root-level sections.
         """
@@ -294,11 +292,10 @@ class MarkdownDocument(BaseModel):
 
     @property
     def _async_file_path(self) -> AsyncPath:
-        """
-        Compute the full absolute path to the markdown file in the vault.
-        
+        """Compute the full absolute path to the markdown file in the vault.
+
         Returns:
-        	The full path obtained by joining the vault root path with the relative vault path.
+                The full path obtained by joining the vault root path with the relative vault path.
         """
         return SETTINGS.obsidian_vault_path / self.vault_path
 
@@ -478,9 +475,8 @@ class MarkdownDocument(BaseModel):
             yield from section.iter_sections()
 
     def render(self) -> str:
-        """
-        Render the document as a normalized markdown string.
-        
+        """Render the document as a normalized markdown string.
+
         Returns:
             The full markdown document including frontmatter (if any) and body.
         """

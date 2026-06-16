@@ -114,12 +114,11 @@ class ObsidianService:
         *,
         read_only: bool = False,
     ) -> AsyncGenerator[MarkdownDocument]:
-        """
-        Provide access to the idea inbox document for reading or editing.
-        
+        """Provide access to the idea inbox document for reading or editing.
+
         Parameters:
             read_only: If `True`, open the document in read-only mode.
-        
+
         Yields:
             The loaded markdown document for the idea inbox.
         """
@@ -131,15 +130,14 @@ class ObsidianService:
 
     @staticmethod
     def _validate_vault_note_path(path: AsyncPath) -> AsyncPath:
-        """
-        Validate a vault-relative markdown note path.
-        
+        """Validate a vault-relative markdown note path.
+
         Args:
             path: Path relative to the vault root.
-        
+
         Returns:
             The validated path.
-        
+
         Raises:
             UserError: If the path is empty, not a markdown file, or under `.obsidian/`.
         """

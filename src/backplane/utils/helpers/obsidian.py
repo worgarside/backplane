@@ -63,11 +63,10 @@ class VaultNoteMetadata(BaseModel, frozen=True):
 
 
 def note_filename(title: str) -> str:
-    """
-    Convert a display title into a filesystem-safe, human-readable filename stem.
-    
+    """Convert a display title into a filesystem-safe, human-readable filename stem.
+
     Removes characters that are invalid on filesystems and normalizes whitespace. If the result is empty, returns "Untitled".
-    
+
     Returns:
         str: The sanitized filename stem.
     """
@@ -78,11 +77,10 @@ def note_filename(title: str) -> str:
 
 
 def obsidian_link_target_from_path(path: str) -> str:
-    """
-    Derive the wikilink target display stem from a vault-relative path.
-    
+    """Derive the wikilink target display stem from a vault-relative path.
+
     Returns:
-    	The filename from the last path component, with `.md` extension removed if present.
+        The filename from the last path component, with `.md` extension removed if present.
     """
     stem = path.rsplit("/", maxsplit=1)[-1]
 
@@ -146,13 +144,12 @@ def build_obsidian_link(
 
 
 def build_entity_wikilink(kind: VaultEntityKind, name: str) -> str:
-    """
-    Build a wikilink to an entity note.
-    
+    """Build a wikilink to an entity note.
+
     Parameters:
         kind: Entity kind determining the vault subdirectory (domain, person, project, or resource).
         name: Human-readable display name used as the link alias.
-    
+
     Returns:
         Obsidian wikilink string targeting the entity's note.
     """
@@ -168,16 +165,15 @@ def build_vault_note_metadata(
     title: str,
     path: AsyncPath,
 ) -> VaultNoteMetadata:
-    """
-    Create vault note metadata for a given title and vault-relative path.
-    
+    """Create vault note metadata for a given title and vault-relative path.
+
     Parameters:
-    	kind: The kind of vault note (entity kind or "task").
-    	title: The note's human-readable title.
-    	path: The vault-relative path to the note file.
-    
+        kind: The kind of vault note (entity kind or "task").
+        title: The note's human-readable title.
+        path: The vault-relative path to the note file.
+
     Returns:
-    	A VaultNoteMetadata object with the specified kind, title, path, slug, and canonical link.
+        A VaultNoteMetadata object with the specified kind, title, path, slug, and canonical link.
     """
     canonical_link = build_obsidian_link(path)
 

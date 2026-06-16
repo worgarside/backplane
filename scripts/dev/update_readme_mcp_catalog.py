@@ -12,9 +12,8 @@ FIXTURE_VAULT = REPO_ROOT / "scripts" / "fixtures" / "readme-vault"
 
 
 def main() -> int:
-    """
-    Regenerate the MCP catalog section in README.md.
-    
+    """Regenerate the MCP catalog section in README.md.
+
     Returns:
         1 if README.md was changed, 0 if it was already up to date.
     """

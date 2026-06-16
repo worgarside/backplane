@@ -13,9 +13,7 @@ from backplane.utils.helpers.files import atomic_write_text
 
 
 async def test__list_entities_returns_sorted_titles(obsidian_vault: AsyncPath) -> None:
-    """
-    Verify that entity titles are extracted from H1 headings in markdown files and returned in sorted order.
-    """
+    """Verify that entity titles are extracted from H1 headings in markdown files and returned in sorted order."""
     domains = obsidian_vault / "Domains"
     await domains.mkdir(parents=True)
     await atomic_write_text(

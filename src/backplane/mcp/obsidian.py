@@ -183,9 +183,8 @@ async def record_idea(
         ),
     ],
 ) -> str:
-    """
-    Record a new idea in the Obsidian idea inbox.
-    
+    """Record a new idea in the Obsidian idea inbox.
+
     Returns:
         The string "Idea recorded successfully."
     """
@@ -210,9 +209,8 @@ async def move_note(
         Field(description="New vault-relative note path."),
     ],
 ) -> str:
-    """
-    Move a vault note to a new location.
-    
+    """Move a vault note to a new location.
+
     Returns:
         str: Confirmation message including the destination path.
     """
@@ -241,9 +239,8 @@ async def daily_note_by_date_resource(
         Field(description="Daily note date in YYYY-MM-DD."),
     ],
 ) -> str:
-    """
-    Fetch the daily note for a given date.
-    
+    """Fetch the daily note for a given date.
+
     Returns:
         The daily note content as rendered markdown.
     """
@@ -252,11 +249,10 @@ async def daily_note_by_date_resource(
 
 
 def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
-    """
-    Register Obsidian tools and resources on a FastMCP server instance.
-    
+    """Register Obsidian tools and resources on a FastMCP server instance.
+
     If require_oauth is true, OAuth authentication is applied to all registered tools and resources.
-    
+
     Parameters:
         require_oauth: If true, OAuth authentication is required for all registered tools and resources.
     """

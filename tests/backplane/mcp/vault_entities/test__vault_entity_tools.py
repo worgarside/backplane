@@ -138,9 +138,8 @@ async def test__update_vault_entity__delegates_to_service(mocker: MockerFixture)
 
 
 async def test__list_vault_entities__integration(obsidian_vault: AsyncPath) -> None:
-    """
-    Verify that list_vault_entities returns entity names matching VaultEntityService behavior.
-    
+    """Verify that list_vault_entities returns entity names matching VaultEntityService behavior.
+
     This integration test creates a vault with a Domain entity file and asserts that
     list_vault_entities returns the same result as the underlying service when reading
     from that vault.

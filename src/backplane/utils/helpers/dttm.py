@@ -57,11 +57,10 @@ _OBSIDIAN_FORMAT_HANDLERS: Final[list[tuple[str, Callable[[dt.datetime], str]]]]
 
 
 def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
-    """
-    Replace Obsidian format tokens with their formatted values.
-    
+    """Replace Obsidian format tokens with their formatted values.
+
     Replaces recognized tokens (such as YYYY, MM, Do, HH, mm, ss) in the format string with their corresponding formatted values from the provided datetime.
-    
+
     Returns:
         The format string with all matched tokens substituted.
     """
@@ -86,9 +85,8 @@ def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
 
 
 def _obsidian_format_moment(value: dt.date | dt.datetime) -> dt.datetime:
-    """
-    Convert a date or datetime to a timezone-aware datetime.
-    
+    """Convert a date or datetime to a timezone-aware datetime.
+
     Returns:
         A timezone-aware datetime. If the input is a date, it is set to midnight in the local timezone.
     """
@@ -121,11 +119,10 @@ def format_obsidian_moment_date(date: dt.date, fmt: str) -> str:
 
 
 def format_human_date(date: dt.date) -> str:
-    """
-    Format a date as a human-readable string, for example "Saturday, May 9th 2026".
-    
+    """Format a date as a human-readable string, for example "Saturday, May 9th 2026".
+
     Returns:
-    	str: The formatted date string.
+        str: The formatted date string.
     """
     return format_obsidian_moment_date(date, "dddd, MMMM Do YYYY")
 
@@ -151,13 +148,12 @@ def substitute_obsidian_core_date_variables(template: str, date: dt.date) -> str
 
 
 def format_obsidian_datetime(now: dt.datetime, fmt: str) -> str:
-    """
-    Formats a datetime according to Obsidian template token syntax.
-    
+    """Formats a datetime according to Obsidian template token syntax.
+
     Args:
         now: The local datetime to format.
         fmt: The format string with Obsidian tokens.
-    
+
     Returns:
         The formatted string.
     """

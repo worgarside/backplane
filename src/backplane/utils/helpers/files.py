@@ -14,15 +14,8 @@ if TYPE_CHECKING:
 
 
 async def atomic_write_text(path: AsyncPath, content: str) -> None:
-    """Write ``content`` to ``path`` atomically via a system temporary file.
-
-    Content is written to a temp file under the system temp directory, then
-    moved into place with ``replace`` so readers never see a partial file.
-    Temp files are not created next to ``path``, avoiding sync/index noise.
-
-    Args:
-        path: Destination file path.
-        content: Text to write.
+    """
+    Write text to a file atomically.
     """
     await path.parent.mkdir(parents=True, exist_ok=True)
     async with NamedTemporaryFile(

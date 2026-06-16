@@ -140,7 +140,12 @@ def obsidian_vault(
     vault_path: AsyncPath,
     monkeypatch: pytest.MonkeyPatch,
 ) -> AsyncPath:
-    """Point application settings at a temporary vault root."""
+    """
+    Create a temporary Obsidian vault with entity templates and a project board.
+    
+    Returns:
+        AsyncPath: The vault root path.
+    """
     monkeypatch.setattr(SETTINGS, "obsidian_vault_path", vault_path)
     _install_entity_templates(vault_path)
     _install_project_board(vault_path)
@@ -148,7 +153,12 @@ def obsidian_vault(
 
 
 def _install_entity_templates(vault_path: AsyncPath) -> None:
-    """Write minimal entity templates into a temporary vault."""
+    """
+    Create entity template files in the vault's Templates directory.
+    
+    Writes Domain.md, Person.md, Project.md, and Resource.md files using the
+    corresponding template constants.
+    """
     templates = pathlib.Path(str(vault_path)) / "Templates"
     templates.mkdir(parents=True, exist_ok=True)
     _ = (templates / "Domain.md").write_text(DOMAIN_TEMPLATE, encoding="utf-8")
@@ -158,7 +168,9 @@ def _install_entity_templates(vault_path: AsyncPath) -> None:
 
 
 def _install_project_board(vault_path: AsyncPath) -> None:
-    """Write a minimal project Kanban board into a temporary vault."""
+    """
+    Create the project board file in the vault using the minimal Kanban board template.
+    """
     board = pathlib.Path(str(vault_path)) / str(VAULT_PATHS.project_board_path)
     board.parent.mkdir(parents=True, exist_ok=True)
     _ = board.write_text(PROJECT_BOARD, encoding="utf-8")

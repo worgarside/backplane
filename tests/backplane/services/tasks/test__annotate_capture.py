@@ -17,7 +17,9 @@ async def test__annotate_capture_logs_warning_when_inbox_is_missing(
     obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
-    """Missing inbox files are ignored because annotation is best effort."""
+    """
+    Verify that a warning is logged when the target inbox file is missing.
+    """
     _ = obsidian_vault
     mock_warning = mocker.patch("backplane.services.tasks.logger.warning")
     capture = Capture(

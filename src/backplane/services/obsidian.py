@@ -114,13 +114,14 @@ class ObsidianService:
         *,
         read_only: bool = False,
     ) -> AsyncGenerator[MarkdownDocument]:
-        """Open the idea inbox for editing, flushing on successful exit.
-
-        Args:
-            read_only: When true, require file content unchanged on exit.
-
+        """
+        Provide access to the idea inbox document for reading or editing.
+        
+        Parameters:
+            read_only: If `True`, open the document in read-only mode.
+        
         Yields:
-            Loaded markdown document for the idea inbox.
+            The loaded markdown document for the idea inbox.
         """
         async with MarkdownDocument(
             vault_path=self.IDEA_INBOX_PATH,
@@ -130,16 +131,17 @@ class ObsidianService:
 
     @staticmethod
     def _validate_vault_note_path(path: AsyncPath) -> AsyncPath:
-        """Validate a vault-relative markdown note path.
-
+        """
+        Validate a vault-relative markdown note path.
+        
         Args:
             path: Path relative to the vault root.
-
+        
         Returns:
-            Normalised async path for resolution.
-
+            The validated path.
+        
         Raises:
-            UserError: If the path is empty, not a markdown file, or under ``.obsidian/``.
+            UserError: If the path is empty, not a markdown file, or under `.obsidian/`.
         """
         if not path.parts:
             msg = "Note path must not be empty."

@@ -269,7 +269,9 @@ class TaskFrontmatter(BaseModel, frozen=True):
 
 @cache
 def _metadata_agent() -> Agent[None, TaskMetadata]:
-    """Return the pydantic-ai agent used for task metadata extraction."""
+    """
+    Provide a configured agent for extracting structured task metadata.
+    """
     return Agent(
         SETTINGS.task_metadata_model,
         output_type=TaskMetadata,
@@ -439,15 +441,17 @@ def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
 
 
 def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
-    """Return a best-effort inbox capture match.
-
+    """
+    Find the best matching inbox capture for a task description.
+    
     Args:
         description: Task description to match against.
         captures: Candidate captures to score.
-
+    
     Returns:
-        A match outcome. Borderline candidates are surfaced but never block
-        task creation.
+        A match outcome containing the best-matched capture if it exceeds a high
+        threshold, borderline candidates if they meet a lower threshold, or
+        neither. Task creation always proceeds regardless of match strength.
     """
     if not captures:
         logger.debug("Fuzzy match skipped: no inbox captures in lookback window")
@@ -495,10 +499,11 @@ def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
 
 
 async def _load_recent_captures() -> list[Capture]:
-    """Load recent inbox captures.
-
+    """
+    Parse captures from the inbox within a default lookback window.
+    
     Returns:
-        Recent inbox captures, or an empty list when the inbox is absent.
+        List of parsed captures; an empty list if the inbox file is absent.
     """
     try:
         async with ObsidianService().idea_inbox(read_only=True) as inbox:
@@ -538,15 +543,20 @@ def _find_capture_by_id(captures: list[Capture], capture_id: str) -> Capture | N
 
 
 def _capture_payload(capture: Capture) -> CaptureCandidate:
-    """Return the public payload used to offer optional capture linking."""
+    """
+    Convert a capture to a public payload for optional linking.
+    
+    Returns:
+        CaptureCandidate: A public representation of the capture containing its id and text.
+    """
     return CaptureCandidate(id=capture.id, text=capture.text)
 
 
 async def _metadata_catalog_prompt() -> str:
-    """Build a user-prompt section listing existing vault entity names.
-
+    """Build a prompt section listing existing vault entity names.
+    
     Returns:
-        Catalog lines for the metadata agent user prompt, or an empty string.
+        A newline-separated string of existing domains, resources, projects, and people, or an empty string if no entities exist.
     """
     domains, resources, projects, people = await asyncio.gather(
         VaultEntityService.list_entities(enums.VaultEntityKind.DOMAIN),
@@ -664,15 +674,16 @@ async def _extract_metadata(
     title: str | None,
     priority: enums.Priority | None,
 ) -> TaskMetadata:
-    """Extract structured task metadata using PydanticAI.
-
+    """
+    Extract structured metadata fields from a task description, with optional title and priority overrides.
+    
     Args:
         description: Raw task description text.
-        title: Pre-supplied title (skips extraction if provided).
-        priority: Pre-supplied priority (skips extraction if provided).
-
+        title: Pre-supplied title to use unchanged; if provided, skips title extraction.
+        priority: Pre-supplied priority to use unchanged; if provided, skips priority extraction.
+    
     Returns:
-        Extracted (or fallback) TaskMetadata.
+        TaskMetadata with extracted fields, or fallback defaults if extraction fails.
     """
     prompt_parts = [f"Task description: {description}"]
     catalog = await _metadata_catalog_prompt()
@@ -917,7 +928,12 @@ async def _select_task_capture(
 
 
 def _metadata_source(description: str, capture: Capture | None) -> str:
-    """Return the text used for metadata extraction and log the source choice."""
+    """
+    Selects the text source for metadata extraction and logs the source choice.
+    
+    Returns:
+        The selected text (from capture if available, otherwise from description).
+    """
     if capture is not None:
         logger.info(
             "Task metadata source: capture {} (description_len={} capture_len={})",
@@ -935,7 +951,12 @@ def _metadata_source(description: str, capture: Capture | None) -> str:
 
 
 async def _unique_task_filename(title: str) -> tuple[str, str]:
-    """Return a unique human-readable task filename stem and internal slug."""
+    """
+    Generate a unique task filename stem and corresponding slug.
+    
+    Returns:
+        A tuple of (stem, slug) where stem does not collide with existing task note files.
+    """
     base_stem = note_filename(title)
     slug = safe_slug(title)
     stem = base_stem
@@ -956,10 +977,11 @@ async def _unique_task_filename(title: str) -> tuple[str, str]:
 async def _resolve_task_reference(
     task_ref: str,
 ) -> tuple[AsyncPath, str] | None:
-    """Resolve a task slug, filename stem, or title to its vault path and link target.
-
+    """Find a task note matching a reference, filename, or title.
+    
     Returns:
-        Vault-relative task path and filename stem, or ``None`` when not found.
+    	A tuple containing the vault-relative task note path and filename stem,
+    	or ``None`` if no matching task is found.
     """
     tasks_dir = await resolve_under_root(VAULT_PATHS.task_notes_dir)
 
@@ -1027,10 +1049,11 @@ async def _create_linked_stubs(
     metadata: TaskMetadata,
     source_task_link: str,
 ) -> tuple[list[str], list[str], list[str], list[str]]:
-    """Create domain, resource, project, and people stub notes for task metadata.
-
+    """
+    Creates stub notes for domains, resources, projects, and people from task metadata.
+    
     Returns:
-        Created domain, resource, project, and people names.
+        A tuple of four lists containing newly created domain, resource, project, and people names, respectively.
     """
     return await asyncio.gather(
         _create_stubs(
@@ -1068,18 +1091,18 @@ class TaskService:
         priority: enums.Priority | None = None,
         link_capture_id: str | None = None,
     ) -> CreateTaskResult:
-        """Create a task note, update the Kanban board, and stub missing entity notes.
-
-        Args:
-            description: Natural-language task description.
-            title: Task title. Inferred via LLM if omitted.
-            due: Due date in YYYY-MM-DD format.
-            priority: Priority override: 'low', 'medium', or 'high'.
-            link_capture_id: Explicit capture ID to link when the user has
-                confirmed a prior inbox capture.
-
+        """
+        Create a task note from a description and return its vault details, linked capture information, and created entity stubs.
+        
+        Parameters:
+            description (str): Natural-language task description.
+            title (str | None): Task title. Inferred via LLM if omitted.
+            due (str | None): Due date in YYYY-MM-DD format.
+            priority (enums.Priority | None): Priority override (low, medium, or high).
+            link_capture_id (str | None): Exact capture ID to link when a specific inbox entry has been confirmed.
+        
         Returns:
-            Structured outcome including slug, paths, capture matching, and stubs created.
+            CreateTaskResult: Task metadata and vault details including the note path, slug, title, vault note metadata, optional linked capture ID, candidate captures for manual linking, and lists of newly created domain, resource, project, and person entity stubs.
         """
         capture_selection = await _select_task_capture(description, link_capture_id)
         metadata = await _extract_metadata(

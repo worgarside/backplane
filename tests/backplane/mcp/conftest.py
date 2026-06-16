@@ -49,7 +49,12 @@ def public_mcp_http_app(
     mocker: MockerFixture,
     sample_oidc_configuration: OIDCConfiguration,
 ) -> Starlette:
-    """Build the public MCP HTTP app the same way as ``public.py``."""
+    """
+    Create a public MCP HTTP app configured for testing with mocked OIDC.
+    
+    Returns:
+        A Starlette ASGI app with test settings and mocked OIDC configuration.
+    """
     settings = Settings.model_validate(
         {
             "obsidian_vault_path": AsyncPath("/tmp/vault"),

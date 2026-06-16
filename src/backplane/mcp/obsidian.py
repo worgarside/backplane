@@ -183,13 +183,11 @@ async def record_idea(
         ),
     ],
 ) -> str:
-    """Record a new idea in the Obsidian idea inbox.
-
-    Args:
-        idea: The idea to record.
-
+    """
+    Record a new idea in the Obsidian idea inbox.
+    
     Returns:
-        A confirmation message.
+        The string "Idea recorded successfully."
     """
     logger.info("record_idea")
     now = dt.datetime.now(tz=SETTINGS.local_timezone)
@@ -212,14 +210,11 @@ async def move_note(
         Field(description="New vault-relative note path."),
     ],
 ) -> str:
-    """Move a vault note to a new vault-relative path.
-
-    Args:
-        source_path: Vault-relative path to the note to move.
-        destination_path: Vault-relative destination path for the note.
-
+    """
+    Move a vault note to a new location.
+    
     Returns:
-        Short confirmation with the destination path.
+        str: Confirmation message including the destination path.
     """
     logger.info(
         "move_note: source={!r} destination={!r}",
@@ -246,20 +241,25 @@ async def daily_note_by_date_resource(
         Field(description="Daily note date in YYYY-MM-DD."),
     ],
 ) -> str:
-    """Return the daily note for the given ISO date as rendered markdown.
-
-    Args:
-        date: ISO date string (YYYY-MM-DD).
-
+    """
+    Fetch the daily note for a given date.
+    
     Returns:
-        The rendered markdown of the daily note.
+        The daily note content as rendered markdown.
     """
     async with ObsidianService().daily_note(date=date, read_only=True) as daily_note:
         return daily_note.render()
 
 
 def register_obsidian_tools(mcp: FastMCP[None], *, require_oauth: bool = False) -> None:
-    """Register Obsidian tools and resources on a FastMCP server instance."""
+    """
+    Register Obsidian tools and resources on a FastMCP server instance.
+    
+    If require_oauth is true, OAuth authentication is applied to all registered tools and resources.
+    
+    Parameters:
+        require_oauth: If true, OAuth authentication is required for all registered tools and resources.
+    """
     auth_kwargs: OAuthToolRegistrationKwargs = {}
     if require_oauth:
         auth_kwargs = oauth_tool_registration_kwargs()

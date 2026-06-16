@@ -21,7 +21,7 @@ async def test__create_task_skips_missing_inbox_and_avoids_slug_collisions(
     obsidian_vault: AsyncPath,
     mocker: MockerFixture,
 ) -> None:
-    """Missing inbox files are skipped and duplicate task filenames get a suffix."""
+    """Verify that task creation handles filename collisions by appending a numeric suffix to the note file."""
     tasks_dir = obsidian_vault / VAULT_PATHS.task_notes_dir
     await tasks_dir.mkdir(parents=True)
     _ = await (obsidian_vault / VAULT_PATHS.task_board_path).write_text(

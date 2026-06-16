@@ -57,10 +57,13 @@ _OBSIDIAN_FORMAT_HANDLERS: Final[list[tuple[str, Callable[[dt.datetime], str]]]]
 
 
 def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
-    """Expand an Obsidian template format string using ``_OBSIDIAN_FORMAT_HANDLERS``.
-
+    """
+    Replace Obsidian format tokens with their formatted values.
+    
+    Replaces recognized tokens (such as YYYY, MM, Do, HH, mm, ss) in the format string with their corresponding formatted values from the provided datetime.
+    
     Returns:
-        The format string with token placeholders replaced.
+        The format string with all matched tokens substituted.
     """
     sorted_handlers = sorted(
         _OBSIDIAN_FORMAT_HANDLERS,
@@ -83,10 +86,11 @@ def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
 
 
 def _obsidian_format_moment(value: dt.date | dt.datetime) -> dt.datetime:
-    """Normalize a calendar date or datetime for Obsidian token expansion.
-
+    """
+    Convert a date or datetime to a timezone-aware datetime.
+    
     Returns:
-        A datetime suitable for token handler dispatch.
+        A timezone-aware datetime. If the input is a date, it is set to midnight in the local timezone.
     """
     if isinstance(value, dt.datetime):
         return value
@@ -117,13 +121,11 @@ def format_obsidian_moment_date(date: dt.date, fmt: str) -> str:
 
 
 def format_human_date(date: dt.date) -> str:
-    """Format a date as e.g. ``Saturday, May 9th 2026``.
-
-    Args:
-        date: The date to format.
-
+    """
+    Format a date as a human-readable string, for example "Saturday, May 9th 2026".
+    
     Returns:
-        The formatted date.
+    	str: The formatted date string.
     """
     return format_obsidian_moment_date(date, "dddd, MMMM Do YYYY")
 
@@ -149,17 +151,13 @@ def substitute_obsidian_core_date_variables(template: str, date: dt.date) -> str
 
 
 def format_obsidian_datetime(now: dt.datetime, fmt: str) -> str:
-    """Format a timestamp for Obsidian ``{ date:... }`` single-brace placeholders.
-
-    Intended for core-template datetime variables embedded in YAML frontmatter,
-    such as ``"{ date:YYYY-MM-DDTHH:mm:ss }"`` in entity/task templates. Uses the
-    same token vocabulary as :func:`format_obsidian_moment_date`; pass a
-    :class:`~datetime.datetime` so time tokens reflect the actual clock time.
-
+    """
+    Formats a datetime according to Obsidian template token syntax.
+    
     Args:
         now: The local datetime to format.
-        fmt: The format string from inside ``{ date:... }``.
-
+        fmt: The format string with Obsidian tokens.
+    
     Returns:
         The formatted string.
     """

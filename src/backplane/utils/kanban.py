@@ -25,10 +25,14 @@ def _format_card_line(
     *,
     due: dt.date | dt.datetime | None = None,
 ) -> str:
-    """Build a single Obsidian Kanban task line for a vault note path.
-
+    """
+    Build a markdown task line for an Obsidian Kanban board containing an Obsidian wiki link and optional due metadata.
+    
+    Parameters:
+        due (date | datetime | None): Optional due date or datetime. Timezone-aware datetimes are converted to local time. Dates format as `@{YYYY-MM-DD}`; datetimes add time as `@@{HH:MM}`.
+    
     Returns:
-        A markdown task line, optionally including ``@{…}`` due metadata.
+        str: A markdown checkbox line with the note link and optional due metadata.
     """
     line = f"- [ ] {build_obsidian_link(note_path)}"
     if due is None:

@@ -105,6 +105,12 @@ class Settings(BaseSettings):
     @field_validator("obsidian_vault_path", mode="before")
     @classmethod
     def _parse_obsidian_vault_path(cls, v: AsyncPath | str) -> AsyncPath:
+        """
+        Coerce a value to an AsyncPath.
+        
+        Returns:
+        	AsyncPath: The value as an AsyncPath.
+        """
         if isinstance(v, AsyncPath):
             return v
         return AsyncPath(v)

@@ -47,7 +47,12 @@ class VaultEntitySection(TypedDict):
 
 
 def note_title_from_markdown(text: str) -> str | None:
-    """Return the first level-1 heading text, skipping YAML frontmatter."""
+    """
+    Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
+    
+    Returns:
+    	str | None: The text of the first H1 heading (without the `#` prefix), or `None` if no heading is found.
+    """
     in_frontmatter = False
     frontmatter_closed = False
     for line in text.splitlines():
@@ -89,7 +94,12 @@ def _section_entries(
 
 
 def _vault_relative_path(path: AsyncPath) -> pathlib.PurePath:
-    """Return a vault-relative pure path for ``MarkdownDocument`` construction."""
+    """
+    Compute the vault-relative path of the given path.
+    
+    Returns:
+        A pure path representing the given path relative to the configured vault root.
+    """
     root_resolved = pathlib.Path(SETTINGS.obsidian_vault_path.as_posix()).resolve()
     path_resolved = pathlib.Path(path.as_posix())
     return pathlib.PurePath(path_resolved.relative_to(root_resolved).as_posix())
@@ -99,13 +109,14 @@ def _entity_section_path(
     body: list[MarkdownSection],
     heading_path: list[str],
 ) -> tuple[str, ...]:
-    """Resolve a section path using the document's actual level-1 root heading.
-
+    """
+    Resolves a section path by prepending the document's H1 heading when it exists as a single level-1 section.
+    
     Returns:
-        Absolute section path including the note's H1 when present.
-
+        tuple[str, ...]: The resolved section path, prepended with the H1 heading if the document has exactly one level-1 section; otherwise, the requested heading path.
+    
     Raises:
-        ValueError: If ``heading_path`` is empty.
+        ValueError: If heading_path is empty.
     """
     if not heading_path:
         msg = "heading_path must not be empty."
@@ -159,7 +170,19 @@ class VaultEntityService:
         name: str,
         *,
         must_exist: Literal[True],
-    ) -> AsyncPath: ...
+    ) -> AsyncPath: """
+        Resolve the vault path for an entity note, or raise NotFoundError if not found.
+        
+        Searches by exact filename, slug filename, or matching the note's title
+        case-insensitively.
+        
+        Returns:
+            The vault-relative path to the entity note.
+        
+        Raises:
+            NotFoundError: If no matching entity is found.
+        """
+        ...
 
     @overload
     @staticmethod
@@ -168,7 +191,13 @@ class VaultEntityService:
         name: str,
         *,
         must_exist: Literal[False] = False,
-    ) -> AsyncPath | None: ...
+    ) -> AsyncPath | None: """
+        Resolve the filesystem path for an entity note by name.
+        
+        Returns:
+            The entity note path if found, `None` otherwise.
+        """
+        ...
 
     @staticmethod
     async def resolve_entity_path(
@@ -243,10 +272,11 @@ class VaultEntityService:
 
     @staticmethod
     async def get_entity(kind: VaultEntityKind, name: str) -> str:
-        """Read an entity note as rendered markdown.
-
+        """
+        Retrieve the full content of an entity note.
+        
         Returns:
-            The entity note rendered as markdown.
+        	The entity note rendered as markdown.
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
@@ -290,18 +320,19 @@ class VaultEntityService:
         *,
         heading_path: list[str],
     ) -> str:
-        """Read a section of an entity note as rendered markdown.
-
-        Args:
-            kind: Entity kind determining the search directory.
-            name: Human-readable entity name.
-            heading_path: Section path relative to the note title, e.g. ``["Overview"]``.
-
+        """
+        Read a specific section from an entity note.
+        
+        Parameters:
+        	kind (VaultEntityKind): Entity kind determining the search directory.
+        	name (str): Human-readable entity name.
+        	heading_path (list[str]): Section path relative to the note title, e.g. ["Overview"].
+        
         Returns:
-            The requested section rendered as markdown.
-
+        	str: The requested section rendered as markdown.
+        
         Raises:
-            InformationRequiredError: If the section is missing.
+        	InformationRequiredError: If the section does not exist.
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 
@@ -390,22 +421,27 @@ class VaultEntityService:
         mode: UpdateMode = "append",
         create_section_if_not_exists: bool = False,
     ) -> str:
-        """Update a section of an entity note.
-
-        Args:
+        """
+        Update a section of an entity note and set its updated timestamp.
+        
+        Merges new content into the target section according to the specified mode and
+        updates the note's "updated" frontmatter field to the current time.
+        
+        Parameters:
             kind: Entity kind determining the search directory.
             name: Human-readable entity name.
             heading_path: Section path relative to the note title, e.g. ``["Overview"]``.
-            content: Markdown content to combine with the section.
-            mode: How to combine ``content`` with existing section text.
-            create_section_if_not_exists: Create the section when missing.
-
+            content: Markdown content to merge with the section.
+            mode: How to merge content: "append", "prepend", or "replace".
+            create_section_if_not_exists: Create the section if it does not exist.
+        
         Returns:
             The updated section rendered as markdown.
-
+        
         Raises:
-            InformationRequiredError: If the section is missing and creation is
-                disabled.
+            NotFoundError: If the entity note does not exist.
+            InformationRequiredError: If the section does not exist and
+                ``create_section_if_not_exists`` is False.
         """
         path = await VaultEntityService.resolve_entity_path(kind, name, must_exist=True)
 

@@ -22,6 +22,12 @@ if TYPE_CHECKING:
 
 @lifespan
 async def _home_assistant_lifespan(mcp: FastMCP[None]) -> AsyncGenerator[None]:
+    """
+    Startup lifecycle hook that gathers MCP server metadata and notifies Home Assistant.
+    
+    Collects registered tools and resources from the MCP server and sends a startup
+    notification to Home Assistant, then reloads the Home Assistant MCP integration.
+    """
     raw_tools = await mcp.list_tools()
     raw_resources = await mcp.list_resources()
     raw_templates = await mcp.list_resource_templates()
@@ -40,16 +46,14 @@ def create_mcp_server(
     notify_home_assistant: bool = False,
     require_oauth: bool = False,
 ) -> FastMCP[None]:
-    """Create a Backplane MCP server instance with all tools registered.
-
+    """
+    Create a Backplane MCP server instance with all tools registered.
+    
     Args:
-        auth: Optional FastMCP auth provider. Used by the public-facing
-            streamable HTTP endpoint.
-        notify_home_assistant: Whether startup should notify/reload the private
-            Home Assistant MCP integration. Only the private SSE server should do this.
-        require_oauth: When true, register tools and resources with OAuth metadata
-            and scope checks for ChatGPT-facing authentication.
-
+        auth: Optional FastMCP auth provider.
+        notify_home_assistant: Whether to trigger Home Assistant MCP integration notification and reload on startup.
+        require_oauth: Whether to register tools and resources with OAuth metadata for ChatGPT-facing authentication.
+    
     Returns:
         Configured FastMCP server instance.
     """

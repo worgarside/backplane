@@ -130,16 +130,16 @@ def _extract_headings(
 
 
 def _render_text(text: str) -> str:
-    """Normalize a raw markdown string through the mdformat pipeline.
-
-    Parses frontmatter separately (to preserve ruamel.yaml formatting) then
-    runs the body through ``mdformat``. Used to produce a canonical form of the
-    on-disk content so that two snapshots of the same logical document compare
-    equal regardless of trivial whitespace differences.
-
+    """
+    Normalize raw markdown into a canonical form.
+    
+    Preserves the formatting of YAML frontmatter while standardizing body formatting,
+    enabling equivalent documents to compare equal regardless of whitespace
+    differences.
+    
     Args:
-        text: Raw markdown source (may include YAML frontmatter).
-
+        text: Raw markdown source, optionally including YAML frontmatter.
+    
     Returns:
         The normalized markdown string.
     """
@@ -284,12 +284,22 @@ class MarkdownDocument(BaseModel):
     @computed_field
     @property
     def body(self) -> list[MarkdownSection]:
-        """Return the document body."""
+        """
+        The top-level sections of the parsed document.
+        
+        Returns:
+            list[MarkdownSection]: The document's root-level sections.
+        """
         return self._body
 
     @property
     def _async_file_path(self) -> AsyncPath:
-        """Async-capable path wrapper for disk I/O."""
+        """
+        Compute the full absolute path to the markdown file in the vault.
+        
+        Returns:
+        	The full path obtained by joining the vault root path with the relative vault path.
+        """
         return SETTINGS.obsidian_vault_path / self.vault_path
 
     async def __aenter__(self) -> Self:
@@ -468,14 +478,9 @@ class MarkdownDocument(BaseModel):
             yield from section.iter_sections()
 
     def render(self) -> str:
-        """Render the document to markdown.
-
-        The body is normalised by ``mdformat`` (canonical spacing, list markers,
-        and table alignment). The frontmatter is rendered separately through
-        ``YAML_LOADER`` to preserve quoting styles, key order, types, and comments
-        that ``mdformat-frontmatter`` would otherwise flatten by re-parsing through
-        PyYAML.
-
+        """
+        Render the document as a normalized markdown string.
+        
         Returns:
             The full markdown document including frontmatter (if any) and body.
         """

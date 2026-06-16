@@ -12,10 +12,11 @@ FIXTURE_VAULT = REPO_ROOT / "scripts" / "fixtures" / "readme-vault"
 
 
 def main() -> int:
-    """Update README.md and return a pre-commit-friendly exit code.
-
+    """
+    Regenerate the MCP catalog section in README.md.
+    
     Returns:
-        1 when README.md changed, 0 when already up to date.
+        1 if README.md was changed, 0 if it was already up to date.
     """
     os.environ["OBSIDIAN_VAULT_PATH"] = str(FIXTURE_VAULT)
     if "LOCAL_TIMEZONE" not in os.environ:

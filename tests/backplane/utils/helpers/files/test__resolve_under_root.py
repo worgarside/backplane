@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 async def test__resolve_under_root_accepts_relative_path(
     obsidian_vault: AsyncPath,
 ) -> None:
-    """Normal relative paths resolve under the root."""
+    """
+    Verify that resolve_under_root correctly resolves relative paths under the root directory.
+    """
     resolved = await resolve_under_root(AsyncPath("Tasks/foo.md"))
     expected = await AsyncPath(str(obsidian_vault / "Tasks/foo.md")).resolve()
     assert pathlib.Path(str(resolved)) == expected
@@ -35,7 +37,9 @@ async def test__resolve_under_root_rejects_traversal(
 async def test__resolve_under_root_rejects_absolute_path(
     obsidian_vault: AsyncPath,
 ) -> None:
-    """Absolute relative paths are rejected."""
+    """
+    Verify that resolve_under_root rejects absolute paths.
+    """
     _ = obsidian_vault
     with pytest.raises(ValueError, match="Unsafe path"):
         _ = await resolve_under_root(pathlib.PurePath("/etc/passwd"))

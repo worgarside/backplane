@@ -269,9 +269,7 @@ class TaskFrontmatter(BaseModel, frozen=True):
 
 @cache
 def _metadata_agent() -> Agent[None, TaskMetadata]:
-    """
-    Provide a configured agent for extracting structured task metadata.
-    """
+    """Provide a configured agent for extracting structured task metadata."""
     return Agent(
         SETTINGS.task_metadata_model,
         output_type=TaskMetadata,
@@ -441,13 +439,12 @@ def _runner_up_gap(scored: list[tuple[Capture, float]]) -> float | None:
 
 
 def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
-    """
-    Find the best matching inbox capture for a task description.
-    
+    """Find the best matching inbox capture for a task description.
+
     Args:
         description: Task description to match against.
         captures: Candidate captures to score.
-    
+
     Returns:
         A match outcome containing the best-matched capture if it exceeds a high
         threshold, borderline candidates if they meet a lower threshold, or
@@ -499,9 +496,8 @@ def _find_match(description: str, captures: list[Capture]) -> MatchOutcome:
 
 
 async def _load_recent_captures() -> list[Capture]:
-    """
-    Parse captures from the inbox within a default lookback window.
-    
+    """Parse captures from the inbox within a default lookback window.
+
     Returns:
         List of parsed captures; an empty list if the inbox file is absent.
     """
@@ -543,9 +539,8 @@ def _find_capture_by_id(captures: list[Capture], capture_id: str) -> Capture | N
 
 
 def _capture_payload(capture: Capture) -> CaptureCandidate:
-    """
-    Convert a capture to a public payload for optional linking.
-    
+    """Convert a capture to a public payload for optional linking.
+
     Returns:
         CaptureCandidate: A public representation of the capture containing its id and text.
     """
@@ -554,7 +549,7 @@ def _capture_payload(capture: Capture) -> CaptureCandidate:
 
 async def _metadata_catalog_prompt() -> str:
     """Build a prompt section listing existing vault entity names.
-    
+
     Returns:
         A newline-separated string of existing domains, resources, projects, and people, or an empty string if no entities exist.
     """
@@ -674,14 +669,13 @@ async def _extract_metadata(
     title: str | None,
     priority: enums.Priority | None,
 ) -> TaskMetadata:
-    """
-    Extract structured metadata fields from a task description, with optional title and priority overrides.
-    
+    """Extract structured metadata fields from a task description, with optional title and priority overrides.
+
     Args:
         description: Raw task description text.
         title: Pre-supplied title to use unchanged; if provided, skips title extraction.
         priority: Pre-supplied priority to use unchanged; if provided, skips priority extraction.
-    
+
     Returns:
         TaskMetadata with extracted fields, or fallback defaults if extraction fails.
     """
@@ -928,9 +922,8 @@ async def _select_task_capture(
 
 
 def _metadata_source(description: str, capture: Capture | None) -> str:
-    """
-    Selects the text source for metadata extraction and logs the source choice.
-    
+    """Selects the text source for metadata extraction and logs the source choice.
+
     Returns:
         The selected text (from capture if available, otherwise from description).
     """
@@ -951,9 +944,8 @@ def _metadata_source(description: str, capture: Capture | None) -> str:
 
 
 async def _unique_task_filename(title: str) -> tuple[str, str]:
-    """
-    Generate a unique task filename stem and corresponding slug.
-    
+    """Generate a unique task filename stem and corresponding slug.
+
     Returns:
         A tuple of (stem, slug) where stem does not collide with existing task note files.
     """
@@ -978,10 +970,10 @@ async def _resolve_task_reference(
     task_ref: str,
 ) -> tuple[AsyncPath, str] | None:
     """Find a task note matching a reference, filename, or title.
-    
+
     Returns:
-    	A tuple containing the vault-relative task note path and filename stem,
-    	or ``None`` if no matching task is found.
+        A tuple containing the vault-relative task note path and filename stem,
+        or ``None`` if no matching task is found.
     """
     tasks_dir = await resolve_under_root(VAULT_PATHS.task_notes_dir)
 
@@ -1049,9 +1041,8 @@ async def _create_linked_stubs(
     metadata: TaskMetadata,
     source_task_link: str,
 ) -> tuple[list[str], list[str], list[str], list[str]]:
-    """
-    Creates stub notes for domains, resources, projects, and people from task metadata.
-    
+    """Creates stub notes for domains, resources, projects, and people from task metadata.
+
     Returns:
         A tuple of four lists containing newly created domain, resource, project, and people names, respectively.
     """
@@ -1091,16 +1082,15 @@ class TaskService:
         priority: enums.Priority | None = None,
         link_capture_id: str | None = None,
     ) -> CreateTaskResult:
-        """
-        Create a task note from a description and return its vault details, linked capture information, and created entity stubs.
-        
+        """Create a task note from a description and return its vault details, linked capture information, and created entity stubs.
+
         Parameters:
             description (str): Natural-language task description.
             title (str | None): Task title. Inferred via LLM if omitted.
             due (str | None): Due date in YYYY-MM-DD format.
             priority (enums.Priority | None): Priority override (low, medium, or high).
             link_capture_id (str | None): Exact capture ID to link when a specific inbox entry has been confirmed.
-        
+
         Returns:
             CreateTaskResult: Task metadata and vault details including the note path, slug, title, vault note metadata, optional linked capture ID, candidate captures for manual linking, and lists of newly created domain, resource, project, and person entity stubs.
         """

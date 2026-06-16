@@ -104,13 +104,13 @@ async def list_vault_entity_sections(
     ],
 ) -> list[VaultEntitySection]:
     """List sections from a vault entity note.
-    
+
     Parameters:
-    	kind: The type of vault entity (domain, person, project, or resource).
-    	name: The human-readable name of the entity.
-    
+        kind: The type of vault entity (domain, person, project, or resource).
+        name: The human-readable name of the entity.
+
     Returns:
-    	A list of VaultEntitySection objects in document order.
+        A list of VaultEntitySection objects in document order.
     """
     logger.info("list_vault_entity_sections: kind={} name={!r}", kind, name)
     return await VaultEntityService.list_entity_sections(
@@ -129,9 +129,8 @@ async def get_vault_entity(
         Field(description="Human-readable entity name."),
     ],
 ) -> str:
-    """
-    Retrieve a vault entity note.
-    
+    """Retrieve a vault entity note.
+
     Returns:
         The entity note rendered as markdown.
     """
@@ -280,9 +279,8 @@ def register_vault_entity_tools(
     *,
     require_oauth: bool = False,
 ) -> None:
-    """
-    Register vault entity tools for listing, reading, creating, and updating vault entity notes.
-    
+    """Register vault entity tools for listing, reading, creating, and updating vault entity notes.
+
     Parameters:
         require_oauth (bool): If True, all registered tools require OAuth authentication. Defaults to False.
     """

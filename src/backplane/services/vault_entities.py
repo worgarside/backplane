@@ -49,7 +49,7 @@ class VaultEntitySection(TypedDict):
 def note_title_from_markdown(text: str) -> str | None:
     """
     Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
-    
+
     Returns:
     	str | None: The text of the first H1 heading (without the `#` prefix), or `None` if no heading is found.
     """
@@ -96,7 +96,7 @@ def _section_entries(
 def _vault_relative_path(path: AsyncPath) -> pathlib.PurePath:
     """
     Compute the vault-relative path of the given path.
-    
+
     Returns:
         A pure path representing the given path relative to the configured vault root.
     """
@@ -111,10 +111,10 @@ def _entity_section_path(
 ) -> tuple[str, ...]:
     """
     Resolves a section path by prepending the document's H1 heading when it exists as a single level-1 section.
-    
+
     Returns:
         tuple[str, ...]: The resolved section path, prepended with the H1 heading if the document has exactly one level-1 section; otherwise, the requested heading path.
-    
+
     Raises:
         ValueError: If heading_path is empty.
     """
@@ -172,13 +172,13 @@ class VaultEntityService:
         must_exist: Literal[True],
     ) -> AsyncPath: """
         Resolve the vault path for an entity note, or raise NotFoundError if not found.
-        
+
         Searches by exact filename, slug filename, or matching the note's title
         case-insensitively.
-        
+
         Returns:
             The vault-relative path to the entity note.
-        
+
         Raises:
             NotFoundError: If no matching entity is found.
         """
@@ -193,7 +193,7 @@ class VaultEntityService:
         must_exist: Literal[False] = False,
     ) -> AsyncPath | None: """
         Resolve the filesystem path for an entity note by name.
-        
+
         Returns:
             The entity note path if found, `None` otherwise.
         """
@@ -274,7 +274,7 @@ class VaultEntityService:
     async def get_entity(kind: VaultEntityKind, name: str) -> str:
         """
         Retrieve the full content of an entity note.
-        
+
         Returns:
         	The entity note rendered as markdown.
         """
@@ -322,15 +322,15 @@ class VaultEntityService:
     ) -> str:
         """
         Read a specific section from an entity note.
-        
+
         Parameters:
         	kind (VaultEntityKind): Entity kind determining the search directory.
         	name (str): Human-readable entity name.
         	heading_path (list[str]): Section path relative to the note title, e.g. ["Overview"].
-        
+
         Returns:
         	str: The requested section rendered as markdown.
-        
+
         Raises:
         	InformationRequiredError: If the section does not exist.
         """
@@ -423,10 +423,10 @@ class VaultEntityService:
     ) -> str:
         """
         Update a section of an entity note and set its updated timestamp.
-        
+
         Merges new content into the target section according to the specified mode and
         updates the note's "updated" frontmatter field to the current time.
-        
+
         Parameters:
             kind: Entity kind determining the search directory.
             name: Human-readable entity name.
@@ -434,10 +434,10 @@ class VaultEntityService:
             content: Markdown content to merge with the section.
             mode: How to merge content: "append", "prepend", or "replace".
             create_section_if_not_exists: Create the section if it does not exist.
-        
+
         Returns:
             The updated section rendered as markdown.
-        
+
         Raises:
             NotFoundError: If the entity note does not exist.
             InformationRequiredError: If the section does not exist and

@@ -15,9 +15,7 @@ from backplane.utils import VAULT_PATHS, enums
 
 
 def test__build_task_note_serializes_enum_frontmatter_as_strings() -> None:
-    """
-    Verify that enum frontmatter fields and wiki link references render correctly in task notes.
-    """
+    """Verify that enum frontmatter fields and wiki link references render correctly in task notes."""
     capture = Capture(
         id="2026-05-25T21:15",
         date="2026-05-25",

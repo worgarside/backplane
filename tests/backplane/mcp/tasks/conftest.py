@@ -15,9 +15,8 @@ if TYPE_CHECKING:
 
 @pytest.fixture
 def make_create_task_result() -> Callable[..., CreateTaskResult]:
-    """
-    Factory for constructing CreateTaskResult objects in tests.
-    
+    """Factory for constructing CreateTaskResult objects in tests.
+
     The returned callable accepts a task title and slug, along with optional
     matched capture information, and constructs a complete CreateTaskResult
     with empty lists for created domains, resources, projects, and people.
@@ -30,17 +29,16 @@ def make_create_task_result() -> Callable[..., CreateTaskResult]:
         matched_capture_id: str | None = None,
         candidate_captures: list[CaptureCandidate] | None = None,
     ) -> CreateTaskResult:
-        """
-        Construct a CreateTaskResult instance.
-        
+        """Construct a CreateTaskResult instance.
+
         Parameters:
-        	title (str): Task title and note filename.
-        	slug (str): Task slug.
-        	matched_capture_id (str | None): Optional matched capture ID.
-        	candidate_captures (list[CaptureCandidate] | None): Optional candidate captures; defaults to an empty list.
-        
+                title (str): Task title and note filename.
+                slug (str): Task slug.
+                matched_capture_id (str | None): Optional matched capture ID.
+                candidate_captures (list[CaptureCandidate] | None): Optional candidate captures; defaults to an empty list.
+
         Returns:
-        	CreateTaskResult: The constructed result instance.
+                CreateTaskResult: The constructed result instance.
         """
         note_path = VAULT_PATHS.task_notes_dir / f"{title}.md"
         return CreateTaskResult(

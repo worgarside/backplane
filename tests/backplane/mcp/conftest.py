@@ -49,9 +49,8 @@ def public_mcp_http_app(
     mocker: MockerFixture,
     sample_oidc_configuration: OIDCConfiguration,
 ) -> Starlette:
-    """
-    Create a public MCP HTTP app configured for testing with mocked OIDC.
-    
+    """Create a public MCP HTTP app configured for testing with mocked OIDC.
+
     Returns:
         A Starlette ASGI app with test settings and mocked OIDC configuration.
     """

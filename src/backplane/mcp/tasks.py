@@ -54,14 +54,13 @@ class CreateTaskToolResponse(BaseModel, frozen=True):
 
 
 def _build_create_task_messages(task: CreateTaskResult) -> list[str]:
-    """
-    Generate follow-up messages based on capture matching results from task creation.
-    
+    """Generate follow-up messages based on capture matching results from task creation.
+
     Parameters:
-    	task (CreateTaskResult): The result of task creation, containing match and candidate capture information.
-    
+        task (CreateTaskResult): The result of task creation, containing match and candidate capture information.
+
     Returns:
-    	list[str]: A list of follow-up messages describing the capture match status. If a capture was matched, contains a message with the matched capture ID. If candidates were found but no match occurred, contains a message suggesting to link to the first candidate with a text snippet. Otherwise returns an empty list.
+        list[str]: A list of follow-up messages describing the capture match status. If a capture was matched, contains a message with the matched capture ID. If candidates were found but no match occurred, contains a message suggesting to link to the first candidate with a text snippet. Otherwise returns an empty list.
     """
     messages: list[str] = []
     if task.matched_capture_id:
@@ -117,7 +116,7 @@ async def create_task(
     ] = None,
 ) -> CreateTaskToolResponse:
     """Create a structured Obsidian task note from natural language.
-    
+
     Returns:
         A response containing the created task's metadata, slug, any matched or candidate inbox captures,
         newly created entities, and follow-up messages for potential linking.
@@ -176,9 +175,8 @@ async def link_task_to_capture(
         Field(description="Inbox capture ID, e.g. `2026-05-25T21:15`."),
     ],
 ) -> str:
-    """
-    Link an existing task note to a confirmed inbox capture.
-    
+    """Link an existing task note to a confirmed inbox capture.
+
     Returns:
         A confirmation message indicating the task was successfully linked to the capture.
     """

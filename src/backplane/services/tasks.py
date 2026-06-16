@@ -16,7 +16,7 @@ from pydantic_ai import Agent, AgentRunResult
 from rapidfuzz import fuzz
 
 from backplane.services import ObsidianService
-from backplane.services.vault_entities import VaultEntityService, note_title_from_markdown
+from backplane.services.vault_entities import VaultEntityService
 from backplane.utils import (
     SETTINGS,
     VAULT_PATHS,
@@ -36,6 +36,7 @@ from backplane.utils import (
     today,
 )
 from backplane.utils.kanban import append_board_card
+from backplane.utils.markdown import note_title_from_markdown
 
 if TYPE_CHECKING:
     from pydantic_ai.usage import RunUsage

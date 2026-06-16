@@ -144,6 +144,10 @@ Tool routing:
 - Use `get_daily_note` when the user asks what is in today's note or a specific daily note,
   or before `add_to_daily_note` when the available sections are unknown.
 - Use `create_vault_entity` to create a Domain, Project, Resource, or Person note.
+- Use `list_vault_entities` when the user wants a full catalog of existing Domains,
+  Projects, Resources, or People for one kind.
+- Use `find_vault_notes` when the user knows an approximate note name.
+- Use `search_vault_notes` when the user asks what notes mention a topic or phrase.
 - Use `get_vault_entity` to read a whole entity note.
 - Use `list_vault_entity_sections` before reading or updating a specific entity section
   if the available headings are unknown.
@@ -153,6 +157,9 @@ Tool routing:
 - Use `move_note` to rename, move, or reorganise an Obsidian note.
 
 General rules:
+- Prefer `find_vault_notes` for name-like queries and `search_vault_notes` for topical
+  or phrase queries. Use `list_vault_entities` only when the user wants every note of
+  one entity kind.
 - Prefer human-readable Obsidian names and paths. Kebab-case slugs are internal IDs only.
 - When a tool response includes `canonical_link`, use that exact value for markdown links.
 - Entity associations are stored as Obsidian wikilinks, not plain names.
@@ -232,6 +239,23 @@ Fails if a note with the same name already exists.
 | --- | --- | --- | --- | --- |
 | `kind` | `domain` \| `person` \| `project` \| `resource` | yes | — | Entity kind: `domain`, `person`, `project`, or `resource`. |
 | `name` | `string` | yes | — | Human-readable note title. |
+
+#### `find_vault_notes`
+
+Find notes by approximate title or filename.
+
+Use when the user knows a note name, such as a Domain, Project, Resource, Person,
+task, or daily note — for example "Home Assistant", "garage migration", or
+"2026-06-16".
+
+Prefer this over `search_vault_notes` for name-like queries. Prefer this over
+`list_vault_entities` when searching across note kinds or when the name is partial.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kinds` | `domain` \| `person` \| `project` \| `resource` \| `task` \| `daily_note`[]? | no | `null` | Note kinds to search. Omit to search all kinds. |
+| `limit` | `integer` | no | `20` | Maximum number of hits to return. |
+| `query` | `string` | yes | — | Approximate note title or filename to match. |
 
 #### `get_daily_note`
 
@@ -336,6 +360,23 @@ Convert spoken phrasing to a written sentence while preserving the user's wordin
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `idea` | `string` | yes | — | The loose, non-actionable idea to record. Preserve the user's wording as closely as possible. |
+
+#### `search_vault_notes`
+
+Search vault note contents for a topic or phrase.
+
+Use when the user asks what notes mention a topic, integration, or phrase — for
+example "MQTT broker", "rain alert", or "backup verification".
+
+Prefer this over `find_vault_notes` when the query is topical rather than a note name.
+After finding a hit, read entity notes with `get_vault_entity`, daily notes with
+`get_daily_note`, or follow `canonical_link` in responses.
+
+| Parameter | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `kinds` | `domain` \| `person` \| `project` \| `resource` \| `task` \| `daily_note`[]? | no | `null` | Note kinds to search. Omit to search all kinds. |
+| `limit` | `integer` | no | `20` | Maximum number of hits to return. |
+| `query` | `string` | yes | — | Topic or phrase to match in note content. |
 
 #### `update_vault_entity`
 

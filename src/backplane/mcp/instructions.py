@@ -11,6 +11,10 @@ Tool routing:
 - Use `get_daily_note` when the user asks what is in today's note or a specific daily note,
   or before `add_to_daily_note` when the available sections are unknown.
 - Use `create_vault_entity` to create a Domain, Project, Resource, or Person note.
+- Use `list_vault_entities` when the user wants a full catalog of existing Domains,
+  Projects, Resources, or People for one kind.
+- Use `find_vault_notes` when the user knows an approximate note name.
+- Use `search_vault_notes` when the user asks what notes mention a topic or phrase.
 - Use `get_vault_entity` to read a whole entity note.
 - Use `list_vault_entity_sections` before reading or updating a specific entity section
   if the available headings are unknown.
@@ -20,6 +24,9 @@ Tool routing:
 - Use `move_note` to rename, move, or reorganise an Obsidian note.
 
 General rules:
+- Prefer `find_vault_notes` for name-like queries and `search_vault_notes` for topical
+  or phrase queries. Use `list_vault_entities` only when the user wants every note of
+  one entity kind.
 - Prefer human-readable Obsidian names and paths. Kebab-case slugs are internal IDs only.
 - When a tool response includes `canonical_link`, use that exact value for markdown links.
 - Entity associations are stored as Obsidian wikilinks, not plain names.

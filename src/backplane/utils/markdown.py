@@ -96,6 +96,26 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, FrontmatterValue], str]:
     return loaded, body_text
 
 
+def markdown_body(text: str) -> str:
+    """Return markdown body text with Obsidian-style YAML frontmatter removed."""
+    _, body = _parse_frontmatter(text)
+    return body
+
+
+def note_title_from_markdown(text: str) -> str | None:
+    """Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
+
+    Returns:
+        The text of the first H1 heading (without the ``#`` prefix), or ``None`` if no
+        heading is found.
+    """
+    for line in markdown_body(text).splitlines():
+        if line.startswith("# ") and not line.startswith("## "):
+            return line.removeprefix("# ").strip()
+
+    return None
+
+
 def _extract_headings(
     tokens: Sequence[Token],
     lines: Sequence[str],

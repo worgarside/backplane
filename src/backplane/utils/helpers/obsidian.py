@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, computed_field
@@ -88,6 +89,7 @@ def obsidian_link_target_from_path(path: str) -> str:
     return stem.removesuffix(".md")
 
 
+@lru_cache(maxsize=1024)
 def build_obsidian_link(
     path_or_target: AsyncPath,
     *,

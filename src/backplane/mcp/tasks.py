@@ -60,7 +60,9 @@ def _build_create_task_messages(task: CreateTaskResult) -> list[str]:
         task (CreateTaskResult): The result of task creation, containing match and candidate capture information.
 
     Returns:
-        list[str]: A list of follow-up messages describing the capture match status. If a capture was matched, contains a message with the matched capture ID. If candidates were found but no match occurred, contains a message suggesting to link to the first candidate with a text snippet. Otherwise returns an empty list.
+        list[str]: Follow-up messages describing capture match status. When a capture
+            was matched, includes the capture ID. When candidates exist without a
+            match, suggests linking the first candidate. Otherwise empty.
     """
     messages: list[str] = []
     if task.matched_capture_id:

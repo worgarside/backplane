@@ -49,8 +49,10 @@ def create_mcp_server(
 
     Args:
         auth: Optional FastMCP auth provider.
-        notify_home_assistant: Whether to trigger Home Assistant MCP integration notification and reload on startup.
-        require_oauth: Whether to register tools and resources with OAuth metadata for ChatGPT-facing authentication.
+        notify_home_assistant: Whether to trigger Home Assistant MCP integration
+            notification and reload on startup.
+        require_oauth: Whether to register tools and resources with OAuth metadata
+            for ChatGPT-facing authentication.
 
     Returns:
         Configured FastMCP server instance.

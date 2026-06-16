@@ -269,7 +269,11 @@ class TaskFrontmatter(BaseModel, frozen=True):
 
 @cache
 def _metadata_agent() -> Agent[None, TaskMetadata]:
-    """Provide a configured agent for extracting structured task metadata."""
+    """Provide a configured agent for extracting structured task metadata.
+
+    Returns:
+        Agent configured to produce ``TaskMetadata`` from task descriptions.
+    """
     return Agent(
         SETTINGS.task_metadata_model,
         output_type=TaskMetadata,
@@ -551,7 +555,8 @@ async def _metadata_catalog_prompt() -> str:
     """Build a prompt section listing existing vault entity names.
 
     Returns:
-        A newline-separated string of existing domains, resources, projects, and people, or an empty string if no entities exist.
+        A newline-separated string of existing domains, resources, projects, and
+        people, or an empty string if no entities exist.
     """
     domains, resources, projects, people = await asyncio.gather(
         VaultEntityService.list_entities(enums.VaultEntityKind.DOMAIN),
@@ -1082,7 +1087,9 @@ class TaskService:
         priority: enums.Priority | None = None,
         link_capture_id: str | None = None,
     ) -> CreateTaskResult:
-        """Create a task note from a description and return its vault details, linked capture information, and created entity stubs.
+        """Create a task note from a description and return its vault details.
+
+        Also returns linked capture information and any created entity stubs.
 
         Parameters:
             description (str): Natural-language task description.
@@ -1092,7 +1099,10 @@ class TaskService:
             link_capture_id (str | None): Exact capture ID to link when a specific inbox entry has been confirmed.
 
         Returns:
-            CreateTaskResult: Task metadata and vault details including the note path, slug, title, vault note metadata, optional linked capture ID, candidate captures for manual linking, and lists of newly created domain, resource, project, and person entity stubs.
+            CreateTaskResult: Task metadata and vault details including the note path,
+                slug, title, vault note metadata, optional linked capture ID,
+                candidate captures for manual linking, and lists of newly created
+                domain, resource, project, and person entity stubs.
         """
         capture_selection = await _select_task_capture(description, link_capture_id)
         metadata = await _extract_metadata(

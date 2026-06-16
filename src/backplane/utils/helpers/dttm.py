@@ -59,7 +59,8 @@ _OBSIDIAN_FORMAT_HANDLERS: Final[list[tuple[str, Callable[[dt.datetime], str]]]]
 def _expand_obsidian_format(fmt: str, moment: dt.datetime) -> str:
     """Replace Obsidian format tokens with their formatted values.
 
-    Replaces recognized tokens (such as YYYY, MM, Do, HH, mm, ss) in the format string with their corresponding formatted values from the provided datetime.
+    Replaces recognized tokens (such as YYYY, MM, Do, HH, mm, ss) in the format string
+    with their corresponding formatted values from the provided datetime.
 
     Returns:
         The format string with all matched tokens substituted.

@@ -35,7 +35,8 @@ def make_create_task_result() -> Callable[..., CreateTaskResult]:
                 title (str): Task title and note filename.
                 slug (str): Task slug.
                 matched_capture_id (str | None): Optional matched capture ID.
-                candidate_captures (list[CaptureCandidate] | None): Optional candidate captures; defaults to an empty list.
+                candidate_captures (list[CaptureCandidate] | None): Optional candidate
+                    captures; defaults to an empty list.
 
         Returns:
                 CreateTaskResult: The constructed result instance.

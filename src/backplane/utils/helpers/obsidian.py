@@ -65,7 +65,8 @@ class VaultNoteMetadata(BaseModel, frozen=True):
 def note_filename(title: str) -> str:
     """Convert a display title into a filesystem-safe, human-readable filename stem.
 
-    Removes characters that are invalid on filesystems and normalizes whitespace. If the result is empty, returns "Untitled".
+    Removes characters that are invalid on filesystems and normalizes whitespace.
+    If the result is empty, returns "Untitled".
 
     Returns:
         str: The sanitized filename stem.

@@ -154,12 +154,12 @@ class Settings(BaseSettings):
 
     @property
     def allowed_client_redirect_uri_patterns(self) -> list[str]:
-        """Return allowed MCP client redirect URI patterns (ChatGPT DCR)."""
+        """Allowed MCP client redirect URI patterns (ChatGPT DCR)."""
         return list(_DEFAULT_MCP_CLIENT_REDIRECT_URIS)
 
     @property
     def mcp_oauth_configured(self) -> bool:
-        """Return whether the public MCP OAuth settings are complete."""
+        """Whether the public MCP OAuth settings are complete."""
         return (
             self.mcp_public_base_url is not None
             and self.mcp_oidc_config_url is not None

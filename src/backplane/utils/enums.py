@@ -37,7 +37,7 @@ class VaultEntityKind(enum.StrEnum):
 
     @property
     def vault_dir(self) -> AsyncPath:
-        """Return the vault subdirectory for this entity kind."""
+        """Vault subdirectory for this entity kind."""
         return {
             VaultEntityKind.DOMAIN: VAULT_PATHS.domains_dir,
             VaultEntityKind.PERSON: VAULT_PATHS.people_dir,

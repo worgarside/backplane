@@ -277,7 +277,7 @@ class MarkdownDocument(BaseModel):
     @computed_field
     @property
     def frontmatter(self) -> dict[str, FrontmatterValue]:
-        """Return the document frontmatter."""
+        """Document frontmatter."""
         return self._frontmatter
 
     @computed_field

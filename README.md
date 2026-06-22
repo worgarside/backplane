@@ -131,7 +131,7 @@ This starts the private Home Assistant-compatible SSE server on port `8000`.
 
 This section is generated automatically from the registered MCP surface. Run `prek run update-readme-mcp-catalog` to refresh it after changing tools or resources.
 
-**Server:** `Backplane` v0.5.0
+**Server:** `Backplane` v0.6.0
 
 ### Server instructions
 

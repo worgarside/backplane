@@ -2,6 +2,24 @@
 
 <!-- version list -->
 
+## v0.6.0 (2026-06-22)
+
+### Code Style
+
+- Fixes from prek hooks
+  ([`32b34c7`](https://github.com/worgarside/backplane/commit/32b34c79b6b3b0d107711523102634dded10e1cb))
+
+### Continuous Integration
+
+- Prek autoupdate ([#56](https://github.com/worgarside/backplane/pull/56),
+  [`e98964e`](https://github.com/worgarside/backplane/commit/e98964eddec4d9ff061abc02eb7e7196c786ff5e))
+
+### Features
+
+- Enhance note search capabilities ([#55](https://github.com/worgarside/backplane/pull/55),
+  [`b557e5b`](https://github.com/worgarside/backplane/commit/b557e5b9834d2507ff7be383bf19ffb82dca1a6e))
+
+
 ## v0.5.0 (2026-06-16)
 
 ### Chores

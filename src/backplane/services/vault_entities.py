@@ -22,6 +22,7 @@ from backplane.utils import (
     substitute_vault_entity_template,
 )
 from backplane.utils.enums import VaultEntityKind
+from backplane.utils.markdown import note_title_from_markdown
 from backplane.utils.settings import SETTINGS
 
 if TYPE_CHECKING:
@@ -44,32 +45,6 @@ class VaultEntitySection(TypedDict):
     heading: str
     path: list[str]
     level: int
-
-
-def note_title_from_markdown(text: str) -> str | None:
-    """Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
-
-    Returns:
-        str | None: The text of the first H1 heading (without the `#` prefix), or `None` if no heading is found.
-    """
-    in_frontmatter = False
-    frontmatter_closed = False
-    for line in text.splitlines():
-        stripped = line.strip()
-
-        if not frontmatter_closed and stripped == "---":
-            in_frontmatter = not in_frontmatter
-            if not in_frontmatter:
-                frontmatter_closed = True
-            continue
-
-        if in_frontmatter:
-            continue
-
-        if line.startswith("# ") and not line.startswith("## "):
-            return line.removeprefix("# ").strip()
-
-    return None
 
 
 def _section_entries(

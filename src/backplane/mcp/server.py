@@ -12,6 +12,7 @@ from backplane.mcp.instructions import BACKPLANE_MCP_INSTRUCTIONS
 from backplane.mcp.obsidian import register_obsidian_tools
 from backplane.mcp.tasks import register_task_tools
 from backplane.mcp.vault_entities import register_vault_entity_tools
+from backplane.mcp.vault_search import register_vault_search_tools
 from backplane.services.home_assistant import notify_startup, reload_mcp_integration
 
 if TYPE_CHECKING:
@@ -68,5 +69,6 @@ def create_mcp_server(
     register_obsidian_tools(mcp, require_oauth=require_oauth)
     register_task_tools(mcp, require_oauth=require_oauth)
     register_vault_entity_tools(mcp, require_oauth=require_oauth)
+    register_vault_search_tools(mcp, require_oauth=require_oauth)
 
     return mcp

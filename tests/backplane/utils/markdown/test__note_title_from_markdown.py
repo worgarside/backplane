@@ -1,8 +1,8 @@
-"""Tests for vault entity note title parsing."""
+"""Tests for note title extraction from markdown."""
 
 from __future__ import annotations
 
-from backplane.services.vault_entities import note_title_from_markdown
+from backplane.utils.markdown import note_title_from_markdown
 
 
 def test__note_title_from_markdown_skips_frontmatter() -> None:

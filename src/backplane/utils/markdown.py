@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import io
 import pathlib
+import re
 from dataclasses import dataclass
 from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, ClassVar, Self, cast
@@ -94,6 +95,29 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, FrontmatterValue], str]:
     )
     body_text = "\n".join(lines[closing_line + 1 :])
     return loaded, body_text
+
+
+def markdown_body(text: str) -> str:
+    """Return markdown body text with Obsidian-style YAML frontmatter removed."""
+    _, body = _parse_frontmatter(text)
+    return body
+
+
+_H1_HEADING_PATTERN = re.compile(r"^\s*#(?:[ \t]+)(.*)$")
+
+
+def note_title_from_markdown(text: str) -> str | None:
+    """Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
+
+    Returns:
+        The text of the first H1 heading (without the ``#`` prefix), or ``None`` if no
+        heading is found.
+    """
+    for line in markdown_body(text).splitlines():
+        if match := _H1_HEADING_PATTERN.match(line):
+            return match.group(1).strip()
+
+    return None
 
 
 def _extract_headings(

@@ -6,6 +6,7 @@ import pathlib
 import re
 from typing import TYPE_CHECKING, Final, Literal, final
 
+from loguru import logger
 from pydantic import BaseModel, computed_field
 from rapidfuzz import fuzz
 
@@ -171,8 +172,13 @@ async def _iter_searchable_notes(
             if entry.name in _EXCLUDED_BOARD_NAMES:
                 continue
 
-            text = await entry.read_text(encoding="utf-8")
-            rel_path = _vault_relative_path(AsyncPath(entry.as_posix()))
+            try:
+                text = await entry.read_text(encoding="utf-8")
+                rel_path = _vault_relative_path(AsyncPath(entry.as_posix()))
+            except (UnicodeDecodeError, OSError) as exc:
+                logger.warning("Skipping unreadable vault note {}: {}", entry, exc)
+                continue
+
             title = _note_title(text, filename_stem=entry.stem)
             yield kind, rel_path, title, text
 

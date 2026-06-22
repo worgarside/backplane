@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import io
 import pathlib
+import re
 from dataclasses import dataclass
 from functools import cache, lru_cache
 from typing import TYPE_CHECKING, Annotated, ClassVar, Self, cast
@@ -102,6 +103,9 @@ def markdown_body(text: str) -> str:
     return body
 
 
+_H1_HEADING_PATTERN = re.compile(r"^\s*#(?:[ \t]+)(.*)$")
+
+
 def note_title_from_markdown(text: str) -> str | None:
     """Extract the first level-1 heading from markdown text, skipping YAML frontmatter.
 
@@ -110,8 +114,8 @@ def note_title_from_markdown(text: str) -> str | None:
         heading is found.
     """
     for line in markdown_body(text).splitlines():
-        if line.startswith("# ") and not line.startswith("## "):
-            return line.removeprefix("# ").strip()
+        if match := _H1_HEADING_PATTERN.match(line):
+            return match.group(1).strip()
 
     return None
 

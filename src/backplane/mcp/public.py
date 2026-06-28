@@ -9,8 +9,7 @@ import uvloop
 from loguru import logger
 
 from backplane import __version__
-from backplane.mcp import create_mcp_server
-from backplane.mcp.auth import create_public_mcp_auth
+from backplane.mcp.asgi import compose_public_mcp_app
 
 if TYPE_CHECKING:
     from fastmcp.server.http import StarletteWithLifespan
@@ -25,9 +24,7 @@ def create_public_mcp_app() -> StarletteWithLifespan:
     Returns:
         Streamable HTTP ASGI app for the ChatGPT-facing MCP server.
     """
-    auth = create_public_mcp_auth()
-    mcp = create_mcp_server(auth=auth, require_oauth=True)
-    return mcp.http_app(transport="http")
+    return compose_public_mcp_app()
 
 
 def main() -> None:

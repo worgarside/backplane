@@ -102,7 +102,7 @@ max-branches = 15
 max-public-methods = 150
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108", "S104", "TC002", "SLF001", "PLR2004"]
+"tests/**/*.py" = ["S101", "INP001", "PLC2701", "DOC201", "S108", "S104", "TC002", "SLF001", "PLR2004", "RUF069"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

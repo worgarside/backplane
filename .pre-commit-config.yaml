@@ -23,7 +23,7 @@ repos:
           - --package-manager=uv
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.24
+    rev: 0.11.25
     hooks:
       - id: uv-lock
 
@@ -68,7 +68,7 @@ repos:
           - --strict
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.19
+    rev: v0.15.20
     hooks:
       - id: ruff-check
         args:
@@ -76,7 +76,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/DetachHead/basedpyright-prek-mirror
-    rev: 1.39.8
+    rev: 1.39.9
     hooks:
       - id: basedpyright
         name: basedpyright-src

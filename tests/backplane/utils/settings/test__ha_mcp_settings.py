@@ -45,3 +45,17 @@ def test__require_ha_mcp_url__raises_when_enabled_without_url() -> None:
 
     with pytest.raises(UserError, match="BACKPLANE_HA_MCP_URL"):
         settings.require_ha_mcp_url()
+
+
+def test__require_ha_mcp_url__raises_when_disabled() -> None:
+    """require_ha_mcp_url rejects calls when HA MCP upstream is disabled."""
+    settings = Settings.model_validate(
+        {
+            "obsidian_vault_path": AsyncPath("/tmp/vault"),
+            "ha_mcp_enabled": False,
+            "ha_mcp_url": "http://10.0.0.2:9583/secret-path",
+        },
+    )
+
+    with pytest.raises(UserError, match="disabled"):
+        settings.require_ha_mcp_url()

@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 from fastmcp.server.auth.oidc_proxy import OIDCConfiguration
+from fastmcp.server.http import StarletteWithLifespan
 from starlette.routing import Route
 
 from backplane.mcp.app_factory import build_backplane_mcp
 from backplane.mcp.asgi import (
     _build_ha_mcp,
+    _compose_mcp_apps,
     compose_private_mcp_app,
     compose_public_mcp_app,
 )
@@ -103,6 +105,44 @@ def test__compose_private_mcp_app__registers_mcp_ha_route_when_enabled(
 
     assert "/mcp" in route_paths
     assert "/mcp-ha" in route_paths
+
+
+async def test__compose_private_mcp_app__startup_lifespan_notifies_home_assistant(
+    mocker: MockerFixture,
+    ha_upstream_settings: Settings,
+    sample_fake_ha_mcp: FastMCP[None],
+) -> None:
+    """Private app startup runs the HA notification lifespan for core and HA apps."""
+    mocker.patch("backplane.utils.settings.SETTINGS", ha_upstream_settings)
+    mocker.patch("backplane.mcp.asgi.SETTINGS", ha_upstream_settings)
+    mock_notify = mocker.patch(
+        "backplane.mcp.app_factory.notify_startup",
+        new_callable=mocker.AsyncMock,
+    )
+    mock_reload = mocker.patch(
+        "backplane.mcp.app_factory.reload_mcp_integration",
+        new_callable=mocker.AsyncMock,
+    )
+    mocker.patch(
+        "backplane.mcp.upstreams.ha.create_proxy",
+        return_value=sample_fake_ha_mcp,
+    )
+
+    app = compose_private_mcp_app()
+    async with app.router.lifespan_context(app):
+        pass
+
+    mock_notify.assert_awaited_once()
+    mock_reload.assert_awaited_once()
+
+
+def test__compose_mcp_apps__raises_when_ha_route_missing() -> None:
+    """Composition fails when the HA app does not expose /mcp-ha."""
+    core_app = build_backplane_mcp().http_app(transport="http")
+    ha_app = StarletteWithLifespan(routes=[])
+
+    with pytest.raises(RuntimeError, match="/mcp-ha"):
+        _compose_mcp_apps(core_app=core_app, ha_app=ha_app)
 
 
 def test__compose_public_mcp_app__does_not_register_mcp_ha_when_disabled(

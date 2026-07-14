@@ -446,6 +446,32 @@ Terminate TLS at your reverse proxy (for example NGINX Proxy Manager) and forwar
 
 Keep the private SSE server on your LAN only.
 
+#### Home Assistant MCP upstream (optional)
+
+Backplane can proxy your private Home Assistant MCP add-on through a separate
+`/mcp-ha` endpoint so clients never reach the add-on URL on `:9583` directly.
+
+| Variable | Description |
+| --- | --- |
+| `BACKPLANE_HA_MCP_ENABLED` | Set to `true` to mount the HA MCP add-on upstream |
+| `BACKPLANE_HA_MCP_URL` | Private LAN URL from the add-on logs, e.g. `http://10.0.0.x:9583/<secret-path>` |
+| `BACKPLANE_HA_MCP_NAMESPACE` | Tool namespace prefix (default: `ha`) |
+
+When enabled:
+
+- **Public server (`:8001`)** — `/mcp` stays Backplane-only; `/mcp-ha` exposes the
+  full Backplane toolset **plus** all namespaced HA tools. Restrict `/mcp-ha` in
+  Authentik; anyone who can reach it gets both Backplane and HA tools.
+- **Private server (`:8000`)** — switches from SSE to streamable HTTP and serves
+  `/mcp` plus `/mcp-ha`. Update any LAN MCP client URLs accordingly.
+
+Rollout: deploy with `BACKPLANE_HA_MCP_ENABLED=false` first, confirm the add-on
+URL is reachable from the Backplane host (for example with `curl`), then set
+`BACKPLANE_HA_MCP_ENABLED=true` and restart. Roll back by setting
+`BACKPLANE_HA_MCP_ENABLED=false`.
+
+Do **not** expose the HA MCP add-on port `:9583` on your public reverse proxy.
+
 #### OAuth scope model (current)
 
 The public MCP server requires authentication for all tools and resources. The
@@ -458,6 +484,7 @@ read/write scope plan.
 | Route | Policy |
 | --- | --- |
 | `POST /mcp` | Bearer token required |
+| `POST /mcp-ha` | Bearer token required (when HA upstream enabled) |
 | `/.well-known/oauth-protected-resource/*` | Public |
 | FastMCP OAuth routes (`/authorize`, `/token`, `/register`, `/auth/callback`, …) | Public (state/PKCE validated by FastMCP) |
 

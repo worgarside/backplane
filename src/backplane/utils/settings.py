@@ -6,7 +6,7 @@ import zoneinfo
 from typing import Annotated, Final, final
 
 import yarl
-from pydantic import AnyHttpUrl, BeforeValidator, Field, field_validator
+from pydantic import AliasChoices, AnyHttpUrl, BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings
 
 from .async_path import AsyncPath
@@ -71,6 +71,45 @@ class Settings(BaseSettings):
             description="Config entry ID of the Backplane MCP integration in Home Assistant.",
         ),
     ] = None
+
+    ha_mcp_enabled: Annotated[
+        bool,
+        Field(
+            validation_alias=AliasChoices(
+                "BACKPLANE_HA_MCP_ENABLED",
+                "HA_MCP_ENABLED",
+                "ha_mcp_enabled",
+            ),
+            description="Whether to proxy the Home Assistant MCP add-on through Backplane.",
+        ),
+    ] = False
+
+    ha_mcp_url: Annotated[
+        str | None,
+        Field(
+            validation_alias=AliasChoices(
+                "BACKPLANE_HA_MCP_URL",
+                "HA_MCP_URL",
+                "ha_mcp_url",
+            ),
+            description=(
+                "Private LAN URL of the Home Assistant MCP add-on, "
+                "e.g. http://10.0.0.x:9583/<secret-path>."
+            ),
+        ),
+    ] = None
+
+    ha_mcp_namespace: Annotated[
+        str,
+        Field(
+            validation_alias=AliasChoices(
+                "BACKPLANE_HA_MCP_NAMESPACE",
+                "HA_MCP_NAMESPACE",
+                "ha_mcp_namespace",
+            ),
+            description="Namespace prefix for mounted HA MCP tools.",
+        ),
+    ] = "ha"
 
     @field_validator("home_assistant_url", mode="before")
     @classmethod
@@ -201,6 +240,26 @@ class Settings(BaseSettings):
             )
 
         return public_base_url, oidc_config_url, client_id, client_secret
+
+    def require_ha_mcp_url(self) -> str:
+        """Return the HA MCP add-on URL when upstream proxying is enabled.
+
+        Returns:
+            Private LAN URL of the Home Assistant MCP add-on.
+
+        Raises:
+            UserError: If HA MCP is enabled but the URL is missing.
+        """
+        url = self.ha_mcp_url
+        if not self.ha_mcp_enabled:
+            msg = "HA MCP upstream is disabled."
+            raise UserError(message=msg)
+        if url is None or not url.strip():
+            msg = (
+                "BACKPLANE_HA_MCP_URL is required when BACKPLANE_HA_MCP_ENABLED is true."
+            )
+            raise UserError(message=msg)
+        return url.strip()
 
 
 @final

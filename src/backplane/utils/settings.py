@@ -111,19 +111,6 @@ class Settings(BaseSettings):
         ),
     ] = "ha"
 
-    ha_mcp_connect_timeout_seconds: Annotated[
-        float,
-        Field(
-            validation_alias=AliasChoices(
-                "BACKPLANE_HA_MCP_CONNECT_TIMEOUT_SECONDS",
-                "HA_MCP_CONNECT_TIMEOUT_SECONDS",
-                "ha_mcp_connect_timeout_seconds",
-            ),
-            ge=0,
-            description="Timeout in seconds when connecting to the HA MCP add-on.",
-        ),
-    ] = 5.0
-
     @field_validator("home_assistant_url", mode="before")
     @classmethod
     def _parse_ha_url(cls, v: yarl.URL | str | None) -> yarl.URL | None:

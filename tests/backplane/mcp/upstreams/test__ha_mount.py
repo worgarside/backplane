@@ -40,20 +40,6 @@ def ha_upstream_settings() -> Settings:
     )
 
 
-def test__mount_home_assistant_upstream__requires_url_when_enabled() -> None:
-    """Mounting HA upstream fails fast when enabled without a URL."""
-    mcp = build_backplane_mcp()
-    config = HomeAssistantMcpConfig(
-        enabled=True,
-        url=None,
-        namespace="ha",
-        connect_timeout_seconds=5.0,
-    )
-
-    with pytest.raises(RuntimeError, match="BACKPLANE_HA_MCP_URL"):
-        mount_home_assistant_upstream(mcp, config)
-
-
 def test__require_ha_mcp_url__raises_when_compose_private_app_enabled_without_url(
     mocker: MockerFixture,
     ha_upstream_settings: Settings,
@@ -160,16 +146,14 @@ def test__mount_home_assistant_upstream__does_not_log_secret_url(
     mock_logger = mocker.patch("backplane.mcp.upstreams.ha.logger")
     mocker.patch("backplane.mcp.upstreams.ha.create_proxy")
     mcp = build_backplane_mcp()
+    secret_url = ha_upstream_settings.ha_mcp_url
+    assert secret_url is not None
     config = HomeAssistantMcpConfig(
-        enabled=True,
-        url=ha_upstream_settings.ha_mcp_url,
+        url=secret_url,
         namespace=ha_upstream_settings.ha_mcp_namespace,
-        connect_timeout_seconds=ha_upstream_settings.ha_mcp_connect_timeout_seconds,
     )
 
     mount_home_assistant_upstream(mcp, config)
 
-    secret_url = ha_upstream_settings.ha_mcp_url
-    assert secret_url is not None
     for call in mock_logger.info.call_args_list:
         assert secret_url not in str(call)

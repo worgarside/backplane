@@ -14,12 +14,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class HomeAssistantMcpConfig:
-    """Configuration for the Home Assistant MCP upstream."""
+    """Configuration for the Home Assistant MCP upstream.
 
-    enabled: bool
-    url: str | None
+    Callers must validate that the upstream is enabled and that ``url`` is set
+    (for example via ``Settings.require_ha_mcp_url``) before mounting.
+    """
+
+    url: str
     namespace: str
-    connect_timeout_seconds: float
 
 
 def mount_home_assistant_upstream(
@@ -30,17 +32,8 @@ def mount_home_assistant_upstream(
 
     Args:
         mcp: Backplane MCP server to augment with HA tools.
-        config: HA MCP upstream configuration.
-
-    Raises:
-        RuntimeError: If HA MCP is enabled but the upstream URL is missing.
+        config: Validated HA MCP upstream configuration.
     """
-    if not config.enabled:
-        return
-    if not config.url:
-        msg = "BACKPLANE_HA_MCP_URL is required when HA MCP is enabled"
-        raise RuntimeError(msg)
-
     logger.info(
         "Mounting Home Assistant MCP upstream with namespace {}",
         config.namespace,

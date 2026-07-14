@@ -92,16 +92,13 @@ def _build_ha_mcp(
     Returns:
         Streamable HTTP ASGI app for ``/mcp-ha``, or ``None`` when disabled.
     """
-    config = HomeAssistantMcpConfig(
-        enabled=SETTINGS.ha_mcp_enabled,
-        url=SETTINGS.ha_mcp_url,
-        namespace=SETTINGS.ha_mcp_namespace,
-        connect_timeout_seconds=SETTINGS.ha_mcp_connect_timeout_seconds,
-    )
-    if not config.enabled:
+    if not SETTINGS.ha_mcp_enabled:
         return None
 
-    _ = SETTINGS.require_ha_mcp_url()
+    config = HomeAssistantMcpConfig(
+        url=SETTINGS.require_ha_mcp_url(),
+        namespace=SETTINGS.ha_mcp_namespace,
+    )
     ha_mcp = build_backplane_mcp(
         name="Backplane + Home Assistant",
         auth=auth,

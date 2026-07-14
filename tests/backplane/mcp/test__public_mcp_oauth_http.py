@@ -106,3 +106,31 @@ async def test__public_mcp_oauth__unauthenticated_get_mcp_returns_401_not_405(
     assert response.status_code == httpx.codes.UNAUTHORIZED
     assert "WWW-Authenticate" in response.headers
     assert response.headers["WWW-Authenticate"].startswith("Bearer ")
+
+
+async def test__public_mcp_oauth__unauthenticated_post_mcp_ha_returns_401(
+    public_mcp_client_with_ha: AsyncClient,
+) -> None:
+    """Unauthenticated POST requests to /mcp-ha receive a WWW-Authenticate challenge."""
+    response = await public_mcp_client_with_ha.post(
+        "/mcp-ha",
+        json={"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+    )
+
+    assert response.status_code == httpx.codes.UNAUTHORIZED
+    assert "WWW-Authenticate" in response.headers
+    assert response.headers["WWW-Authenticate"].startswith("Bearer ")
+
+
+async def test__public_mcp_oauth__unauthenticated_get_mcp_ha_returns_401(
+    public_mcp_client_with_ha: AsyncClient,
+) -> None:
+    """Unauthenticated GET probes to /mcp-ha receive a WWW-Authenticate challenge."""
+    response = await public_mcp_client_with_ha.get(
+        "/mcp-ha",
+        headers={"Accept": "text/event-stream"},
+    )
+
+    assert response.status_code == httpx.codes.UNAUTHORIZED
+    assert "WWW-Authenticate" in response.headers
+    assert response.headers["WWW-Authenticate"].startswith("Bearer ")

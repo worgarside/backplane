@@ -456,25 +456,19 @@ Backplane can proxy your private Home Assistant MCP add-on through a separate
 | `BACKPLANE_HA_MCP_ENABLED` | Set to `true` to mount the HA MCP add-on upstream |
 | `BACKPLANE_HA_MCP_URL` | Private LAN URL from the add-on logs, e.g. `http://10.0.0.x:9583/<secret-path>` |
 | `BACKPLANE_HA_MCP_NAMESPACE` | Tool namespace prefix (default: `ha`) |
-| `BACKPLANE_HA_MCP_CONNECT_TIMEOUT_SECONDS` | Upstream connect timeout (default: `5`) |
 
 When enabled:
 
-- **Public server (`:8001`)** — `/mcp` stays Backplane-only; `/mcp-ha` adds all
-  namespaced HA tools. Restrict `/mcp-ha` in Authentik; anyone who can reach it
-  gets all HA tools.
+- **Public server (`:8001`)** — `/mcp` stays Backplane-only; `/mcp-ha` exposes the
+  full Backplane toolset **plus** all namespaced HA tools. Restrict `/mcp-ha` in
+  Authentik; anyone who can reach it gets both Backplane and HA tools.
 - **Private server (`:8000`)** — switches from SSE to streamable HTTP and serves
   `/mcp` plus `/mcp-ha`. Update any LAN MCP client URLs accordingly.
 
-Smoke-check connectivity from the Backplane LXC before enabling:
-
-```bash
-BACKPLANE_HA_MCP_URL='http://<ha-ip>:9583/<secret-path>' \
-  uv run python scripts/check_ha_mcp_upstream.py
-```
-
-Rollout: deploy with `BACKPLANE_HA_MCP_ENABLED=false` first, run the smoke script,
-then enable and restart. Roll back by setting `BACKPLANE_HA_MCP_ENABLED=false`.
+Rollout: deploy with `BACKPLANE_HA_MCP_ENABLED=false` first, confirm the add-on
+URL is reachable from the Backplane host (for example with `curl`), then set
+`BACKPLANE_HA_MCP_ENABLED=true` and restart. Roll back by setting
+`BACKPLANE_HA_MCP_ENABLED=false`.
 
 Do **not** expose the HA MCP add-on port `:9583` on your public reverse proxy.
 
